@@ -1,13 +1,13 @@
-from core import *
+from terraflow.libraries.core import *
+import click
 
 scope = 'resource'
 namespace = 'hashicorp'
 provider= 'azurerm'
-resource = 'azurerm_storage_account'
+resource = 'azurerm_resource_group'
 
 
 resource_schema = get_schema(
-    schema_file='/Users/justinoconnor/Code/terraform-writer/terraform/full_schema.json',
     namespace=namespace,
     provider=provider,
     scope=scope,

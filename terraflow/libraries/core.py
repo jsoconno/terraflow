@@ -6,10 +6,27 @@ from bs4 import BeautifulSoup
 import re
 import os
 import difflib
+import errno
 
-ALLOWED_SCOPES = ["provider", "resource", "data_source"]
-ALLOWED_ATTRIBUTES = ["optional", "required", "description", "type"]
+from terraflow.libraries.constants import *
 
+def colors(color="END"):
+    """
+    A standard set of colors used for printing to command line.
+    """
+    colors = {
+        "HEADER": "\033[95m",
+        "OK_BLUE": "\033[94m",
+        "OK_CYAN": "\033[96m",
+        "OK_GREEN": "\033[92m",
+        "WARNING": "\033[93m",
+        "FAIL": "\033[91m",
+        "END": "\033[0m",
+        "BOLD": "\033[1m",
+        "UNDERLINE": "\033[4m",
+    }
+
+    return colors[color]
 
 def get_schema(
     namespace="hashicorp",
@@ -18,14 +35,14 @@ def get_schema(
     resource=None,
     attribute=None,
     blocks=None,
-    schema_file=None,
+    filename=None
 ):
     """
     Returns the schema for a provider as a dictionary.
     """
     # Get the full schema
-    if schema_file:
-        with open(schema_file, "r") as schema:
+    if filename:
+        with open(filename, "r") as schema:
             schema = json.loads(schema.read())
     else:
         try:
@@ -102,17 +119,25 @@ def list_items(schema, namespace="hashicorp", provider=None, scope="resource"):
     return items
 
 
-def download_schema(schema, filename="schema"):
+def download_schema(schema, filename='schema'):
+    # Set a default filename
+    if filename == None:
+        filename = 'schema'
+
+    # Create file
     with open(f"{filename}.json", "w+") as f:
         f.write(json.dumps(schema))
 
 
 def write_to_file(text, filename, regex_pattern=None, overwrite=False):
-    with open(filename, 'r+') as f:
-        # Read the file contents
-        contents = f.read()
-        if not contents.endswith('\n'):
-            contents += '\n'
+    try:
+        with open(filename, 'r+') as f:
+            # Read the file contents
+            contents = f.read()
+            if not contents.endswith('\n'):
+                contents += '\n\n'
+    except:
+        contents = ''
         
     with open(filename, 'w+') as f:
         # If the pattern matches, append or overwrite the text
@@ -123,8 +148,8 @@ def write_to_file(text, filename, regex_pattern=None, overwrite=False):
                     text = contents.replace(current_text, text)
                 else:
                     text = contents + text
-        else:
-            text = contents + text
+            else:
+                text = contents + text
         
         f.write(text.strip())
 
@@ -425,7 +450,7 @@ def write_code(
     attribute_value_prefix=None,
     configuration_file="main.tf",
     output_code=True,
-    overwrite_code=False,
+    overwrite_code=True,
     format_code=True,
 ):
     code_lines = []
@@ -473,7 +498,7 @@ def write_code(
         write_to_file(
             text=code,
             filename=configuration_file,
-            regex_pattern=rf'^resource\s+"{resource}"\s+"{resource_name}"\s+{{[\s\S]*?}}',
+            regex_pattern=rf'^resource\s+"{resource}"\s+"{resource_name}"\s+{{[\s\S]*?^}}$',
             overwrite=overwrite_code
         )
 
@@ -605,3 +630,12 @@ def get_resource_attribute_description(documentation_text, attribute, block_list
 # )
 
 # print(description)
+
+def convert_strings_to_dict(text, delimiter='='):
+    
+    dictionary = {}
+    for x in text:
+        k, v = x.split(delimiter)
+        dictionary[k] = v
+
+    return dictionary
