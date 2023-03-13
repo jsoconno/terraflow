@@ -13,7 +13,6 @@ SCHEMA = 'The name of the schema to use for resource creation.'
 NAMESPACE = 'The namespace for the Terraform provider.'
 PROVIDER = 'The name of the Terraform provider.'
 RESOURCE = 'The target Terraform resource name.'
-SCOPE = f'The target scope.  Allowed values are {ALLOWED_SCOPES}.'
 ATTRIBUTE = 'The name of the Terraform resource attribute.'
 BLOCKS = 'A list of the blocks where the attribute can be found.'
 FILENAME = 'The name of the file.'
@@ -31,7 +30,7 @@ options = {
     'namespace': click.option(
         '--namespace',
         type=str,
-        default=None,
+        default='hashicorp',
         multiple=False,
         required=False,
         help=NAMESPACE
@@ -43,14 +42,6 @@ options = {
         multiple=False,
         required=False,
         help=PROVIDER
-    ),
-    'scope': click.option(
-        '--scope',
-        type=str,
-        default=None,
-        multiple=False,
-        required=False,
-        help=SCOPE
     ),
     'resource': click.option(
         '--resource',
@@ -200,7 +191,6 @@ def scope_options(func):
     '''
     Description
     '''
-    func = options['scope'](func)
     func = options['namespace'](func)
     func = options['provider'](func)
     func = options['resource'](func)

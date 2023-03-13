@@ -106,6 +106,7 @@ def resource():
     '''
     Docs
     '''
+    pass
 
 # terraflow resource create
 @resource.command('create', context_settings=CONTEXT_SETTINGS)
@@ -114,7 +115,6 @@ def resource():
 @code_options
 def resource_create(
     schema,
-    scope,
     namespace,
     provider,
     resource,
@@ -134,6 +134,7 @@ def resource_create(
     '''
     Docs
     '''
+    scope = 'resource'
     attribute_defaults = convert_strings_to_dict(attribute_default)
     
     schema = get_schema(
@@ -143,6 +144,72 @@ def resource_create(
         resource=resource,
         filename=schema
     )
+
+    write_code(
+        schema=schema,
+        scope=scope,
+        namespace=namespace,
+        provider=provider,
+        resource=resource,
+        resource_name=resource_name,
+        required_attributes_only=required_attributes_only,
+        required_blocks_only=required_blocks_only,
+        add_descriptions=add_descriptions,
+        ignore_blocks=ignore_block,
+        ignore_attributes=ignore_attribute,
+        attribute_defaults=attribute_defaults,
+        attribute_value_prefix=attribute_value_prefix,
+        configuration_file=configuration_file,
+        output_code=output_code,
+        overwrite_code=overwrite_code,
+        format_code=format_code,
+    )
+
+# terraflow data-source
+@terraflow.group('data-source')
+def data_source():
+    '''
+    Docs
+    '''
+    pass
+
+# terraflow data-source create
+@data_source.command('create', context_settings=CONTEXT_SETTINGS)
+@schema_options
+@scope_options
+@code_options
+def data_source_create(
+    schema,
+    namespace,
+    provider,
+    resource,
+    resource_name,
+    required_attributes_only,
+    required_blocks_only,
+    add_descriptions,
+    ignore_block,
+    ignore_attribute,
+    attribute_default,
+    attribute_value_prefix,
+    configuration_file,
+    output_code,
+    overwrite_code,
+    format_code,
+):
+    '''
+    Docs
+    '''
+    scope = 'data_source'
+    attribute_defaults = convert_strings_to_dict(attribute_default)
+    
+    schema = get_schema(
+        scope=scope,
+        namespace=namespace,
+        provider=provider,
+        resource=resource,
+        filename=schema
+    )
+
     write_code(
         schema=schema,
         scope=scope,

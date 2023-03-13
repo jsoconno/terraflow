@@ -61,6 +61,10 @@ def get_schema(
                 ).decode("utf-8")
             )
 
+    # Allow resource shorthand without the provider
+    if not provider in resource:
+        resource = f'{provider}_{resource}'
+
     # Get scope schema
     if namespace and provider:
         if scope in ALLOWED_SCOPES:
@@ -359,7 +363,7 @@ def recurse_schema(
             block_required = is_required_block(block_min_items=block_min_items)
 
             # Skip blocks
-            if required_blocks_only or block in ignore_blocks or block_required == None:
+            if required_blocks_only or "_".join(block_list + [block]) in ignore_blocks or block_required == None:
                 if not block_required:
                     continue
 
@@ -459,11 +463,17 @@ def write_code(
         if scope == "provider":
             if provider:
                 header = f'provider "{provider}" {{'
+                regex_pattern = rf'^provider\s+"{provider}"\s+{{[\s\S]*?^}}$'
             else:
                 print(f"A {scope} must be specified when the scope is set to {scope}.")
         else:
             if resource:
-                header = f'{scope.split("_")[0]} "{resource}" "{resource_name}" {{'
+                if scope == 'resource':
+                    header = f'resource "{resource}" "{resource_name}" {{'
+                    regex_pattern = rf'^resource\s+"{resource}"\s+"{resource_name}"\s+{{[\s\S]*?^}}$'
+                elif scope == 'data_source':
+                    header = f'data "{resource}" "{resource_name}" {{'
+                    regex_pattern = rf'^data\s+"{resource}"\s+"{resource_name}"\s+{{[\s\S]*?^}}$'
             else:
                 print(
                     f'A {scope.replace("_", " ")} must be specified when the scope is set to {scope}.'
@@ -498,7 +508,7 @@ def write_code(
         write_to_file(
             text=code,
             filename=configuration_file,
-            regex_pattern=rf'^resource\s+"{resource}"\s+"{resource_name}"\s+{{[\s\S]*?^}}$',
+            regex_pattern=regex_pattern,
             overwrite=overwrite_code
         )
 
