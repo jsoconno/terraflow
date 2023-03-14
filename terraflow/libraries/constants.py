@@ -2,6 +2,7 @@
 Constant values used across the CLI.
 '''
 from enum import Enum
+import os
 import click
 
 # Validation
@@ -22,7 +23,7 @@ options = {
     'schema': click.option(
         '--schema',
         type=str,
-        default=None,
+        default='schema.json' if os.path.isfile('schema.json') else None,
         multiple=False,
         required=False,
         help=SCHEMA
@@ -32,7 +33,7 @@ options = {
         type=str,
         default='hashicorp',
         multiple=False,
-        required=False,
+        required=True,
         help=NAMESPACE
     ),
     'provider': click.option(
@@ -40,7 +41,7 @@ options = {
         type=str,
         default=None,
         multiple=False,
-        required=False,
+        required=True,
         help=PROVIDER
     ),
     'resource': click.option(
@@ -48,7 +49,7 @@ options = {
         type=str,
         default=None,
         multiple=False,
-        required=False,
+        required=True,
         help=RESOURCE
     ),
     'attribute': click.option(
@@ -70,7 +71,7 @@ options = {
     'filename': click.option(
         '--filename',
         type=str,
-        default=None,
+        default='schema',
         multiple=False,
         required=False,
         help=FILENAME
@@ -142,8 +143,8 @@ options = {
         required=False,
         help=''
     ),
-    'configuration_file': click.option(
-        '--configuration-file',
+    'config_filename': click.option(
+        '--config-filename',
         type=str,
         default='main.tf',
         multiple=False,
@@ -187,23 +188,21 @@ def schema_options(func):
 
     return func
 
-def scope_options(func):
+def provider_options(func):
     '''
     Description
     '''
     func = options['namespace'](func)
     func = options['provider'](func)
-    func = options['resource'](func)
 
     return func
 
-def download_options(func):
+def resource_options(func):
     '''
     Description
     '''
-    func = options['attribute'](func)
-    func = options['blocks'](func)
-    func = options['filename'](func)
+    func = options['resource'](func)
+    func = options['resource_name'](func)
 
     return func
 
@@ -211,7 +210,6 @@ def code_options(func):
     '''
     Description
     '''
-    func = options['resource_name'](func)
     func = options['required_attributes_only'](func)
     func = options['required_blocks_only'](func)
     func = options['add_descriptions'](func)
@@ -219,9 +217,17 @@ def code_options(func):
     func = options['ignore_attribute'](func)
     func = options['attribute_default'](func)
     func = options['attribute_value_prefix'](func)
-    func = options['configuration_file'](func)
+    func = options['config_filename'](func)
     func = options['output_code'](func)
     func = options['overwrite_code'](func)
     func = options['format_code'](func)
+
+    return func
+
+def download_options(func):
+    '''
+    Description
+    '''
+    func = options['filename'](func)
 
     return func

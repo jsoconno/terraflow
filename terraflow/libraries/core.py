@@ -46,12 +46,17 @@ def get_schema(
             schema = json.loads(schema.read())
     else:
         try:
+            subprocess.run(
+                ["terraform", "init"], capture_output=True, text=True
+            )
             schema = json.loads(
                 subprocess.check_output(
                     ["terraform", "providers", "schema", "-json"]
                 ).decode("utf-8")
             )
+            print(f'\n{colors("OK_GREEN")}Success:{colors()} The schema was downloaded successfully.\n')
         except:
+            print(f'\n{colors("WARNING")}Warning:{colors()} The dependency lock file does not match the current configuration.  Running terraform init -upgrade to collect the latest schema for the selected provider versions.\n')
             subprocess.run(
                 ["terraform", "init", "-upgrade"], capture_output=True, text=True
             )
@@ -60,10 +65,7 @@ def get_schema(
                     ["terraform", "providers", "schema", "-json"]
                 ).decode("utf-8")
             )
-
-    # Allow resource shorthand without the provider
-    if not provider in resource:
-        resource = f'{provider}_{resource}'
+            print(f'\n{colors("OK_GREEN")}Success:{colors()} The schema was downloaded successfully.\n')
 
     # Get scope schema
     if namespace and provider:
@@ -73,10 +75,14 @@ def get_schema(
                     f"registry.terraform.io/{namespace}/{provider}"
                 ][scope]
             elif scope == "resource" or scope == "data_source":
+                # Allow resource shorthand without the provider
+                if resource and not provider in resource:
+                    resource = f'{provider}_{resource}'
                 schema = schema["provider_schemas"][
                     f"registry.terraform.io/{namespace}/{provider}"
                 ][f"{scope}_schemas"][resource]
         else:
+
             schema = schema["provider_schemas"][
                 f"registry.terraform.io/{namespace}/{provider}"
             ]
@@ -124,10 +130,6 @@ def list_items(schema, namespace="hashicorp", provider=None, scope="resource"):
 
 
 def download_schema(schema, filename='schema'):
-    # Set a default filename
-    if filename == None:
-        filename = 'schema'
-
     # Create file
     with open(f"{filename}.json", "w+") as f:
         f.write(json.dumps(schema))
@@ -367,31 +369,14 @@ def recurse_schema(
                 if not block_required:
                     continue
 
-            # Determine if multiple blocks are allowed
-            if block_max_items and block_max_items > 1:
-                multiple_blocks_allowed = True
-            else:
-                multiple_blocks_allowed = False
-
             # Write a comment describing the constraints of the block
-            if block_required:
-                if multiple_blocks_allowed:
-                    lines.append(
-                        f'\n{level * "  "}# This block is required and allows for up to {block_max_items} items.'
-                    )
-                else:
-                    lines.append(
-                        f'\n{level * "  "}# This block is required and allows only one item.'
-                    )
-            else:
-                if multiple_blocks_allowed:
-                    lines.append(
-                        f'\n{level * "  "}# This block is optional and allows for up to {block_max_items} items.'
-                    )
-                else:
-                    lines.append(
-                        f'\n{level * "  "}# This block is optional and allows only one item.'
-                    )
+            required_blocks_message = 'required' if block_required else 'optional'
+            min_blocks_message = 'no minimum number of items' if block_min_items == None else f'a minimum of {block_min_items} items'
+            max_blocks_message = 'no maximum number of items' if block_max_items == None else f'a maximum of {block_max_items} items'
+
+            lines.append(
+                f'\n{level * "  "}# This block is {required_blocks_message} with {min_blocks_message} and {max_blocks_message}'
+            )
 
             # Increment the block number
             current_block_number += 1
@@ -452,12 +437,16 @@ def write_code(
     ignore_attributes=[],
     attribute_defaults={},
     attribute_value_prefix=None,
-    configuration_file="main.tf",
+    config_filename="main.tf",
     output_code=True,
     overwrite_code=True,
     format_code=True,
 ):
     code_lines = []
+
+    # Allow resource shorthand without the provider
+    if resource and not provider in resource:
+        resource = f'{provider}_{resource}'
 
     if scope in ALLOWED_SCOPES:
         if scope == "provider":
@@ -507,7 +496,7 @@ def write_code(
         # Write file
         write_to_file(
             text=code,
-            filename=configuration_file,
+            filename=config_filename,
             regex_pattern=regex_pattern,
             overwrite=overwrite_code
         )

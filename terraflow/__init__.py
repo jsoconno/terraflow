@@ -82,18 +82,9 @@ def schema():
 
 # terraflow schema download
 @schema.command('download', context_settings=CONTEXT_SETTINGS)
-@scope_options
 @download_options
-def schema_download(namespace, provider, scope, resource, attribute, blocks, filename):
-    schema = get_schema(
-        scope=scope,
-        namespace=namespace,
-        provider=provider,
-        resource=resource,
-        attribute=attribute,
-        blocks=blocks,
-        filename=filename
-    )
+def schema_download(filename):
+    schema = get_schema()
 
     download_schema(
         schema=schema,
@@ -111,13 +102,14 @@ def resource():
 # terraflow resource create
 @resource.command('create', context_settings=CONTEXT_SETTINGS)
 @schema_options
-@scope_options
+@provider_options
+@resource_options
 @code_options
 def resource_create(
-    schema,
     namespace,
     provider,
     resource,
+    schema,
     resource_name,
     required_attributes_only,
     required_blocks_only,
@@ -126,7 +118,7 @@ def resource_create(
     ignore_attribute,
     attribute_default,
     attribute_value_prefix,
-    configuration_file,
+    config_filename,
     output_code,
     overwrite_code,
     format_code,
@@ -159,7 +151,7 @@ def resource_create(
         ignore_attributes=ignore_attribute,
         attribute_defaults=attribute_defaults,
         attribute_value_prefix=attribute_value_prefix,
-        configuration_file=configuration_file,
+        config_filename=config_filename,
         output_code=output_code,
         overwrite_code=overwrite_code,
         format_code=format_code,
@@ -176,13 +168,14 @@ def data_source():
 # terraflow data-source create
 @data_source.command('create', context_settings=CONTEXT_SETTINGS)
 @schema_options
-@scope_options
+@provider_options
+@resource_options
 @code_options
 def data_source_create(
-    schema,
     namespace,
     provider,
     resource,
+    schema,
     resource_name,
     required_attributes_only,
     required_blocks_only,
@@ -191,7 +184,7 @@ def data_source_create(
     ignore_attribute,
     attribute_default,
     attribute_value_prefix,
-    configuration_file,
+    config_filename,
     output_code,
     overwrite_code,
     format_code,
@@ -224,12 +217,101 @@ def data_source_create(
         ignore_attributes=ignore_attribute,
         attribute_defaults=attribute_defaults,
         attribute_value_prefix=attribute_value_prefix,
-        configuration_file=configuration_file,
+        config_filename=config_filename,
         output_code=output_code,
         overwrite_code=overwrite_code,
         format_code=format_code,
     )
 
 # terraflow variable create --namespace --provider --provider-version --name
-# terraflow provider create --namespace --provider --provider-version
+# terraflow provider
+@terraflow.group('provider')
+def provider():
+    '''
+    Docs
+    '''
+    pass
+
+# terraflow provider create
+@provider.command('create', context_settings=CONTEXT_SETTINGS)
+@schema_options
+@provider_options
+@code_options
+def provider_create(
+    namespace,
+    provider,
+    schema,
+    required_attributes_only,
+    required_blocks_only,
+    add_descriptions,
+    ignore_block,
+    ignore_attribute,
+    attribute_default,
+    attribute_value_prefix,
+    config_filename,
+    output_code,
+    overwrite_code,
+    format_code,
+):
+    '''
+    Docs
+    '''
+    scope = 'provider'
+    attribute_defaults = convert_strings_to_dict(attribute_default)
+    
+    schema = get_schema(
+        scope=scope,
+        namespace=namespace,
+        provider=provider,
+        filename=schema
+    )
+
+    write_code(
+        schema=schema,
+        scope=scope,
+        namespace=namespace,
+        provider=provider,
+        required_attributes_only=required_attributes_only,
+        required_blocks_only=required_blocks_only,
+        add_descriptions=add_descriptions,
+        ignore_blocks=ignore_block,
+        ignore_attributes=ignore_attribute,
+        attribute_defaults=attribute_defaults,
+        attribute_value_prefix=attribute_value_prefix,
+        config_filename=config_filename,
+        output_code=output_code,
+        overwrite_code=overwrite_code,
+        format_code=format_code,
+    )
+
+# terraflow provider list
+# terraflow provider create
+# @provider.command('list', context_settings=CONTEXT_SETTINGS)
+# @schema_options
+# @provider_options
+# def provider_list(
+#     namespace,
+#     provider,
+#     schema
+# ):
+#     '''
+#     Docs
+#     '''
+#     scope = 'provider'
+#     attribute_defaults = convert_strings_to_dict(attribute_default)
+    
+#     schema = get_schema(
+#         scope=scope,
+#         namespace=namespace,
+#         provider=provider,
+#         filename=schema
+#     )
+
+#     list_items(
+#         schema=schema,
+#         namespace=namespace,
+#         provider=provider,
+#         scope='provider'
+#     )
+
 # terraflow documentation create --namespace --provider --provider-version 

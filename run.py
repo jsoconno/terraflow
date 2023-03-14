@@ -4,7 +4,7 @@ import click
 scope = 'resource'
 namespace = 'hashicorp'
 provider= 'azurerm'
-resource = 'azurerm_resource_group'
+resource = 'azurerm_cosmosdb_account'
 
 
 resource_schema = get_schema(
