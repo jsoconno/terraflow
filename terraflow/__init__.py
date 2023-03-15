@@ -99,6 +99,26 @@ def resource():
     '''
     pass
 
+# terraflow resource list
+@resource.command('list', context_settings=CONTEXT_SETTINGS)
+@provider_options
+@filter_options
+def resource_list(namespace, provider, keyword):
+    schema = get_schema()
+
+    items = list_items(
+        schema=schema,
+        namespace=namespace,
+        provider=provider,
+        scope='resource',
+        keywords=keyword
+    )
+
+    print(pretty_list(
+        title=f'Resources for {namespace} {provider}:',
+        items=items
+    ))
+
 # terraflow resource create
 @resource.command('create', context_settings=CONTEXT_SETTINGS)
 @schema_options
@@ -165,6 +185,26 @@ def data_source():
     '''
     pass
 
+# terraflow data source list
+@data_source.command('list', context_settings=CONTEXT_SETTINGS)
+@provider_options
+@filter_options
+def data_source_list(namespace, provider, keyword):
+    schema = get_schema()
+
+    items = list_items(
+        schema=schema,
+        namespace=namespace,
+        provider=provider,
+        scope='data_source',
+        keywords=keyword
+    )
+
+    print(pretty_list(
+        title=f'Data sources for {namespace} {provider}:',
+        items=items
+    ))
+
 # terraflow data-source create
 @data_source.command('create', context_settings=CONTEXT_SETTINGS)
 @schema_options
@@ -224,6 +264,7 @@ def data_source_create(
     )
 
 # terraflow variable create --namespace --provider --provider-version --name
+
 # terraflow provider
 @terraflow.group('provider')
 def provider():
@@ -231,6 +272,23 @@ def provider():
     Docs
     '''
     pass
+
+# terraflow provider list
+@provider.command('list', context_settings=CONTEXT_SETTINGS)
+@filter_options
+def provider_list(keyword):
+    schema = get_schema()
+
+    items = list_items(
+        schema=schema,
+        scope='provider',
+        keywords=keyword
+    )
+
+    print(pretty_list(
+        title='Providers in this configuration:',
+        items=items
+    ))
 
 # terraflow provider create
 @provider.command('create', context_settings=CONTEXT_SETTINGS)
@@ -284,34 +342,5 @@ def provider_create(
         format_code=format_code,
     )
 
-# terraflow provider list
-# terraflow provider create
-# @provider.command('list', context_settings=CONTEXT_SETTINGS)
-# @schema_options
-# @provider_options
-# def provider_list(
-#     namespace,
-#     provider,
-#     schema
-# ):
-#     '''
-#     Docs
-#     '''
-#     scope = 'provider'
-#     attribute_defaults = convert_strings_to_dict(attribute_default)
-    
-#     schema = get_schema(
-#         scope=scope,
-#         namespace=namespace,
-#         provider=provider,
-#         filename=schema
-#     )
-
-#     list_items(
-#         schema=schema,
-#         namespace=namespace,
-#         provider=provider,
-#         scope='provider'
-#     )
 
 # terraflow documentation create --namespace --provider --provider-version 

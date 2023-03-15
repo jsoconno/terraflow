@@ -40,6 +40,10 @@ def get_schema(
     """
     Returns the schema for a provider as a dictionary.
     """
+    # Determine if there is an existing schema file locally
+    if filename == None and os.path.exists('schema.json'):
+        filename = 'schema.json'
+    
     # Get the full schema
     if filename:
         with open(filename, "r") as schema:
@@ -100,7 +104,7 @@ def get_schema(
     return schema
 
 
-def list_items(schema, namespace="hashicorp", provider=None, scope="resource"):
+def list_items(schema, namespace="hashicorp", provider=None, scope="resource", keywords=None):
     """
     Returns an available list of providers based on the configuration.
     """
@@ -120,11 +124,14 @@ def list_items(schema, namespace="hashicorp", provider=None, scope="resource"):
                     f"registry.terraform.io/{namespace}/{provider}"
                 ][f"{scope}_schemas"]
                 for source in schema:
-                    items.append(source)
+                    items.append(source.replace(f'{provider}_', ''))
         else:
             print(f"The scope must be one of {ALLOWED_SCOPES}.")
     except:
         print("No items were found.")
+
+    if keywords:
+        items = [item for item in items if any(keyword in item for keyword in keywords)]
 
     return items
 
@@ -619,17 +626,6 @@ def get_resource_attribute_description(documentation_text, attribute, block_list
 
     return description
 
-# description = get_resource_attribute_description(
-#     namespace='hashicorp',
-#     provider='azurerm',
-#     resource='azurerm_linux_function_app',
-#     attribute='login_scopes',
-#     scope='resource',
-#     block_list=['google_v2']
-# )
-
-# print(description)
-
 def convert_strings_to_dict(text, delimiter='='):
     
     dictionary = {}
@@ -638,3 +634,28 @@ def convert_strings_to_dict(text, delimiter='='):
         dictionary[k] = v
 
     return dictionary
+
+def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
+    """
+    Implements logic to make output to CLI more clean and consistent.
+    """
+    pretty_list = "\n"
+
+    if isinstance(items, str):
+        items = [items]
+
+    if len(items) > 1:
+        item_prefix = item_prefix
+    else:
+        item_prefix = ""
+
+    if title:
+        pretty_list += f'{title}\n\n'
+
+    if top:
+        items = items[:top]
+
+    for option in items:
+        pretty_list += f'{item_prefix}{option}\n'
+
+    return pretty_list

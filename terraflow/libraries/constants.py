@@ -17,6 +17,7 @@ RESOURCE = 'The target Terraform resource name.'
 ATTRIBUTE = 'The name of the Terraform resource attribute.'
 BLOCKS = 'A list of the blocks where the attribute can be found.'
 FILENAME = 'The name of the file.'
+KEYWORD = 'Keyword used to filter the list.'
 
 # Dictionary of different CLI options
 options = {
@@ -178,6 +179,14 @@ options = {
         required=False,
         help=''
     ),
+    'keyword': click.option(
+        '--keyword',
+        type=str,
+        default=None,
+        multiple=True,
+        required=False,
+        help=KEYWORD
+    ),
 }
 # Options decorators
 def schema_options(func):
@@ -229,5 +238,13 @@ def download_options(func):
     Description
     '''
     func = options['filename'](func)
+
+    return func
+
+def filter_options(func):
+    '''
+    Description
+    '''
+    func = options['keyword'](func)
 
     return func
