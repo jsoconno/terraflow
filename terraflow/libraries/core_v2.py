@@ -200,7 +200,6 @@ def format_attribute_type(attribute_type):
         raise ValueError(f"Invalid Terraform data type: {attribute_type}")
 
 
-
 def set_attribute_value(
     block_list, attribute_name, attribute_value_prefix=None, attribute_defaults={}
 ):
@@ -280,7 +279,7 @@ def recurse_schema(
     ignore_attributes=[],
     attribute_defaults={},
     attribute_value_prefix=None,
-    output_variables=False
+    output='configuration'
 ):
     # Set defaults
     lines = []
@@ -290,7 +289,7 @@ def recurse_schema(
         attributes = schema.get("block").get("attributes", None)
         blocks = schema.get("block").get("block_types", None)
         # Collect the documentation
-        if add_descriptions or output_variables:
+        if add_descriptions or output == 'variable':
             documentation_text = get_resource_documentation(
                 namespace=namespace,
                 provider=provider,
@@ -336,10 +335,6 @@ def recurse_schema(
                 attribute_schema=attribute_schema, attribute="description"
             )
 
-            if attribute_description:
-                # Replace double quotes with single quotes attribute descriptions
-                attribute_description = attribute_description.replace('"', "'")
-
             if attribute_description == None and documentation_text:
                 try:
                     attribute_description = get_resource_attribute_description(
@@ -351,23 +346,33 @@ def recurse_schema(
                     print(e)
                     attribute_description = ''
 
-            # Write attributes based on whether or not they are required
-            if attribute_required:
-                line = f'{level * "  "}{attribute} = {attribute_value}'
-            elif not attribute_required and not required_attributes_only:
-                line = f'{level * "  "}{attribute} = {attribute_value}'
+            # Replace double quotes with single quotes attribute descriptions
+            if attribute_description:
+                attribute_description = attribute_description.replace('"', "'")
 
-            if attribute_description and add_descriptions:
-                line = f"{line} # {attribute_description}"
+            attribute_type = get_attribute_value(
+                attribute_schema=attribute_schema, attribute="type"
+            )
+            attribute_type = format_attribute_type(attribute_type)
 
-            if 'var.' in attribute_value:
-                attribute_type = get_attribute_value(
-                    attribute_schema=attribute_schema, attribute="type"
-                )
-                attribute_type = format_attribute_type(attribute_type)
-                print(f'variable {attribute_value.replace("var.", "")} {{\ntype = {attribute_type}\ndescription = "{attribute_description if attribute_description != None else ""}"\ndefault = null\n}}')
+            if output == 'configuration':
+                # Write attributes based on whether or not they are required
+                if attribute_required:
+                    line = f'{level * "  "}{attribute} = {attribute_value}'
+                elif not attribute_required and not required_attributes_only:
+                    line = f'{level * "  "}{attribute} = {attribute_value}'
 
-            lines.append(line)
+                if attribute_description and add_descriptions:
+                    line = f"{line} # {attribute_description}"
+
+                lines.append(line)
+            else:
+                if 'var.' in attribute_value:
+                    lines.append(f'variable "{attribute_value.replace("var.", "")}" {{')
+                    lines.append(f'  type = {attribute_type}')
+                    lines.append(f'  description = "{attribute_description if attribute_description != None else ""}"')
+                    lines.append(f'  default = null\n}}')
+                    # print(f'variable {attribute_value.replace("var.", "")} {{\ntype = {attribute_type}\ndescription = "{attribute_description if attribute_description != None else ""}"\ndefault = null\n}}')
 
     # If there are blocks in the schema
     if blocks:
@@ -422,6 +427,7 @@ def recurse_schema(
                 ignore_blocks=ignore_blocks,
                 attribute_defaults=attribute_defaults,
                 attribute_value_prefix=attribute_value_prefix,
+                output=output
             )
             # Add the lines to the block
             lines.extend(child_lines)
@@ -459,6 +465,7 @@ def write_code(
     output_code=True,
     overwrite_code=True,
     format_code=True,
+    output='configuration'
 ):
     code_lines = []
 
@@ -466,27 +473,31 @@ def write_code(
     if resource and not provider in resource:
         resource = f'{provider}_{resource}'
 
-    if scope in ALLOWED_SCOPES:
-        if scope == "provider":
-            if provider:
-                header = f'provider "{provider}" {{'
-                regex_pattern = rf'^provider\s+"{provider}"\s+{{[\s\S]*?^}}$'
+    if output == 'configuration':
+        if scope in ALLOWED_SCOPES:
+            if scope == "provider":
+                if provider:
+                    header = f'provider "{provider}" {{'
+                    regex_pattern = rf'^provider\s+"{provider}"\s+{{[\s\S]*?^}}$'
+                else:
+                    print(f"A {scope} must be specified when the scope is set to {scope}.")
             else:
-                print(f"A {scope} must be specified when the scope is set to {scope}.")
+                if resource:
+                    if scope == 'resource':
+                        header = f'resource "{resource}" "{resource_name}" {{'
+                        regex_pattern = rf'^resource\s+"{resource}"\s+"{resource_name}"\s+{{[\s\S]*?^}}$'
+                    elif scope == 'data_source':
+                        header = f'data "{resource}" "{resource_name}" {{'
+                        regex_pattern = rf'^data\s+"{resource}"\s+"{resource_name}"\s+{{[\s\S]*?^}}$'
+                else:
+                    print(
+                        f'A {scope.replace("_", " ")} must be specified when the scope is set to {scope}.'
+                    )
         else:
-            if resource:
-                if scope == 'resource':
-                    header = f'resource "{resource}" "{resource_name}" {{'
-                    regex_pattern = rf'^resource\s+"{resource}"\s+"{resource_name}"\s+{{[\s\S]*?^}}$'
-                elif scope == 'data_source':
-                    header = f'data "{resource}" "{resource_name}" {{'
-                    regex_pattern = rf'^data\s+"{resource}"\s+"{resource_name}"\s+{{[\s\S]*?^}}$'
-            else:
-                print(
-                    f'A {scope.replace("_", " ")} must be specified when the scope is set to {scope}.'
-                )
-    else:
-        print(f"The scope must be one of {ALLOWED_SCOPES}.")
+            print(f"The scope must be one of {ALLOWED_SCOPES}.")
+    elif output == 'variable':
+        header = ''
+        regex_pattern = rf''
 
     body = recurse_schema(
         schema=schema,
@@ -501,6 +512,7 @@ def write_code(
         ignore_blocks=ignore_blocks,
         attribute_defaults=attribute_defaults,
         attribute_value_prefix=attribute_value_prefix,
+        output=output
     )
 
     code_lines.append(header)
@@ -670,3 +682,21 @@ def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
         pretty_list += f'{item_prefix}{option}\n'
 
     return pretty_list
+
+schema = get_schema(
+    namespace='hashicorp',
+    provider='azurerm',
+    scope='resource',
+    resource='resource_group'
+)
+resource = write_code(
+    schema=schema,
+    scope='resource',
+    namespace='hashicorp',
+    provider='azurerm',
+    resource='resource_group',
+    output='variable',
+    ignore_blocks=['timeouts']
+)
+
+print(resource)

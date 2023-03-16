@@ -6,8 +6,8 @@ import os
 import click
 
 # Validation
-ALLOWED_SCOPES = ["provider", "resource", "data_source"]
-ALLOWED_ATTRIBUTES = ["optional", "required", "description", "type"]
+ALLOWED_SCOPES = ['provider', 'resource', 'data_source']
+ALLOWED_ATTRIBUTES = ['optional', 'required', 'description', 'type']
 
 # Help text
 SCHEMA = 'The name of the schema to use for resource creation.'
