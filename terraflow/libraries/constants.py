@@ -13,10 +13,11 @@ ALLOWED_ATTRIBUTES = ['optional', 'required', 'description', 'type']
 SCHEMA = 'The name of the schema to use for resource creation.'
 NAMESPACE = 'The namespace for the Terraform provider.'
 PROVIDER = 'The name of the Terraform provider.'
+NAME = 'The name of the resource or data source.'
 RESOURCE = 'The target Terraform resource name.'
 ATTRIBUTE = 'The name of the Terraform resource attribute.'
 BLOCKS = 'A list of the blocks where the attribute can be found.'
-FILENAME = 'The name of the file.'
+FILENAME = 'The name of the Terraform configuration file.'
 KEYWORD = 'Keyword used to filter the list.'
 
 # Dictionary of different CLI options
@@ -69,21 +70,13 @@ options = {
         required=False,
         help=BLOCKS
     ),
-    'filename': click.option(
-        '--filename',
-        type=str,
-        default='schema',
-        multiple=False,
-        required=False,
-        help=FILENAME
-    ),
-    'resource_name': click.option(
-        '--resource-name',
+    'name': click.option(
+        '--name',
         type=str,
         default='main',
         multiple=False,
         required=False,
-        help=''
+        help=NAME
     ),
     'required_attributes_only': click.option(
         '--required-attributes-only',
@@ -144,37 +137,10 @@ options = {
         required=False,
         help=''
     ),
-    'config_filename': click.option(
-        '--config-filename',
+    'filename': click.option(
+        '--filename',
         type=str,
         default='main.tf',
-        multiple=False,
-        required=False,
-        help=''
-    ),
-    'output_code': click.option(
-        '--output-code',
-        type=bool,
-        is_flag=True,
-        default=True,
-        multiple=False,
-        required=False,
-        help=''
-    ),
-    'overwrite_code': click.option(
-        '--overwrite-code',
-        type=bool,
-        is_flag=True,
-        default=True,
-        multiple=False,
-        required=False,
-        help=''
-    ),
-    'format_code': click.option(
-        '--format-code',
-        type=bool,
-        is_flag=True,
-        default=True,
         multiple=False,
         required=False,
         help=''
@@ -211,7 +177,7 @@ def resource_options(func):
     Description
     '''
     func = options['resource'](func)
-    func = options['resource_name'](func)
+    func = options['name'](func)
 
     return func
 
@@ -226,10 +192,7 @@ def code_options(func):
     func = options['ignore_attribute'](func)
     func = options['attribute_default'](func)
     func = options['attribute_value_prefix'](func)
-    func = options['config_filename'](func)
-    func = options['output_code'](func)
-    func = options['overwrite_code'](func)
-    func = options['format_code'](func)
+    func = options['filename'](func)
 
     return func
 

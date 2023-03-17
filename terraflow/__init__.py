@@ -130,7 +130,7 @@ def resource_create(
     provider,
     resource,
     schema,
-    resource_name,
+    name,
     required_attributes_only,
     required_blocks_only,
     add_descriptions,
@@ -138,43 +138,27 @@ def resource_create(
     ignore_attribute,
     attribute_default,
     attribute_value_prefix,
-    config_filename,
-    output_code,
-    overwrite_code,
-    format_code,
+    filename
 ):
     '''
     Docs
     '''
-    scope = 'resource'
     attribute_defaults = convert_strings_to_dict(attribute_default)
-    
-    schema = get_schema(
-        scope=scope,
-        namespace=namespace,
-        provider=provider,
-        resource=resource,
-        filename=schema
-    )
 
-    write_code(
-        schema=schema,
-        scope=scope,
+    write_resource_code(
         namespace=namespace,
         provider=provider,
         resource=resource,
-        resource_name=resource_name,
+        ignore_attributes=ignore_attribute,
+        ignore_blocks=ignore_block,
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         add_descriptions=add_descriptions,
-        ignore_blocks=ignore_block,
-        ignore_attributes=ignore_attribute,
         attribute_defaults=attribute_defaults,
         attribute_value_prefix=attribute_value_prefix,
-        config_filename=config_filename,
-        output_code=output_code,
-        overwrite_code=overwrite_code,
-        format_code=format_code,
+        filename=filename,
+        name=name,
+        schema=schema
     )
 
 # terraflow data-source
@@ -216,7 +200,7 @@ def data_source_create(
     provider,
     resource,
     schema,
-    resource_name,
+    name,
     required_attributes_only,
     required_blocks_only,
     add_descriptions,
@@ -224,43 +208,27 @@ def data_source_create(
     ignore_attribute,
     attribute_default,
     attribute_value_prefix,
-    config_filename,
-    output_code,
-    overwrite_code,
-    format_code,
+    filename
 ):
     '''
     Docs
     '''
-    scope = 'data_source'
     attribute_defaults = convert_strings_to_dict(attribute_default)
-    
-    schema = get_schema(
-        scope=scope,
-        namespace=namespace,
-        provider=provider,
-        resource=resource,
-        filename=schema
-    )
 
-    write_code(
-        schema=schema,
-        scope=scope,
+    write_data_source_code(
         namespace=namespace,
         provider=provider,
         resource=resource,
-        resource_name=resource_name,
+        ignore_attributes=ignore_attribute,
+        ignore_blocks=ignore_block,
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         add_descriptions=add_descriptions,
-        ignore_blocks=ignore_block,
-        ignore_attributes=ignore_attribute,
         attribute_defaults=attribute_defaults,
         attribute_value_prefix=attribute_value_prefix,
-        config_filename=config_filename,
-        output_code=output_code,
-        overwrite_code=overwrite_code,
-        format_code=format_code,
+        filename=filename,
+        name=name,
+        schema=schema
     )
 
 # terraflow variable create --namespace --provider --provider-version --name
@@ -306,41 +274,25 @@ def provider_create(
     ignore_attribute,
     attribute_default,
     attribute_value_prefix,
-    config_filename,
-    output_code,
-    overwrite_code,
-    format_code,
+    filename
 ):
     '''
     Docs
     '''
-    scope = 'provider'
     attribute_defaults = convert_strings_to_dict(attribute_default)
     
-    schema = get_schema(
-        scope=scope,
+    write_provider_code(
         namespace=namespace,
         provider=provider,
-        filename=schema
-    )
-
-    write_code(
-        schema=schema,
-        scope=scope,
-        namespace=namespace,
-        provider=provider,
+        ignore_attributes=ignore_attribute,
+        ignore_blocks=ignore_block,
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         add_descriptions=add_descriptions,
-        ignore_blocks=ignore_block,
-        ignore_attributes=ignore_attribute,
         attribute_defaults=attribute_defaults,
         attribute_value_prefix=attribute_value_prefix,
-        config_filename=config_filename,
-        output_code=output_code,
-        overwrite_code=overwrite_code,
-        format_code=format_code,
+        filename=filename,
+        schema=schema
     )
-
 
 # terraflow documentation create --namespace --provider --provider-version 
