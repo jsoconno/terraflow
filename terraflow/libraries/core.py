@@ -391,7 +391,7 @@ def recurse_schema(
 ):
     # Start with an empty list for the lines of code and block hierarchy
     lines = []
-    block_hierarchy = []
+    block_hierarchy = kwargs['block_hierarchy']
 
     # Collect the documentation
     if add_descriptions:
@@ -425,6 +425,7 @@ def recurse_schema(
 
     # Recursively call this function on each block
     for block, block_schema in blocks.items():
+        block_hierarchy.append(block)
         # Set min and max items for block
         block_min_items = schema.get("min_items", None)
         block_max_items = schema.get("max_items", None)
@@ -436,7 +437,6 @@ def recurse_schema(
         if required_blocks_only and not required_block or "_".join(kwargs['block_hierarchy'] + [block]) in ignore_blocks or required_block == None:
             continue
         else:
-            block_hierarchy.append(block)
             block_lines = recurse_schema(schema=block_schema, func=func, add_descriptions=add_descriptions, *args, **kwargs)
             lines.append(f"{block} {{")
             lines.extend([f"  {line}" for line in block_lines])
@@ -699,3 +699,5 @@ def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
         pretty_list += f'{item_prefix}{option}\n'
 
     return pretty_list
+
+write_resource_code(provider='azurerm', resource='key_vault')
