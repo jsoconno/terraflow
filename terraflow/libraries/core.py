@@ -437,6 +437,14 @@ def recurse_schema(
         if required_blocks_only and not required_block or "_".join(kwargs['block_hierarchy'] + [block]) in ignore_blocks or required_block == None:
             continue
         else:
+            # Write a comment describing the constraints of the block
+            required_blocks_message = 'required' if required_block else 'optional'
+            min_blocks_message = 'no minimum number of items' if block_min_items == None else f'a minimum of {block_min_items} items'
+            max_blocks_message = 'no maximum number of items' if block_max_items == None else f'a maximum of {block_max_items} items'
+
+            lines.append(
+                f'\n# This block is {required_blocks_message} with {min_blocks_message} and {max_blocks_message}'
+            )
             block_lines = recurse_schema(schema=block_schema, func=func, add_descriptions=add_descriptions, *args, **kwargs)
             lines.append(f"{block} {{")
             lines.extend([f"  {line}" for line in block_lines])
@@ -447,8 +455,6 @@ def recurse_schema(
 
 def generate_config_code(attribute, attribute_schema, documentation_text, **kwargs):
 
-    # line_of_code = f'{attribute} = var.{"_".join(block_hierarchy + [attribute])}'
-    # print(kwargs)
     line_of_code = write_attribute(
         attribute=attribute,
         attribute_schema=attribute_schema,
