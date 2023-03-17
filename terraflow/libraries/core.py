@@ -290,7 +290,7 @@ def recurse_schema(
         attributes = schema.get("block").get("attributes", None)
         blocks = schema.get("block").get("block_types", None)
         # Collect the documentation
-        if add_descriptions or output_variables:
+        if add_descriptions:
             documentation_text = get_resource_documentation(
                 namespace=namespace,
                 provider=provider,

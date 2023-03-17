@@ -135,3 +135,7 @@ dmypy.json
 .terraform
 .terraform.lock.hcl
 terraform/*.json
+/*.tf
+
+# Terraflow
+*schema.json
