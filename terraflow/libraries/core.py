@@ -82,9 +82,10 @@ def get_schema(
                 # Allow resource shorthand without the provider
                 if resource and not provider in resource:
                     resource = f'{provider}_{resource}'
-                schema = schema["provider_schemas"][
-                    f"registry.terraform.io/{namespace}/{provider}"
-                ][f"{scope}_schemas"][resource]
+                try:
+                    schema = schema["provider_schemas"][f"registry.terraform.io/{namespace}/{provider}"][f"{scope}_schemas"][resource]
+                except Exception as e:
+                    print(f'{colors(color="WARNING")}\nThe value {str(e)} is invalid.  Did you mean {resource.replace("-", "_").replace(provider + "_", "")}?\n{colors()}')
         else:
 
             schema = schema["provider_schemas"][
@@ -201,8 +202,6 @@ def set_attribute_value(
     """
     Creates an attributes variable name based on the nesting of blocks and attributes name with an optional prefix.
     """
-    if '_'.join(block_hierarchy) in dynamic_blocks:
-        print('stop')
     # Add the variable prefix, if one is provided
     if attribute_value_prefix:
         attribute_value = "_".join(
@@ -226,20 +225,11 @@ def set_attribute_value(
             attribute_value = f'"{attribute_default}"'
     else:
         if dynamic_blocks and block_hierarchy:
-            # for block in block_hierarchy:
-            #     if block in dynamic_blocks:
-            #         attribute_value = f'{block}.value["{attribute_value}"]'
-            print(f'{"_".join(block_hierarchy)} - {dynamic_blocks} - {attribute_value}')
-            # if all(elem in block_hierarchy for elem in dynamic_blocks):
             if "_".join(block_hierarchy) in dynamic_blocks:
                 attribute_value = f'{"_".join(block_hierarchy)}.value["{attribute}"]'
             elif all(elem in block_hierarchy for elem in dynamic_blocks):
-                print('what')
                 x = "_".join(block_hierarchy[1:])
                 attribute_value = f'{block_hierarchy[0]}.value["{x + "_" if x else x}{attribute}"]'
-            # if "_".join(block_hierarchy) in dynamic_blocks:
-            #     x = "_".join(block_hierarchy[1:])
-            #     attribute_value = f'{block_hierarchy[0]}.value["{x + "_" if x else x}{attribute}"]'
         else:
             # Otherwise, set as a variable using the nested attribute value
             attribute_value = f'var.{attribute_value}'
@@ -327,7 +317,7 @@ def get_resource_documentation(namespace, provider, resource, scope='resource'):
         documentation = re.sub(r'(\n\s*)+', '\n', documentation)  # Normalize newlines
         documentation = documentation.strip()
     else:
-        print('Documentation not found.')
+        print(f'{colors(color="WARNING")}Documentation not found.{colors()}')
         documentation = None
 
     return documentation
