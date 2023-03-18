@@ -113,14 +113,14 @@ def write_to_file(text, filename, regex_pattern=None):
         with open(filename, 'r+') as f:
             # Read the file contents
             contents = f.read()
-            if not contents.endswith('\n'):
-                contents += '\n\n'
     except:
         contents = ''
         
     with open(filename, 'w+') as f:
         # If the pattern matches, append or overwrite the text
         if contents != '':
+            if not contents.endswith('\n'):
+                contents += '\n\n'
             if re.search(regex_pattern, contents, flags=re.MULTILINE):
                 current_text = re.findall(pattern=regex_pattern, string=contents, flags=re.MULTILINE)[0]
                 text = contents.replace(current_text, text)
@@ -196,11 +196,13 @@ def format_attribute_type(attribute_type):
 
 
 def set_attribute_value(
-    attribute, block_hierarchy, attribute_value_prefix=None, attribute_defaults={}
+    attribute, block_hierarchy, attribute_value_prefix=None, attribute_defaults={}, dynamic_blocks=[]
 ):
     """
     Creates an attributes variable name based on the nesting of blocks and attributes name with an optional prefix.
     """
+    if '_'.join(block_hierarchy) in dynamic_blocks:
+        print('stop')
     # Add the variable prefix, if one is provided
     if attribute_value_prefix:
         attribute_value = "_".join(
@@ -216,15 +218,31 @@ def set_attribute_value(
     # If an attribute default is set for the attribute
     if attribute_default:
         # If there is a period in the default value
-        if "." in attribute_default:
+        if '.' in attribute_default:
             # Set the value without quotes for things like resource_type.name.attribute
             attribute_value = attribute_default
         else:
             # Otherwise, set as a string with quotes
             attribute_value = f'"{attribute_default}"'
     else:
-        # Otherwise, set as a variable using the nested attribute value
-        attribute_value = f"var.{attribute_value}"
+        if dynamic_blocks and block_hierarchy:
+            # for block in block_hierarchy:
+            #     if block in dynamic_blocks:
+            #         attribute_value = f'{block}.value["{attribute_value}"]'
+            print(f'{"_".join(block_hierarchy)} - {dynamic_blocks} - {attribute_value}')
+            # if all(elem in block_hierarchy for elem in dynamic_blocks):
+            if "_".join(block_hierarchy) in dynamic_blocks:
+                attribute_value = f'{"_".join(block_hierarchy)}.value["{attribute}"]'
+            elif all(elem in block_hierarchy for elem in dynamic_blocks):
+                print('what')
+                x = "_".join(block_hierarchy[1:])
+                attribute_value = f'{block_hierarchy[0]}.value["{x + "_" if x else x}{attribute}"]'
+            # if "_".join(block_hierarchy) in dynamic_blocks:
+            #     x = "_".join(block_hierarchy[1:])
+            #     attribute_value = f'{block_hierarchy[0]}.value["{x + "_" if x else x}{attribute}"]'
+        else:
+            # Otherwise, set as a variable using the nested attribute value
+            attribute_value = f'var.{attribute_value}'
 
     return attribute_value
 
@@ -391,7 +409,6 @@ def recurse_schema(
 ):
     # Start with an empty list for the lines of code and block hierarchy
     lines = []
-    block_hierarchy = kwargs['block_hierarchy']
 
     # Collect the documentation
     if add_descriptions:
@@ -425,7 +442,7 @@ def recurse_schema(
 
     # Recursively call this function on each block
     for block, block_schema in blocks.items():
-        block_hierarchy.append(block)
+        kwargs['block_hierarchy'].append(block)
         # Set min and max items for block
         block_min_items = schema.get("min_items", None)
         block_max_items = schema.get("max_items", None)
@@ -434,7 +451,8 @@ def recurse_schema(
         required_block = is_required_block(block_min_items=block_min_items)
 
         # Skip blocks
-        if required_blocks_only and not required_block or "_".join(kwargs['block_hierarchy'] + [block]) in ignore_blocks or required_block == None:
+        if required_blocks_only and not required_block or "_".join(kwargs['block_hierarchy']) in ignore_blocks or required_block == None:
+            del kwargs['block_hierarchy'][-1:]
             continue
         else:
             # Write a comment describing the constraints of the block
@@ -445,11 +463,16 @@ def recurse_schema(
             lines.append(
                 f'\n# This block is {required_blocks_message} with {min_blocks_message} and {max_blocks_message}'
             )
-            block_lines = recurse_schema(schema=block_schema, func=func, add_descriptions=add_descriptions, *args, **kwargs)
-            lines.append(f"{block} {{")
-            lines.extend([f"  {line}" for line in block_lines])
-            lines.append("}")
-            del block_hierarchy[-1:]
+            block_lines = recurse_schema(schema=block_schema, func=func, add_descriptions=add_descriptions, ignore_attributes=ignore_attributes, ignore_blocks=ignore_blocks, required_attributes_only=required_attributes_only, required_blocks_only=required_blocks_only, *args, **kwargs)
+            if '_'.join(kwargs['block_hierarchy']) in kwargs['dynamic_blocks']:
+                lines.append(f'dynamic "{block}" {{\n  for_each = var.{"_".join(kwargs["block_hierarchy"])}\n  content {{')
+                lines.extend([f'  {line}' for line in block_lines])
+                lines.append('}\n}')
+            else:
+                lines.append(f'{block} {{')
+                lines.extend([f'  {line}' for line in block_lines])
+                lines.append('}')
+            del kwargs['block_hierarchy'][-1:]
 
     return lines
 
@@ -461,7 +484,8 @@ def generate_config_code(attribute, attribute_schema, documentation_text, **kwar
         documentation_text=documentation_text,
         block_hierarchy=kwargs['block_hierarchy'],
         attribute_value_prefix=kwargs['attribute_value_prefix'],
-        attribute_defaults=kwargs['attribute_defaults']
+        attribute_defaults=kwargs['attribute_defaults'],
+        dynamic_blocks=kwargs['dynamic_blocks']
     )
 
     return line_of_code
@@ -472,7 +496,8 @@ def write_attribute(attribute, attribute_schema, documentation_text, **kwargs):
         attribute=attribute,
         block_hierarchy=kwargs['block_hierarchy'],
         attribute_value_prefix=kwargs['attribute_value_prefix'],
-        attribute_defaults=kwargs['attribute_defaults']
+        attribute_defaults=kwargs['attribute_defaults'],
+        dynamic_blocks=kwargs['dynamic_blocks']
     )
 
     # Get the attribute description if the user providers documentation text
@@ -504,6 +529,7 @@ def write_provider_code(
     namespace='hashicorp',
     ignore_attributes=[],
     ignore_blocks=[],
+    dynamic_blocks=[],
     required_attributes_only=False,
     required_blocks_only=False,
     add_descriptions=False,
@@ -531,6 +557,7 @@ def write_provider_code(
         block_hierarchy=[],
         ignore_attributes=ignore_attributes,
         ignore_blocks=ignore_blocks,
+        dynamic_blocks=dynamic_blocks,
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
@@ -563,6 +590,7 @@ def write_resource_code(
     namespace='hashicorp',
     ignore_attributes=[],
     ignore_blocks=[],
+    dynamic_blocks=[],
     required_attributes_only=False,
     required_blocks_only=False,
     add_descriptions=False,
@@ -580,6 +608,7 @@ def write_resource_code(
         filename=schema
     )
 
+    resource = "_".join([provider, resource]) if not provider in resource else resource
     header = f'resource "{resource}" "{name}" {{'
     regex_pattern = rf'^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
 
@@ -593,6 +622,7 @@ def write_resource_code(
         block_hierarchy=[],
         ignore_attributes=ignore_attributes,
         ignore_blocks=ignore_blocks,
+        dynamic_blocks=dynamic_blocks,
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
@@ -625,6 +655,7 @@ def write_data_source_code(
     namespace='hashicorp',
     ignore_attributes=[],
     ignore_blocks=[],
+    dynamic_blocks=[],
     required_attributes_only=False,
     required_blocks_only=False,
     add_descriptions=False,
@@ -642,6 +673,7 @@ def write_data_source_code(
         filename=schema
     )
 
+    resource = "_".join([provider, resource]) if not provider in resource else resource
     header = f'data "{resource}" "{name}" {{'
     regex_pattern = rf'^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
 
@@ -655,6 +687,7 @@ def write_data_source_code(
         block_hierarchy=[],
         ignore_attributes=ignore_attributes,
         ignore_blocks=ignore_blocks,
+        dynamic_blocks=dynamic_blocks,
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
@@ -706,4 +739,4 @@ def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
 
     return pretty_list
 
-write_resource_code(provider='azurerm', resource='key_vault')
+# write_resource_code(provider='azurerm', resource='storage_account', dynamic_blocks=['share_properties_smb'])

@@ -121,6 +121,14 @@ options = {
         required=False,
         help=''
     ),
+    'dynamic_block': click.option(
+        '--dynamic-block',
+        type=str,
+        default=None,
+        multiple=True,
+        required=False,
+        help=''
+    ),
     'attribute_default': click.option(
         '--attribute-default',
         type=str,
@@ -189,6 +197,7 @@ def code_options(func):
     func = options['required_blocks_only'](func)
     func = options['add_descriptions'](func)
     func = options['ignore_block'](func)
+    func = options['dynamic_block'](func)
     func = options['ignore_attribute'](func)
     func = options['attribute_default'](func)
     func = options['attribute_value_prefix'](func)
