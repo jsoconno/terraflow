@@ -20,6 +20,7 @@ Development items
 - [x] Add comments to blocks to specify if more than one are allowed
 - [x] Make blocks that allow more than one item dynamic by default
 - [ ] Add ability to add 'Terraform docs: https://...' for resources / data sources
+- [ ] Make it so if there is only one provider it is used by default.
 
 # CLI commands
 # tool-name 
