@@ -11,13 +11,14 @@ Development items
 - [x] Add a default variable for the attribute
 - [x] Add a prefix to variables
 - [x] Automatically add descriptions to attributes
-- [ ] Add variables to a variables file automatically
+- [ ] Add command to add variables for a given resource
 - [ ] Select the name and location of the variables file
+- [ ] Rename config-filename and schema-filename inputs
 - [x] Use block names in the name of nested variables
 - [x] Set default values for specific variables (static or reference)
 - [x] Add comments to blocks to specify if they are required or not
 - [x] Add comments to blocks to specify if more than one are allowed
-- [ ] Make blocks that allow more than one item dynamic by default
+- [x] Make blocks that allow more than one item dynamic by default
 
 # CLI commands
 # tool-name 
