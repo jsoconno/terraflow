@@ -3,9 +3,24 @@ PYTHON = $(VENV)/bin/python3
 PIP = $(VENV)/bin/pip
 TERRAFLOW_FILES = ./terraflow/**/*.py
 
+.PHONY: help install install-dev test clean build dist lint run hooks document
+
+help:
+	@echo "Available targets:"
+	@echo "  help        Show this help"
+	@echo "  run         Create a virtual environment and show instructions"
+	@echo "  hooks       Set up git hooks"
+	@echo "  install-dev Install the CLI application in editable mode with development dependencies"
+	@echo "  test        Run tests"
+	@echo "  document    Generate documentation"
+	@echo "  clean       Clean up build artifacts and temporary files"
+	@echo "  build       Build the CLI application"
+	@echo "  dist        Package the CLI application for distribution"
+	@echo "  lint        Run linting checks on the codebase"
+
 run: $(VENV)/bin/activate
 	@echo "\nYour python virtual environment is ready!  To activate it, run the following command:\n\n- source $(VENV)/bin/activate"
-	@echo "\nTo install the latest cli, run:\n\n- make install\n"
+	@echo "\nTo install the latest cli, run:\n\n- make install-dev\n"
 	@echo "Happy coding!"
 
 $(VENV)/bin/activate: requirements.txt
@@ -15,19 +30,30 @@ $(VENV)/bin/activate: requirements.txt
 hooks:
 	git config core.hooksPath .githooks
 
-install:
-	pip3 install --editable .
+install-dev:
+	$(PIP) install -e .[dev]
+
+test:
+	$(PYTHON) -m pytest
 
 document:
-	python3 auto-generate-docs.py
+	$(PYTHON) auto-generate-docs.py
 
-make lint:
-	pylint $(TERRAFLOW_FILES)
-	mypy $(TERRAFLOW_FILES)
+build: clean
+	$(PYTHON) setup.py build
 
-make format:
-	black $(TERRAFLOW_FILES)
+dist: clean
+	$(PYTHON) setup.py sdist bdist_wheel
+
+lint:
+	$(PYTHON) -m flake8
+	$(PYTHON) -m black --check .
+	$(PYTHON) -m mypy .
+
+black:
+	$(PYTHON) -m black .
 
 clean:
-	rm -rf __pycache__
-	rm -rf $(VENV)
+	find . -type f -name '*.pyc' -delete
+	find . -type d -name '__pycache__' -exec rm -rf {} +
+	rm -rf build dist *.egg-info

@@ -10,6 +10,7 @@ import errno
 
 from terraflow.libraries.constants import *
 
+
 def colors(color="END"):
     """
     A standard set of colors used for printing to command line.
@@ -28,6 +29,7 @@ def colors(color="END"):
 
     return colors[color]
 
+
 def get_schema(
     namespace="hashicorp",
     provider=None,
@@ -35,32 +37,34 @@ def get_schema(
     resource=None,
     attribute=None,
     blocks=None,
-    filename=None
+    filename=None,
 ):
     """
     Returns the schema for a provider as a dictionary.
     """
     # Determine if there is an existing schema file locally
-    if filename == None and os.path.exists('schema.json'):
-        filename = 'schema.json'
-    
+    if filename == None and os.path.exists("schema.json"):
+        filename = "schema.json"
+
     # Get the full schema
     if filename:
         with open(filename, "r") as schema:
             schema = json.loads(schema.read())
     else:
         try:
-            subprocess.run(
-                ["terraform", "init"], capture_output=True, text=True
-            )
+            subprocess.run(["terraform", "init"], capture_output=True, text=True)
             schema = json.loads(
                 subprocess.check_output(
                     ["terraform", "providers", "schema", "-json"]
                 ).decode("utf-8")
             )
-            print(f'\n{colors("OK_GREEN")}Success:{colors()} The schema was downloaded successfully.\n')
+            print(
+                f'\n{colors("OK_GREEN")}Success:{colors()} The schema was downloaded successfully.\n'
+            )
         except:
-            print(f'\n{colors("WARNING")}Warning:{colors()} The dependency lock file does not match the current configuration.  Running terraform init -upgrade to collect the latest schema for the selected provider versions.\n')
+            print(
+                f'\n{colors("WARNING")}Warning:{colors()} The dependency lock file does not match the current configuration.  Running terraform init -upgrade to collect the latest schema for the selected provider versions.\n'
+            )
             subprocess.run(
                 ["terraform", "init", "-upgrade"], capture_output=True, text=True
             )
@@ -69,7 +73,9 @@ def get_schema(
                     ["terraform", "providers", "schema", "-json"]
                 ).decode("utf-8")
             )
-            print(f'\n{colors("OK_GREEN")}Success:{colors()} The schema was downloaded successfully.\n')
+            print(
+                f'\n{colors("OK_GREEN")}Success:{colors()} The schema was downloaded successfully.\n'
+            )
 
     # Get scope schema
     if namespace and provider:
@@ -81,13 +87,16 @@ def get_schema(
             elif scope == "resource" or scope == "data_source":
                 # Allow resource shorthand without the provider
                 if resource and not provider in resource:
-                    resource = f'{provider}_{resource}'
+                    resource = f"{provider}_{resource}"
                 try:
-                    schema = schema["provider_schemas"][f"registry.terraform.io/{namespace}/{provider}"][f"{scope}_schemas"][resource]
+                    schema = schema["provider_schemas"][
+                        f"registry.terraform.io/{namespace}/{provider}"
+                    ][f"{scope}_schemas"][resource]
                 except Exception as e:
-                    print(f'{colors(color="WARNING")}\nThe value {str(e)} is invalid.  Did you mean {resource.replace("-", "_").replace(provider + "_", "")}?\n{colors()}')
+                    print(
+                        f'{colors(color="WARNING")}\nThe value {str(e)} is invalid.  Did you mean {resource.replace("-", "_").replace(provider + "_", "")}?\n{colors()}'
+                    )
         else:
-
             schema = schema["provider_schemas"][
                 f"registry.terraform.io/{namespace}/{provider}"
             ]
@@ -104,35 +113,42 @@ def get_schema(
 
     return schema
 
-def download_schema(schema, filename='schema'):
+
+def download_schema(schema, filename="schema"):
     # Create file
     with open(f"{filename}.json", "w+") as f:
         f.write(json.dumps(schema))
 
+
 def write_to_file(text, filename, regex_pattern=None):
     try:
-        with open(filename, 'r+') as f:
+        with open(filename, "r+") as f:
             # Read the file contents
             contents = f.read()
     except:
-        contents = ''
-        
-    with open(filename, 'w+') as f:
+        contents = ""
+
+    with open(filename, "w+") as f:
         # If the pattern matches, append or overwrite the text
-        if contents != '':
-            if not contents.endswith('\n'):
-                contents += '\n\n'
+        if contents != "":
+            if not contents.endswith("\n"):
+                contents += "\n\n"
             if re.search(regex_pattern, contents, flags=re.MULTILINE):
-                current_text = re.findall(pattern=regex_pattern, string=contents, flags=re.MULTILINE)[0]
+                current_text = re.findall(
+                    pattern=regex_pattern, string=contents, flags=re.MULTILINE
+                )[0]
                 text = contents.replace(current_text, text)
             else:
                 text = contents + text
         else:
             text = contents + text
-        
+
         f.write(text.strip())
 
-def list_items(schema, namespace="hashicorp", provider=None, scope="resource", keywords=None):
+
+def list_items(
+    schema, namespace="hashicorp", provider=None, scope="resource", keywords=None
+):
     """
     Returns an available list of providers based on the configuration.
     """
@@ -152,7 +168,7 @@ def list_items(schema, namespace="hashicorp", provider=None, scope="resource", k
                     f"registry.terraform.io/{namespace}/{provider}"
                 ][f"{scope}_schemas"]
                 for source in schema:
-                    items.append(source.replace(f'{provider}_', ''))
+                    items.append(source.replace(f"{provider}_", ""))
         else:
             print(f"The scope must be one of {ALLOWED_SCOPES}.")
     except:
@@ -162,6 +178,7 @@ def list_items(schema, namespace="hashicorp", provider=None, scope="resource", k
         items = [item for item in items if any(keyword in item for keyword in keywords)]
 
     return items
+
 
 # def get_attribute_value(attribute_schema, attribute):
 #     """
@@ -197,7 +214,11 @@ def format_attribute_type(attribute_type):
 
 
 def set_attribute_value(
-    attribute, block_hierarchy, attribute_value_prefix=None, attribute_defaults={}, dynamic_blocks=[]
+    attribute,
+    block_hierarchy,
+    attribute_value_prefix=None,
+    attribute_defaults={},
+    dynamic_blocks=[],
 ):
     """
     Creates an attributes variable name based on the nesting of blocks and attributes name with an optional prefix.
@@ -217,7 +238,7 @@ def set_attribute_value(
     # If an attribute default is set for the attribute
     if attribute_default:
         # If there is a period in the default value
-        if '.' in attribute_default:
+        if "." in attribute_default:
             # Set the value without quotes for things like resource_type.name.attribute
             attribute_value = attribute_default
         else:
@@ -229,10 +250,12 @@ def set_attribute_value(
                 attribute_value = f'{"_".join(block_hierarchy)}.value["{attribute}"]'
             elif all(elem in block_hierarchy for elem in dynamic_blocks):
                 x = "_".join(block_hierarchy[1:])
-                attribute_value = f'{block_hierarchy[0]}.value["{x + "_" if x else x}{attribute}"]'
+                attribute_value = (
+                    f'{block_hierarchy[0]}.value["{x + "_" if x else x}{attribute}"]'
+                )
         else:
             # Otherwise, set as a variable using the nested attribute value
-            attribute_value = f'var.{attribute_value}'
+            attribute_value = f"var.{attribute_value}"
 
     return attribute_value
 
@@ -245,7 +268,7 @@ def is_required_attribute(attribute_schema):
     attribute_required = None
 
     # Determine if an attribute is required or optional
-    if not 'computed' in attribute_schema:
+    if not "computed" in attribute_schema:
         if "required" in attribute_schema:
             attribute_required = True
         elif "optional" in attribute_schema:
@@ -296,25 +319,30 @@ def levenshtein_distance(s, t):
 
     return normalized_distance
 
-def get_resource_documentation(namespace, provider, resource, scope='resource'):
-    url = f'https://registry.terraform.io/v1/providers/{namespace}/{provider}'
+
+def get_resource_documentation(namespace, provider, resource, scope="resource"):
+    url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"
     response = json.loads(requests.get(url).text)
 
     docs_path = None
-    
+
     for doc in response["docs"]:
-        if doc["title"] == resource or doc["title"] == resource.replace(f'{provider}_', '') and doc["category"] == f'{scope}s':
+        if (
+            doc["title"] == resource
+            or doc["title"] == resource.replace(f"{provider}_", "")
+            and doc["category"] == f"{scope}s"
+        ):
             docs_path = doc["path"]
 
     if docs_path:
-        docs_url = f'https://github.com/{namespace}/terraform-provider-{provider}/blob/main/{docs_path}'
+        docs_url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/main/{docs_path}"
 
         html_text = requests.get(docs_url).content.decode()
         soup = BeautifulSoup(html_text, features="html.parser")
 
         # Extract the text from the HTML document while preserving special characters
-        documentation = re.sub(r'<[^>]*>', '', soup.text)  # Remove all HTML tags
-        documentation = re.sub(r'(\n\s*)+', '\n', documentation)  # Normalize newlines
+        documentation = re.sub(r"<[^>]*>", "", soup.text)  # Remove all HTML tags
+        documentation = re.sub(r"(\n\s*)+", "\n", documentation)  # Normalize newlines
         documentation = documentation.strip()
     else:
         print(f'{colors(color="WARNING")}Documentation not found.{colors()}')
@@ -322,12 +350,17 @@ def get_resource_documentation(namespace, provider, resource, scope='resource'):
 
     return documentation
 
-def get_resource_attribute_description(documentation_text, attribute, block_hierarchy=None):
+
+def get_resource_attribute_description(
+    documentation_text, attribute, block_hierarchy=None
+):
     # Extract the attribute descriptions from the text
-    pattern = rf'(^{attribute})\s+-\s+(.*)'
-    attribute_matches = re.findall(pattern=pattern, string=documentation_text, flags=re.MULTILINE)
+    pattern = rf"(^{attribute})\s+-\s+(.*)"
+    attribute_matches = re.findall(
+        pattern=pattern, string=documentation_text, flags=re.MULTILINE
+    )
     attribute_matches = [str(x[1]) for x in attribute_matches]
-        
+
     # if there is more than one match on an attribute name
     if len(attribute_matches) > 1:
         # Check is there is a list of blocks
@@ -342,24 +375,28 @@ def get_resource_attribute_description(documentation_text, attribute, block_hier
                 # If the current block name is in the match
                 if current_block in match:
                     # Add a multiplier if the exact block name is in the string
-                    normalized_distance = normalized_distance - .1
+                    normalized_distance = normalized_distance - 0.1
                 else:
                     # For each key word in the block list
                     for keyword in block_hierarchy:
                         # Go through each word in the description text
-                        for word in match.split(' '):
+                        for word in match.split(" "):
                             # Calculate a similarity score
-                            similarity_score = difflib.SequenceMatcher(None, keyword.lower().replace('_', ' '), word.lower()).ratio()
+                            similarity_score = difflib.SequenceMatcher(
+                                None, keyword.lower().replace("_", " "), word.lower()
+                            ).ratio()
                             # And if that score is below a threshold, add another multiplier
-                            if similarity_score > .8:
+                            if similarity_score > 0.8:
                                 # print(f'{keyword} -> {word} = score: {similarity_score}')
-                                normalized_distance = normalized_distance - .1
-                        # elif word 
+                                normalized_distance = normalized_distance - 0.1
+                        # elif word
                 # Create a list of scores
                 levenshtein_distances.append(normalized_distance)
 
             # Sort and get the lowest scoring description
-            levenshtein_distances, descriptions = zip(*sorted(zip(levenshtein_distances, attribute_matches)))
+            levenshtein_distances, descriptions = zip(
+                *sorted(zip(levenshtein_distances, attribute_matches))
+            )
 
             # Select the description with the lowest distance
             description = descriptions[0]
@@ -372,19 +409,19 @@ def get_resource_attribute_description(documentation_text, attribute, block_hier
     elif len(attribute_matches) == 1:
         description = attribute_matches[0]
     else:
-        description = ''
-
+        description = ""
 
     return description
 
-def convert_strings_to_dict(text, delimiter='='):
-    
+
+def convert_strings_to_dict(text, delimiter="="):
     dictionary = {}
     for x in text:
         k, v = x.split(delimiter)
         dictionary[k] = v
 
     return dictionary
+
 
 def recurse_schema(
     schema,
@@ -395,7 +432,7 @@ def recurse_schema(
     required_attributes_only=False,
     required_blocks_only=False,
     *args,
-    **kwargs
+    **kwargs,
 ):
     # Start with an empty list for the lines of code and block hierarchy
     lines = []
@@ -404,15 +441,15 @@ def recurse_schema(
     if add_descriptions:
         try:
             documentation_text = get_resource_documentation(
-                namespace=kwargs['namespace'],
-                provider=kwargs['provider'],
-                resource=kwargs['resource']
+                namespace=kwargs["namespace"],
+                provider=kwargs["provider"],
+                resource=kwargs["resource"],
             )
         except:
             documentation_text = None
     else:
         documentation_text = None
-    
+
     # Get the attributes and blocks from the schema
     attributes = schema.get("block", {}).get("attributes", {})
     blocks = schema.get("block", {}).get("block_types", {})
@@ -420,19 +457,27 @@ def recurse_schema(
     # Call the function on each attribute
     for attribute, attribute_schema in attributes.items():
         # Determine if the attribute is required
-        required_attribute = is_required_attribute(
-            attribute_schema=attribute_schema
-        )
-        if required_attributes_only and not required_attribute or "_".join(kwargs['block_hierarchy'] + [attribute]) in ignore_attributes or required_attribute == None:
+        required_attribute = is_required_attribute(attribute_schema=attribute_schema)
+        if (
+            required_attributes_only
+            and not required_attribute
+            or "_".join(kwargs["block_hierarchy"] + [attribute]) in ignore_attributes
+            or required_attribute == None
+        ):
             continue
         else:
-            result = func(attribute=attribute, attribute_schema=attribute_schema, documentation_text=documentation_text, **kwargs)
+            result = func(
+                attribute=attribute,
+                attribute_schema=attribute_schema,
+                documentation_text=documentation_text,
+                **kwargs,
+            )
             if result is not None:
                 lines.append(result)
 
     # Recursively call this function on each block
     for block, block_schema in blocks.items():
-        kwargs['block_hierarchy'].append(block)
+        kwargs["block_hierarchy"].append(block)
         # Set min and max items for block
         block_min_items = schema.get("min_items", None)
         block_max_items = schema.get("max_items", None)
@@ -441,53 +486,79 @@ def recurse_schema(
         required_block = is_required_block(block_min_items=block_min_items)
 
         # Skip blocks
-        if required_blocks_only and not required_block or "_".join(kwargs['block_hierarchy']) in ignore_blocks or required_block == None:
-            del kwargs['block_hierarchy'][-1:]
+        if (
+            required_blocks_only
+            and not required_block
+            or "_".join(kwargs["block_hierarchy"]) in ignore_blocks
+            or required_block == None
+        ):
+            del kwargs["block_hierarchy"][-1:]
             continue
         else:
             # Write a comment describing the constraints of the block
-            required_blocks_message = 'required' if required_block else 'optional'
-            min_blocks_message = 'no minimum number of items' if block_min_items == None else f'a minimum of {block_min_items} items'
-            max_blocks_message = 'no maximum number of items' if block_max_items == None else f'a maximum of {block_max_items} items'
+            required_blocks_message = "required" if required_block else "optional"
+            min_blocks_message = (
+                "no minimum number of items"
+                if block_min_items == None
+                else f"a minimum of {block_min_items} items"
+            )
+            max_blocks_message = (
+                "no maximum number of items"
+                if block_max_items == None
+                else f"a maximum of {block_max_items} items"
+            )
 
             lines.append(
-                f'\n# This block is {required_blocks_message} with {min_blocks_message} and {max_blocks_message}'
+                f"\n# This block is {required_blocks_message} with {min_blocks_message} and {max_blocks_message}"
             )
-            block_lines = recurse_schema(schema=block_schema, func=func, add_descriptions=add_descriptions, ignore_attributes=ignore_attributes, ignore_blocks=ignore_blocks, required_attributes_only=required_attributes_only, required_blocks_only=required_blocks_only, *args, **kwargs)
-            if '_'.join(kwargs['block_hierarchy']) in kwargs['dynamic_blocks']:
-                lines.append(f'dynamic "{block}" {{\n  for_each = var.{"_".join(kwargs["block_hierarchy"])}\n  content {{')
-                lines.extend([f'  {line}' for line in block_lines])
-                lines.append('}\n}')
+            block_lines = recurse_schema(
+                schema=block_schema,
+                func=func,
+                add_descriptions=add_descriptions,
+                ignore_attributes=ignore_attributes,
+                ignore_blocks=ignore_blocks,
+                required_attributes_only=required_attributes_only,
+                required_blocks_only=required_blocks_only,
+                *args,
+                **kwargs,
+            )
+            if "_".join(kwargs["block_hierarchy"]) in kwargs["dynamic_blocks"]:
+                lines.append(
+                    f'dynamic "{block}" {{\n  for_each = var.{"_".join(kwargs["block_hierarchy"])}\n  content {{'
+                )
+                lines.extend([f"  {line}" for line in block_lines])
+                lines.append("}\n}")
             else:
-                lines.append(f'{block} {{')
-                lines.extend([f'  {line}' for line in block_lines])
-                lines.append('}')
-            del kwargs['block_hierarchy'][-1:]
+                lines.append(f"{block} {{")
+                lines.extend([f"  {line}" for line in block_lines])
+                lines.append("}")
+            del kwargs["block_hierarchy"][-1:]
 
     return lines
 
-def generate_config_code(attribute, attribute_schema, documentation_text, **kwargs):
 
+def generate_config_code(attribute, attribute_schema, documentation_text, **kwargs):
     line_of_code = write_attribute(
         attribute=attribute,
         attribute_schema=attribute_schema,
         documentation_text=documentation_text,
-        block_hierarchy=kwargs['block_hierarchy'],
-        attribute_value_prefix=kwargs['attribute_value_prefix'],
-        attribute_defaults=kwargs['attribute_defaults'],
-        dynamic_blocks=kwargs['dynamic_blocks']
+        block_hierarchy=kwargs["block_hierarchy"],
+        attribute_value_prefix=kwargs["attribute_value_prefix"],
+        attribute_defaults=kwargs["attribute_defaults"],
+        dynamic_blocks=kwargs["dynamic_blocks"],
     )
 
     return line_of_code
+
 
 def write_attribute(attribute, attribute_schema, documentation_text, **kwargs):
     # Get the value that should be set for the attribute
     attribute_value = set_attribute_value(
         attribute=attribute,
-        block_hierarchy=kwargs['block_hierarchy'],
-        attribute_value_prefix=kwargs['attribute_value_prefix'],
-        attribute_defaults=kwargs['attribute_defaults'],
-        dynamic_blocks=kwargs['dynamic_blocks']
+        block_hierarchy=kwargs["block_hierarchy"],
+        attribute_value_prefix=kwargs["attribute_value_prefix"],
+        attribute_defaults=kwargs["attribute_defaults"],
+        dynamic_blocks=kwargs["dynamic_blocks"],
     )
 
     # Get the attribute description if the user providers documentation text
@@ -496,11 +567,11 @@ def write_attribute(attribute, attribute_schema, documentation_text, **kwargs):
             attribute_description = get_resource_attribute_description(
                 documentation_text=documentation_text,
                 attribute=attribute,
-                block_hierarchy=kwargs['block_hierarchy']
+                block_hierarchy=kwargs["block_hierarchy"],
             )
         except Exception as e:
             attribute_description = get_attribute_value(
-                attribute_schema=attribute_schema, attribute='description'
+                attribute_schema=attribute_schema, attribute="description"
             )
         finally:
             attribute_description = attribute_description.replace('"', "'")
@@ -508,15 +579,16 @@ def write_attribute(attribute, attribute_schema, documentation_text, **kwargs):
         attribute_description = None
 
     if attribute_description:
-        line_of_code = f'{attribute} = {attribute_value} # {attribute_description}'
+        line_of_code = f"{attribute} = {attribute_value} # {attribute_description}"
     else:
-        line_of_code = f'{attribute} = {attribute_value}'
+        line_of_code = f"{attribute} = {attribute_value}"
 
     return line_of_code
 
+
 def write_provider_code(
     provider,
-    namespace='hashicorp',
+    namespace="hashicorp",
     ignore_attributes=[],
     ignore_blocks=[],
     dynamic_blocks=[],
@@ -524,15 +596,12 @@ def write_provider_code(
     required_blocks_only=False,
     add_descriptions=False,
     attribute_defaults={},
-    attribute_value_prefix='',
-    filename='providers.tf',
+    attribute_value_prefix="",
+    filename="providers.tf",
     schema=None,
 ):
     schema = get_schema(
-        namespace=namespace,
-        provider=provider,
-        scope='provider',
-        filename=schema
+        namespace=namespace, provider=provider, scope="provider", filename=schema
     )
 
     header = f'provider "{provider}" {{'
@@ -551,33 +620,30 @@ def write_provider_code(
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
-        attribute_defaults=attribute_defaults
+        attribute_defaults=attribute_defaults,
     )
 
-    footer = '}'
+    footer = "}"
 
     # Combine all code lists
     code = [header] + body + [footer]
 
-     # Turn the code list into text
+    # Turn the code list into text
     code = "\n".join(code)
 
     # Write file
-    write_to_file(
-        text=code,
-        filename=filename,
-        regex_pattern=regex_pattern
-    )
+    write_to_file(text=code, filename=filename, regex_pattern=regex_pattern)
 
     # Format code
     subprocess.run(["terraform", "fmt"])
 
     return code
 
+
 def write_resource_code(
     provider,
     resource,
-    namespace='hashicorp',
+    namespace="hashicorp",
     ignore_attributes=[],
     ignore_blocks=[],
     dynamic_blocks=[],
@@ -585,17 +651,17 @@ def write_resource_code(
     required_blocks_only=False,
     add_descriptions=False,
     attribute_defaults={},
-    attribute_value_prefix='',
-    filename='main.tf',
-    name='main',
+    attribute_value_prefix="",
+    filename="main.tf",
+    name="main",
     schema=None,
 ):
     schema = get_schema(
         namespace=namespace,
         provider=provider,
         resource=resource,
-        scope='resource',
-        filename=schema
+        scope="resource",
+        filename=schema,
     )
 
     resource = "_".join([provider, resource]) if not provider in resource else resource
@@ -616,33 +682,30 @@ def write_resource_code(
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
-        attribute_defaults=attribute_defaults
+        attribute_defaults=attribute_defaults,
     )
 
-    footer = '}'
+    footer = "}"
 
     # Combine all code lists
     code = [header] + body + [footer]
 
-     # Turn the code list into text
+    # Turn the code list into text
     code = "\n".join(code)
 
     # Write file
-    write_to_file(
-        text=code,
-        filename=filename,
-        regex_pattern=regex_pattern
-    )
+    write_to_file(text=code, filename=filename, regex_pattern=regex_pattern)
 
     # Format code
     subprocess.run(["terraform", "fmt"])
 
     return code
 
+
 def write_data_source_code(
     provider,
     resource,
-    namespace='hashicorp',
+    namespace="hashicorp",
     ignore_attributes=[],
     ignore_blocks=[],
     dynamic_blocks=[],
@@ -650,17 +713,17 @@ def write_data_source_code(
     required_blocks_only=False,
     add_descriptions=False,
     attribute_defaults={},
-    attribute_value_prefix='',
-    filename='data-sources.tf',
-    name='main',
+    attribute_value_prefix="",
+    filename="data-sources.tf",
+    name="main",
     schema=None,
 ):
     schema = get_schema(
         namespace=namespace,
         provider=provider,
         resource=resource,
-        scope='data_source',
-        filename=schema
+        scope="data_source",
+        filename=schema,
     )
 
     resource = "_".join([provider, resource]) if not provider in resource else resource
@@ -681,28 +744,25 @@ def write_data_source_code(
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
-        attribute_defaults=attribute_defaults
+        attribute_defaults=attribute_defaults,
     )
 
-    footer = '}'
+    footer = "}"
 
     # Combine all code lists
     code = [header] + body + [footer]
 
-     # Turn the code list into text
+    # Turn the code list into text
     code = "\n".join(code)
 
     # Write file
-    write_to_file(
-        text=code,
-        filename=filename,
-        regex_pattern=regex_pattern
-    )
+    write_to_file(text=code, filename=filename, regex_pattern=regex_pattern)
 
     # Format code
     subprocess.run(["terraform", "fmt"])
 
     return code
+
 
 def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
     """
@@ -719,14 +779,15 @@ def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
         item_prefix = ""
 
     if title:
-        pretty_list += f'{title}\n\n'
+        pretty_list += f"{title}\n\n"
 
     if top:
         items = items[:top]
 
     for option in items:
-        pretty_list += f'{item_prefix}{option}\n'
+        pretty_list += f"{item_prefix}{option}\n"
 
     return pretty_list
+
 
 # write_resource_code(provider='azurerm', resource='storage_account', dynamic_blocks=['share_properties_smb'])
