@@ -19,6 +19,7 @@ Development items
 - [x] Add comments to blocks to specify if they are required or not
 - [x] Add comments to blocks to specify if more than one are allowed
 - [x] Make blocks that allow more than one item dynamic by default
+- [ ] Add ability to add 'Terraform docs: https://...' for resources / data sources
 
 # CLI commands
 # tool-name 

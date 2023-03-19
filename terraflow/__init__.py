@@ -2,6 +2,7 @@ import click
 
 from terraflow.libraries.core import *
 from terraflow.libraries.constants import *
+from terraflow.libraries.documentation import *
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="terraflow")
 
@@ -303,4 +304,32 @@ def provider_create(
     )
 
 
-# terraflow documentation create --namespace --provider --provider-version
+# terraflow documentation
+@terraflow.group("docs")
+def docs():
+    """
+    Docs
+    """
+    pass
+
+
+# terraflow documentation create
+@docs.command("create", context_settings=CONTEXT_SETTINGS)
+@click.option(
+    "--module-path", required=True, default=".", help="Path to the Terraform module"
+)
+@click.option(
+    "--config-filename",
+    default="terraform-docs.yaml",
+    help="Filename for the terraform-docs configuration file",
+)
+def docs_create(module_path, config_filename):
+    """
+    Generate Terraform documentation using terraform-docs.
+
+    This command generates a markdown table of the Terraform module's
+    configuration and saves it to a README.md file in the module's
+    directory.
+    """
+    create_terraform_docs_config_file(config_filename)
+    generate_terraform_docs(module_path, config_filename)
