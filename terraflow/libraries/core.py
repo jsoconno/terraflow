@@ -639,6 +639,17 @@ def write_provider_code(
 
     return code
 
+def delete_provider_code(provider, filename='providers.tf'):
+
+    regex_pattern = rf'^provider\s+"{provider}"\s+{{[\s\S]*?^}}\n*'
+
+    with open(filename, "r") as f:
+        string = f.read()
+
+    result = re.sub(pattern=regex_pattern, repl='', string=string, flags=re.MULTILINE)
+
+    with open(filename, "w") as f:
+        f.write(result)
 
 def write_resource_code(
     provider,
@@ -702,6 +713,20 @@ def write_resource_code(
     return code
 
 
+def delete_resource_code(provider, resource, name, filename='main.tf'):
+
+    resource = "_".join([provider, resource]) if not provider in resource else resource
+    regex_pattern = rf'^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+
+    with open(filename, "r") as f:
+        string = f.read()
+
+    result = re.sub(pattern=regex_pattern, repl='', string=string, flags=re.MULTILINE)
+
+    with open(filename, "w") as f:
+        f.write(result)
+
+
 def write_data_source_code(
     provider,
     resource,
@@ -763,6 +788,18 @@ def write_data_source_code(
 
     return code
 
+def delete_data_source_code(provider, resource, name, filename='main.tf'):
+
+    resource = "_".join([provider, resource]) if not provider in resource else resource
+    regex_pattern = rf'^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+
+    with open(filename, "r") as f:
+        string = f.read()
+
+    result = re.sub(pattern=regex_pattern, repl='', string=string, flags=re.MULTILINE)
+
+    with open(filename, "w") as f:
+        f.write(result)
 
 def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
     """
@@ -791,3 +828,4 @@ def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
 
 
 # write_resource_code(provider='azurerm', resource='storage_account', dynamic_blocks=['share_properties_smb'])
+delete_data_source_code('azurerm', 'azurerm_resource_group', 'main')

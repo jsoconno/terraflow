@@ -191,7 +191,7 @@ def code_options(func):
     return func
 
 
-def download_options(func):
+def file_options(func):
     """
     Description
     """

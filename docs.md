@@ -1,5 +1,5 @@
 # terraflow
-Terraform is an open-source infrastructure as code tool that    allows developers to manage cloud resources through code.    Terraflow provides developers with a set of commands and features    that can help them create, test, and deploy Terraform code more efficiently.    With Terraflow, developers can easily create Terraform modules, templates,   and configurations using a simple and intuitive command line interface.   They can also quickly generate code snippets and boilerplate code, reducing   the amount of manual work required to create new Terraform resources. 
+Terraform is an open-source infrastructure as code tool that   allows developers to manage cloud resources through code.   Terraflow provides developers with a set of commands and features   that can help them create, test, and deploy Terraform code more efficiently.    With Terraflow, developers can easily create Terraform modules, templates,   and configurations using a simple and intuitive command line interface. They   can also quickly generate code snippets and boilerplate code, reducing the   amount of manual work required to create new Terraform resources. 
 ## Usage
 ```
 terraflow [OPTIONS] COMMAND [ARGS]...
@@ -11,66 +11,42 @@ terraflow [OPTIONS] COMMAND [ARGS]...
 ```
 ## Commands
 ```
-  boot         Docs
-  data-source  Docs
-  provider     Docs
-  resource     Docs
-  schema       Schema management.
-  workspace    Docs
+  data-source  Manage Terraform data sources.
+  docs         Manage documentation.
+  provider     Manage Terraform providers.
+  resource     Manage Terraform resources.
+  schema       Work with schemas.
+  workspace    Manage workspaces.
 ```
 ## CLI Help
 ```
 Usage: terraflow [OPTIONS] COMMAND [ARGS]...
 
-  Terraform is an open-source infrastructure as code tool that 
-  allows developers to manage cloud resources through code. 
-  Terraflow provides developers with a set of commands and features 
+  Terraform is an open-source infrastructure as code tool that
+  allows developers to manage cloud resources through code.
+  Terraflow provides developers with a set of commands and features
   that can help them create, test, and deploy Terraform code more efficiently.
 
   With Terraflow, developers can easily create Terraform modules, templates,
-  and configurations using a simple and intuitive command line interface.
-  They can also quickly generate code snippets and boilerplate code, reducing
-  the amount of manual work required to create new Terraform resources.
+  and configurations using a simple and intuitive command line interface. They
+  can also quickly generate code snippets and boilerplate code, reducing the
+  amount of manual work required to create new Terraform resources.
 
 Options:
   --version  Show the version and exit.
   --help     Show this message and exit.
 
 Commands:
-  boot         Docs
-  data-source  Docs
-  provider     Docs
-  resource     Docs
-  schema       Schema management.
-  workspace    Docs
-```
-
-# terraflow boot
-Docs 
-## Usage
-```
-terraflow boot [OPTIONS] COMMAND [ARGS]...
-```
-## Options
-```
-  --help  Show this message and exit.
-```
-## Commands
-```
-None
-```
-## CLI Help
-```
-Usage: terraflow boot [OPTIONS] COMMAND [ARGS]...
-
-  Docs
-
-Options:
-  --help  Show this message and exit.
+  data-source  Manage Terraform data sources.
+  docs         Manage documentation.
+  provider     Manage Terraform providers.
+  resource     Manage Terraform resources.
+  schema       Work with schemas.
+  workspace    Manage workspaces.
 ```
 
 # terraflow workspace
-Docs 
+Manage workspaces. 
 ## Usage
 ```
 terraflow workspace [OPTIONS] COMMAND [ARGS]...
@@ -84,14 +60,14 @@ terraflow workspace [OPTIONS] COMMAND [ARGS]...
   create  Create a workspace.
   delete  Delete a workspace.
   get     Get a workspace.
-  list    Get workspaces.
+  list    List workspaces.
   set     Set a workspace.
 ```
 ## CLI Help
 ```
 Usage: terraflow workspace [OPTIONS] COMMAND [ARGS]...
 
-  Docs
+  Manage workspaces.
 
 Options:
   --help  Show this message and exit.
@@ -100,7 +76,7 @@ Commands:
   create  Create a workspace.
   delete  Delete a workspace.
   get     Get a workspace.
-  list    Get workspaces.
+  list    List workspaces.
   set     Set a workspace.
 ```
 
@@ -153,7 +129,7 @@ Options:
 ```
 
 # terraflow workspace list
-Get workspaces. 
+List workspaces. 
 ## Usage
 ```
 terraflow workspace list [OPTIONS]
@@ -170,7 +146,7 @@ None
 ```
 Usage: terraflow workspace list [OPTIONS]
 
-  Get workspaces.
+  List workspaces.
 
 Options:
   --help  Show this message and exit.
@@ -225,7 +201,7 @@ Options:
 ```
 
 # terraflow schema
-Schema management. 
+Work with schemas. 
 ## Usage
 ```
 terraflow schema [OPTIONS] COMMAND [ARGS]...
@@ -236,23 +212,23 @@ terraflow schema [OPTIONS] COMMAND [ARGS]...
 ```
 ## Commands
 ```
-  download
+  download  Download the schema for the Terraform configuration.
 ```
 ## CLI Help
 ```
 Usage: terraflow schema [OPTIONS] COMMAND [ARGS]...
 
-  Schema management.
+  Work with schemas.
 
 Options:
   --help  Show this message and exit.
 
 Commands:
-  download
+  download  Download the schema for the Terraform configuration.
 ```
 
 # terraflow schema download
-
+Download the schema for the Terraform configuration. 
 ## Usage
 ```
 terraflow schema download [OPTIONS]
@@ -270,13 +246,15 @@ None
 ```
 Usage: terraflow schema download [OPTIONS]
 
+  Download the schema for the Terraform configuration.
+
 Options:
   --filename TEXT
   --help           Show this message and exit.
 ```
 
 # terraflow resource
-Docs 
+Manage Terraform resources. 
 ## Usage
 ```
 terraflow resource [OPTIONS] COMMAND [ARGS]...
@@ -287,25 +265,27 @@ terraflow resource [OPTIONS] COMMAND [ARGS]...
 ```
 ## Commands
 ```
-  create  Docs
-  list
+  create  Create a Terraform resource.
+  delete  Delete a resource from the configuration.
+  list    List available resources for a provider.
 ```
 ## CLI Help
 ```
 Usage: terraflow resource [OPTIONS] COMMAND [ARGS]...
 
-  Docs
+  Manage Terraform resources.
 
 Options:
   --help  Show this message and exit.
 
 Commands:
-  create  Docs
-  list
+  create  Create a Terraform resource.
+  delete  Delete a resource from the configuration.
+  list    List available resources for a provider.
 ```
 
 # terraflow resource list
-
+List available resources for a provider. 
 ## Usage
 ```
 terraflow resource list [OPTIONS]
@@ -325,6 +305,8 @@ None
 ```
 Usage: terraflow resource list [OPTIONS]
 
+  List available resources for a provider.
+
 Options:
   --provider TEXT   The name of the Terraform provider.  [required]
   --namespace TEXT  The namespace for the Terraform provider.  [required]
@@ -333,7 +315,7 @@ Options:
 ```
 
 # terraflow resource create
-Docs 
+Create a Terraform resource. 
 ## Usage
 ```
 terraflow resource create [OPTIONS]
@@ -368,7 +350,7 @@ None
 ```
 Usage: terraflow resource create [OPTIONS]
 
-  Docs
+  Create a Terraform resource.
 
 Options:
   --schema TEXT                  The name of the schema to use for resource
@@ -392,8 +374,42 @@ Options:
   --help                         Show this message and exit.
 ```
 
+# terraflow resource delete
+Delete a resource from the configuration. 
+## Usage
+```
+terraflow resource delete [OPTIONS]
+```
+## Options
+```
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace for the Terraform provider.  [required]
+  --name TEXT       The name of the resource or data source.
+  --resource TEXT   The target Terraform resource name.  [required]
+  --filename TEXT
+  --help            Show this message and exit.
+```
+## Commands
+```
+None
+```
+## CLI Help
+```
+Usage: terraflow resource delete [OPTIONS]
+
+  Delete a resource from the configuration.
+
+Options:
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace for the Terraform provider.  [required]
+  --name TEXT       The name of the resource or data source.
+  --resource TEXT   The target Terraform resource name.  [required]
+  --filename TEXT
+  --help            Show this message and exit.
+```
+
 # terraflow data-source
-Docs 
+Manage Terraform data sources. 
 ## Usage
 ```
 terraflow data-source [OPTIONS] COMMAND [ARGS]...
@@ -404,25 +420,27 @@ terraflow data-source [OPTIONS] COMMAND [ARGS]...
 ```
 ## Commands
 ```
-  create  Docs
-  list
+  create  Create a data source.
+  delete  Delete a data source from the configuration.
+  list    List available data sources for a provider.
 ```
 ## CLI Help
 ```
 Usage: terraflow data-source [OPTIONS] COMMAND [ARGS]...
 
-  Docs
+  Manage Terraform data sources.
 
 Options:
   --help  Show this message and exit.
 
 Commands:
-  create  Docs
-  list
+  create  Create a data source.
+  delete  Delete a data source from the configuration.
+  list    List available data sources for a provider.
 ```
 
 # terraflow data-source list
-
+List available data sources for a provider. 
 ## Usage
 ```
 terraflow data-source list [OPTIONS]
@@ -442,6 +460,8 @@ None
 ```
 Usage: terraflow data-source list [OPTIONS]
 
+  List available data sources for a provider.
+
 Options:
   --provider TEXT   The name of the Terraform provider.  [required]
   --namespace TEXT  The namespace for the Terraform provider.  [required]
@@ -450,7 +470,7 @@ Options:
 ```
 
 # terraflow data-source create
-Docs 
+Create a data source. 
 ## Usage
 ```
 terraflow data-source create [OPTIONS]
@@ -485,7 +505,7 @@ None
 ```
 Usage: terraflow data-source create [OPTIONS]
 
-  Docs
+  Create a data source.
 
 Options:
   --schema TEXT                  The name of the schema to use for resource
@@ -509,8 +529,42 @@ Options:
   --help                         Show this message and exit.
 ```
 
+# terraflow data-source delete
+Delete a data source from the configuration. 
+## Usage
+```
+terraflow data-source delete [OPTIONS]
+```
+## Options
+```
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace for the Terraform provider.  [required]
+  --name TEXT       The name of the resource or data source.
+  --resource TEXT   The target Terraform resource name.  [required]
+  --filename TEXT
+  --help            Show this message and exit.
+```
+## Commands
+```
+None
+```
+## CLI Help
+```
+Usage: terraflow data-source delete [OPTIONS]
+
+  Delete a data source from the configuration.
+
+Options:
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace for the Terraform provider.  [required]
+  --name TEXT       The name of the resource or data source.
+  --resource TEXT   The target Terraform resource name.  [required]
+  --filename TEXT
+  --help            Show this message and exit.
+```
+
 # terraflow provider
-Docs 
+Manage Terraform providers. 
 ## Usage
 ```
 terraflow provider [OPTIONS] COMMAND [ARGS]...
@@ -521,25 +575,27 @@ terraflow provider [OPTIONS] COMMAND [ARGS]...
 ```
 ## Commands
 ```
-  create  Docs
-  list
+  create  Create a provider.
+  delete  Delete a provider from the configuration.
+  list    List providers in the Terraform configuration.
 ```
 ## CLI Help
 ```
 Usage: terraflow provider [OPTIONS] COMMAND [ARGS]...
 
-  Docs
+  Manage Terraform providers.
 
 Options:
   --help  Show this message and exit.
 
 Commands:
-  create  Docs
-  list
+  create  Create a provider.
+  delete  Delete a provider from the configuration.
+  list    List providers in the Terraform configuration.
 ```
 
 # terraflow provider list
-
+List providers in the Terraform configuration. 
 ## Usage
 ```
 terraflow provider list [OPTIONS]
@@ -557,13 +613,15 @@ None
 ```
 Usage: terraflow provider list [OPTIONS]
 
+  List providers in the Terraform configuration.
+
 Options:
   --keyword TEXT  Keyword used to filter the list.
   --help          Show this message and exit.
 ```
 
 # terraflow provider create
-Docs 
+Create a provider. 
 ## Usage
 ```
 terraflow provider create [OPTIONS]
@@ -595,7 +653,7 @@ None
 ```
 Usage: terraflow provider create [OPTIONS]
 
-  Docs
+  Create a provider.
 
 Options:
   --schema TEXT                  The name of the schema to use for resource
@@ -614,5 +672,93 @@ Options:
   --required-blocks-only
   --required-attributes-only
   --help                         Show this message and exit.
+```
+
+# terraflow provider delete
+Delete a provider from the configuration. 
+## Usage
+```
+terraflow provider delete [OPTIONS]
+```
+## Options
+```
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace for the Terraform provider.  [required]
+  --filename TEXT
+  --help            Show this message and exit.
+```
+## Commands
+```
+None
+```
+## CLI Help
+```
+Usage: terraflow provider delete [OPTIONS]
+
+  Delete a provider from the configuration.
+
+Options:
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace for the Terraform provider.  [required]
+  --filename TEXT
+  --help            Show this message and exit.
+```
+
+# terraflow docs
+Manage documentation. 
+## Usage
+```
+terraflow docs [OPTIONS] COMMAND [ARGS]...
+```
+## Options
+```
+  --help  Show this message and exit.
+```
+## Commands
+```
+  create  Generate Terraform documentation using terraform-docs.
+```
+## CLI Help
+```
+Usage: terraflow docs [OPTIONS] COMMAND [ARGS]...
+
+  Manage documentation.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  create  Generate Terraform documentation using terraform-docs.
+```
+
+# terraflow docs create
+Generate Terraform documentation using terraform-docs.    This command generates a markdown table of the Terraform module's   configuration and saves it to a README.md file in the module's directory. 
+## Usage
+```
+terraflow docs create [OPTIONS]
+```
+## Options
+```
+  --module-path TEXT      Path to the Terraform module  [required]
+  --config-filename TEXT  Filename for the terraform-docs configuration file
+  --help                  Show this message and exit.
+```
+## Commands
+```
+None
+```
+## CLI Help
+```
+Usage: terraflow docs create [OPTIONS]
+
+  Generate Terraform documentation using terraform-docs.
+
+  This command generates a markdown table of the Terraform module's
+  configuration and saves it to a README.md file in the module's directory.
+
+Options:
+  --module-path TEXT      Path to the Terraform module  [required]
+  --config-filename TEXT  Filename for the terraform-docs configuration file
+  --help                  Show this message and exit.
 ```
 

@@ -91,7 +91,7 @@ def schema():
 
 # terraflow schema download
 @schema.command("download", context_settings=CONTEXT_SETTINGS)
-@download_options
+@file_options
 def schema_download(filename):
     """
     Download the schema for the Terraform configuration.
@@ -175,6 +175,21 @@ def resource_create(
         schema=schema,
     )
 
+# terraflow resource delete
+@resource.command("delete", context_settings=CONTEXT_SETTINGS)
+@provider_options
+@resource_options
+@file_options
+def resource_delete(namespace, provider, resource, name, filename):
+    """
+    Delete a resource from the configuration.
+    """
+    delete_resource_code(
+        provider=provider,
+        resource=resource,
+        name=name,
+        filename=filename
+    )
 
 # terraflow data-source
 @terraflow.group("data-source")
@@ -250,6 +265,21 @@ def data_source_create(
         schema=schema,
     )
 
+# terraflow datasource delete
+@data_source.command("delete", context_settings=CONTEXT_SETTINGS)
+@provider_options
+@resource_options
+@file_options
+def data_source_delete(namespace, provider, resource, name, filename):
+    """
+    Delete a data source from the configuration.
+    """
+    delete_resource_code(
+        provider=provider,
+        resource=resource,
+        name=name,
+        filename=filename
+    )
 
 # terraflow variable create --namespace --provider --provider-version --name
 
@@ -316,6 +346,18 @@ def provider_create(
         schema=schema,
     )
 
+# terraflow provider delete
+@provider.command("delete", context_settings=CONTEXT_SETTINGS)
+@provider_options
+@file_options
+def provider_delete(namespace, provider, filename):
+    """
+    Delete a provider from the configuration.
+    """
+    delete_provider_code(
+        provider=provider,
+        filename=filename
+    )
 
 # terraflow documentation
 @terraflow.group("docs")
