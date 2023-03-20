@@ -1,10 +1,10 @@
 variable "name" {
-    type = string
-    description = "The name."
+  type        = string
+  description = "The name."
 }
 
 variable "location" {
-    type = string
-    description = "The location."
+  type        = string
+  description = "The location."
 }
 

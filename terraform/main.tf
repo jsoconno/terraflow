@@ -9,7 +9,8 @@
  * block.
  */
 
-resource "azurerm_resource_group" "main" {
+resource "azurerm_resource_group" "other" {
   location = var.location
   name     = var.name
 }
+
