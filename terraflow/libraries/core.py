@@ -793,8 +793,6 @@ def write_data_source_code(
     return code
 
 def delete_data_source_code(provider, resource, name, filename='main.tf'):
-    print(filename)
-
     resource = "_".join([provider, resource]) if not provider in resource else resource
     regex_pattern = rf'^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
 
@@ -802,8 +800,6 @@ def delete_data_source_code(provider, resource, name, filename='main.tf'):
         string = f.read()
 
     result = re.sub(pattern=regex_pattern, repl='', string=string, flags=re.MULTILINE)
-    print(string)
-    print(result)
 
     with open(filename, "w") as f:
         f.write(result)
