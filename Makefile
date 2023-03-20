@@ -30,6 +30,9 @@ $(VENV)/bin/activate: requirements.txt
 hooks:
 	git config core.hooksPath .githooks
 
+install:
+	$(PIP) install -e .
+
 install-dev:
 	$(PIP) install -e .[dev]
 
