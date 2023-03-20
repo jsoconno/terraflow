@@ -10,25 +10,25 @@ ALLOWED_SCOPES = ["provider", "resource", "data_source"]
 ALLOWED_ATTRIBUTES = ["optional", "required", "description", "type"]
 
 # Help text
-SCHEMA = "The name of the schema to use for resource creation."
 NAMESPACE = "The namespace for the Terraform provider."
 PROVIDER = "The name of the Terraform provider."
 NAME = "The name of the resource or data source."
 RESOURCE = "The target Terraform resource name."
 ATTRIBUTE = "The name of the Terraform resource attribute."
 BLOCKS = "A list of the blocks where the attribute can be found."
-FILENAME = "The name of the Terraform configuration file."
+TERRAFORM_FILENAME = "The name of the Terraform configuration file."
+SCHEMA_FILENAME = "The name of the schema json file to use for resource creation."
 KEYWORD = "Keyword used to filter the list."
 
 # Dictionary of different CLI options
 options = {
-    "schema": click.option(
-        "--schema",
+    "schema_filename": click.option(
+        "--schema-filename",
         type=str,
-        default="schema.json" if os.path.isfile("schema.json") else None,
+        default="schema.json",
         multiple=False,
         required=False,
-        help=SCHEMA,
+        help=SCHEMA_FILENAME,
     ),
     "namespace": click.option(
         "--namespace",
@@ -130,8 +130,8 @@ options = {
         required=False,
         help="",
     ),
-    "filename": click.option(
-        "--filename",
+    "terraform_filename": click.option(
+        "--terraform-filename",
         type=str,
         default="main.tf",
         multiple=False,
@@ -145,15 +145,6 @@ options = {
 
 
 # Options decorators
-def schema_options(func):
-    """
-    Description
-    """
-    func = options["schema"](func)
-
-    return func
-
-
 def provider_options(func):
     """
     Description
@@ -186,16 +177,24 @@ def code_options(func):
     func = options["ignore_attribute"](func)
     func = options["attribute_default"](func)
     func = options["attribute_value_prefix"](func)
-    func = options["filename"](func)
+    func = options["terraform_filename"](func)
 
     return func
 
 
-def file_options(func):
+def schema_file_options(func):
     """
     Description
     """
-    func = options["filename"](func)
+    func = options["schema_filename"](func)
+
+    return func
+
+def terraform_file_options(func):
+    """
+    Description
+    """
+    func = options["terraform_filename"](func)
 
     return func
 

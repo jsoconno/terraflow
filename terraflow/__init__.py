@@ -91,14 +91,14 @@ def schema():
 
 # terraflow schema download
 @schema.command("download", context_settings=CONTEXT_SETTINGS)
-@file_options
-def schema_download(filename):
+@schema_file_options
+def schema_download(schema_filename):
     """
     Download the schema for the Terraform configuration.
     """
     schema = get_schema()
 
-    download_schema(schema=schema, filename=filename)
+    download_schema(schema=schema, filename=schema_filename)
 
 
 # terraflow resource
@@ -133,7 +133,8 @@ def resource_list(namespace, provider, keyword):
 
 # terraflow resource create
 @resource.command("create", context_settings=CONTEXT_SETTINGS)
-@schema_options
+@schema_file_options
+@terraform_file_options
 @provider_options
 @resource_options
 @code_options
@@ -141,7 +142,7 @@ def resource_create(
     namespace,
     provider,
     resource,
-    schema,
+    schema_filename,
     name,
     required_attributes_only,
     required_blocks_only,
@@ -151,7 +152,7 @@ def resource_create(
     ignore_attribute,
     attribute_default,
     attribute_value_prefix,
-    filename,
+    terraform_filename,
 ):
     """
     Create a Terraform resource.
@@ -170,17 +171,17 @@ def resource_create(
         add_descriptions=add_descriptions,
         attribute_defaults=attribute_defaults,
         attribute_value_prefix=attribute_value_prefix,
-        filename=filename,
+        filename=terraform_filename,
         name=name,
-        schema=schema,
+        schema=schema_filename,
     )
 
 # terraflow resource delete
 @resource.command("delete", context_settings=CONTEXT_SETTINGS)
+@terraform_file_options
 @provider_options
 @resource_options
-@file_options
-def resource_delete(namespace, provider, resource, name, filename):
+def resource_delete(namespace, provider, resource, name, terraform_filename):
     """
     Delete a resource from the configuration.
     """
@@ -188,7 +189,7 @@ def resource_delete(namespace, provider, resource, name, filename):
         provider=provider,
         resource=resource,
         name=name,
-        filename=filename
+        filename=terraform_filename
     )
 
 # terraflow data-source
@@ -223,7 +224,8 @@ def data_source_list(namespace, provider, keyword):
 
 # terraflow data-source create
 @data_source.command("create", context_settings=CONTEXT_SETTINGS)
-@schema_options
+@schema_file_options
+@terraform_file_options
 @provider_options
 @resource_options
 @code_options
@@ -231,7 +233,7 @@ def data_source_create(
     namespace,
     provider,
     resource,
-    schema,
+    schema_filename,
     name,
     required_attributes_only,
     required_blocks_only,
@@ -241,7 +243,7 @@ def data_source_create(
     ignore_attribute,
     attribute_default,
     attribute_value_prefix,
-    filename,
+    terraform_filename,
 ):
     """
     Create a data source.
@@ -260,25 +262,25 @@ def data_source_create(
         add_descriptions=add_descriptions,
         attribute_defaults=attribute_defaults,
         attribute_value_prefix=attribute_value_prefix,
-        filename=filename,
+        filename=terraform_filename,
         name=name,
-        schema=schema,
+        schema=schema_filename,
     )
 
 # terraflow datasource delete
 @data_source.command("delete", context_settings=CONTEXT_SETTINGS)
+@terraform_file_options
 @provider_options
 @resource_options
-@file_options
-def data_source_delete(namespace, provider, resource, name, filename):
+def data_source_delete(namespace, provider, resource, name, terraform_filename):
     """
     Delete a data source from the configuration.
     """
-    delete_resource_code(
+    delete_data_source_code(
         provider=provider,
         resource=resource,
         name=name,
-        filename=filename
+        filename=terraform_filename
     )
 
 # terraflow variable create --namespace --provider --provider-version --name
@@ -309,13 +311,14 @@ def provider_list(keyword):
 
 # terraflow provider create
 @provider.command("create", context_settings=CONTEXT_SETTINGS)
-@schema_options
+@schema_file_options
+@terraform_file_options
 @provider_options
 @code_options
 def provider_create(
     namespace,
     provider,
-    schema,
+    schema_filename,
     required_attributes_only,
     required_blocks_only,
     add_descriptions,
@@ -324,7 +327,7 @@ def provider_create(
     ignore_attribute,
     attribute_default,
     attribute_value_prefix,
-    filename,
+    terraform_filename,
 ):
     """
     Create a provider.
@@ -342,21 +345,21 @@ def provider_create(
         add_descriptions=add_descriptions,
         attribute_defaults=attribute_defaults,
         attribute_value_prefix=attribute_value_prefix,
-        filename=filename,
-        schema=schema,
+        filename=terraform_filename,
+        schema=schema_filename,
     )
 
 # terraflow provider delete
 @provider.command("delete", context_settings=CONTEXT_SETTINGS)
+@terraform_file_options
 @provider_options
-@file_options
-def provider_delete(namespace, provider, filename):
+def provider_delete(namespace, provider, terraform_filename):
     """
     Delete a provider from the configuration.
     """
     delete_provider_code(
         provider=provider,
-        filename=filename
+        filename=terraform_filename
     )
 
 # terraflow documentation
