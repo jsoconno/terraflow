@@ -29,7 +29,8 @@ def terraflow():
 @terraflow.group("workspace")
 def workspace():
     """
-    Docs
+    \b
+    Manage workspaces.
     """
     pass
 
@@ -56,7 +57,7 @@ def workspace_get(workspace):
 @workspace.command("list", context_settings=CONTEXT_SETTINGS)
 def workspace_list():
     """
-    Get workspaces.
+    List workspaces.
     """
     pass
 
@@ -83,7 +84,7 @@ def workspace_delete(workspace):
 @terraflow.group("schema")
 def schema():
     """
-    Schema management.
+    Work with schemas.
     """
     pass
 
@@ -92,6 +93,9 @@ def schema():
 @schema.command("download", context_settings=CONTEXT_SETTINGS)
 @download_options
 def schema_download(filename):
+    """
+    Download the schema for the Terraform configuration.
+    """
     schema = get_schema()
 
     download_schema(schema=schema, filename=filename)
@@ -101,7 +105,7 @@ def schema_download(filename):
 @terraflow.group("resource")
 def resource():
     """
-    Docs
+    Manage Terraform resources.
     """
     pass
 
@@ -111,6 +115,9 @@ def resource():
 @provider_options
 @filter_options
 def resource_list(namespace, provider, keyword):
+    """
+    List available resources for a provider.
+    """
     schema = get_schema()
 
     items = list_items(
@@ -147,7 +154,7 @@ def resource_create(
     filename,
 ):
     """
-    Docs
+    Create a Terraform resource.
     """
     attribute_defaults = convert_strings_to_dict(attribute_default)
 
@@ -173,7 +180,7 @@ def resource_create(
 @terraflow.group("data-source")
 def data_source():
     """
-    Docs
+    Manage Terraform data sources.
     """
     pass
 
@@ -183,6 +190,9 @@ def data_source():
 @provider_options
 @filter_options
 def data_source_list(namespace, provider, keyword):
+    """
+    List available data sources for a provider.
+    """
     schema = get_schema()
 
     items = list_items(
@@ -219,7 +229,7 @@ def data_source_create(
     filename,
 ):
     """
-    Docs
+    Create a data source.
     """
     attribute_defaults = convert_strings_to_dict(attribute_default)
 
@@ -248,7 +258,7 @@ def data_source_create(
 @terraflow.group("provider")
 def provider():
     """
-    Docs
+    Manage Terraform providers.
     """
     pass
 
@@ -257,6 +267,9 @@ def provider():
 @provider.command("list", context_settings=CONTEXT_SETTINGS)
 @filter_options
 def provider_list(keyword):
+    """
+    List providers in the Terraform configuration.
+    """
     schema = get_schema()
 
     items = list_items(schema=schema, scope="provider", keywords=keyword)
@@ -284,7 +297,7 @@ def provider_create(
     filename,
 ):
     """
-    Docs
+    Create a provider.
     """
     attribute_defaults = convert_strings_to_dict(attribute_default)
 
@@ -308,7 +321,7 @@ def provider_create(
 @terraflow.group("docs")
 def docs():
     """
-    Docs
+    Manage documentation.
     """
     pass
 
