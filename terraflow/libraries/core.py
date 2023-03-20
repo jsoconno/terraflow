@@ -831,4 +831,4 @@ def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
 
 
 # write_resource_code(provider='azurerm', resource='storage_account', dynamic_blocks=['share_properties_smb'])
-delete_data_source_code('azurerm', 'azurerm_resource_group', 'main')
+# delete_data_source_code('azurerm', 'azurerm_resource_group', 'main')
