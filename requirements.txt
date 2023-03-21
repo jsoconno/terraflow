@@ -1,6 +1,6 @@
-beautifulsoup4==4.11.2 # Include in Homebrew release
+beautifulsoup4==4.11.2
 black==23.1.0
-bs4==0.0.1 # Include in Homebrew release
+bs4==0.0.1
 certifi==2022.12.7
 charset-normalizer==3.1.0
 click==8.1.3
