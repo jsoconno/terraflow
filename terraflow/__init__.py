@@ -5,12 +5,13 @@ import click
 from terraflow.libraries.core import *
 from terraflow.libraries.constants import *
 from terraflow.libraries.documentation import *
+from terraflow.version import __version__
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="terraflow")
 
 
 @click.group("terraflow", invoke_without_command=True)
-@click.version_option()
+@click.version_option(version=__version__)
 def terraflow():
     """
     \b
