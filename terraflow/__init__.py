@@ -11,7 +11,7 @@ CONTEXT_SETTINGS = dict(auto_envvar_prefix="terraflow")
 
 
 @click.group("terraflow", invoke_without_command=True)
-@click.version_option(version=__version__)
+@click.version_option(version=__version__, package_name="terraflow")
 def terraflow():
     """
     \b
