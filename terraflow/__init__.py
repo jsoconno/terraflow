@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import click
 
 from terraflow.libraries.core import *
@@ -391,3 +393,6 @@ def docs_create(module_path, config_filename):
     """
     create_terraform_docs_config_file(config_filename)
     generate_terraform_docs(module_path, config_filename)
+
+if __name__ == '__main__':
+    terraflow()
