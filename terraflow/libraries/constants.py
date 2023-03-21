@@ -25,7 +25,7 @@ options = {
     "schema_filename": click.option(
         "--schema-filename",
         type=str,
-        default="schema.json",
+        default=None,
         multiple=False,
         required=False,
         help=SCHEMA_FILENAME,

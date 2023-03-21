@@ -45,7 +45,7 @@ def get_schema(
     # Determine if there is an existing schema file locally
     if filename == None and os.path.exists("schema.json"):
         filename = "schema.json"
-
+    
     # Get the full schema
     if filename:
         with open(filename, "r") as schema:
@@ -59,7 +59,7 @@ def get_schema(
                 ).decode("utf-8")
             )
             print(
-                f'\n{colors("OK_GREEN")}Success:{colors()} The schema was downloaded successfully.\n'
+                f'\n{colors("OK_GREEN")}Success:{colors()} The schema was loaded successfully.\n'
             )
         except:
             print(
@@ -74,7 +74,7 @@ def get_schema(
                 ).decode("utf-8")
             )
             print(
-                f'\n{colors("OK_GREEN")}Success:{colors()} The schema was downloaded successfully.\n'
+                f'\n{colors("OK_GREEN")}Success:{colors()} The schema was loaded successfully.\n'
             )
 
     # Get scope schema
