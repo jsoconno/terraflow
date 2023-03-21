@@ -24,8 +24,8 @@ jobs:
           VERSION="${{ github.event.release.tag_name }}"
           URL="https://github.com/jsoconno/terraflow/archive/${VERSION}.tar.gz"
           SHA256="$(curl -L -s ${URL} | sha256sum | awk '{print $1}')"
-          sed -i "s|url .\+|url \"$URL\"|g" $FORMULA_PATH
-          sed -i "s|sha256 .\+|sha256 \"$SHA256\"|g" $FORMULA_PATH
+          sed -i "s|url \".\+terraflow/archive.\+\"|url \"$URL\"|g" $FORMULA_PATH
+          sed -i "s|sha256 \".\+\" \# terraflow|sha256 \"$SHA256\" # terraflow|g" $FORMULA_PATH
 
       - name: Commit and push changes
         run: |
