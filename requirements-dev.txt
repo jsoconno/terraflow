@@ -16,7 +16,7 @@ pyflakes==3.0.1
 PyYAML==6.0
 requests==2.28.2
 soupsieve==2.4
--e git+https://github.com/jsoconno/terraflow.git@16687b017412bd093bb95e8a5b7f97743d670f52#egg=terraflow
+-e git+https://github.com/jsoconno/terraflow.git
 tomli==2.0.1
 typing_extensions==4.5.0
 urllib3==1.26.15
