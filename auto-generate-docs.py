@@ -22,7 +22,7 @@ def auto_generate_docs(cmd=terraflow, parent=None):
         description = re.search(pattern, text, re.MULTILINE).group(3).replace("\n", " ")
         options = re.search(pattern, text, re.MULTILINE).group(4)
         commands = str(re.search(pattern, text, re.MULTILINE).group(5))
-        print(usage)
+
         file.write(f"# {title}\n")
         file.write(f"{description}\n")
         file.write("## Usage\n")

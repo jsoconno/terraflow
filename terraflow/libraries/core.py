@@ -42,39 +42,29 @@ def get_schema(
     """
     Returns the schema for a provider as a dictionary.
     """
-    # Determine if there is an existing schema file locally
-    if filename == None and os.path.exists("schema.json"):
-        filename = "schema.json"
-    
-    # Get the full schema
-    if filename:
+    # Get the schema from file
+    if filename and os.path.exists(filename):
         with open(filename, "r") as schema:
             schema = json.loads(schema.read())
     else:
         try:
-            subprocess.run(["terraform", "init"], capture_output=True, text=True)
+            p = subprocess.run(["terraform", "init"], capture_output=True, text=True)
             schema = json.loads(
                 subprocess.check_output(
                     ["terraform", "providers", "schema", "-json"]
                 ).decode("utf-8")
             )
-            print(
-                f'\n{colors("OK_GREEN")}Success:{colors()} The schema was loaded successfully.\n'
-            )
         except:
             print(
                 f'\n{colors("WARNING")}Warning:{colors()} The dependency lock file does not match the current configuration.  Running terraform init -upgrade to collect the latest schema for the selected provider versions.\n'
             )
-            subprocess.run(
+            p = subprocess.run(
                 ["terraform", "init", "-upgrade"], capture_output=True, text=True
             )
             schema = json.loads(
                 subprocess.check_output(
                     ["terraform", "providers", "schema", "-json"]
                 ).decode("utf-8")
-            )
-            print(
-                f'\n{colors("OK_GREEN")}Success:{colors()} The schema was loaded successfully.\n'
             )
 
     # Get scope schema
@@ -114,14 +104,29 @@ def get_schema(
     return schema
 
 
-def download_schema(schema, filename="schema"):
-    # Name based on whether the file extension was passed or not
-    if ".json" not in filename:
-        filename = f'{filename}.json'
+def download_schema(filename='schema.json', refresh=False):
+    # Check if the file type is .json
+    if not filename.endswith('.json'):
+        print(
+            f'\n{colors("FAIL")}Error:{colors()} {filename} is not a json file.\n'
+        )
+        return
 
-    # Create file
-    with open(f"{filename}", "w+") as f:
-        f.write(json.dumps(schema))
+    # Determine if there is an existing schema file locally
+    if os.path.exists(filename) and not refresh:
+        # If the file exists and refresh is False, exit the function
+        return
+    else:
+        # If the file doesn't exist or refresh is True, call get_schema()
+        schema = get_schema()
+
+        # Create or overwrite the file
+        with open(filename, "w") as f:
+            f.write(json.dumps(schema))
+
+        print(
+            f'\n{colors("OK_GREEN")}Success:{colors()} Schema downloaded successfully.\n'
+        )
 
 
 def write_to_file(text, filename, regex_pattern=None):
@@ -639,7 +644,7 @@ def write_provider_code(
     write_to_file(text=code, filename=filename, regex_pattern=regex_pattern)
 
     # Format code
-    subprocess.run(["terraform", "fmt"])
+    subprocess.run(["terraform", "fmt"], stdout=subprocess.DEVNULL)
 
     return code
 
@@ -712,7 +717,7 @@ def write_resource_code(
     write_to_file(text=code, filename=filename, regex_pattern=regex_pattern)
 
     # Format code
-    subprocess.run(["terraform", "fmt"])
+    subprocess.run(["terraform", "fmt"], stdout=subprocess.DEVNULL)
 
     return code
 
@@ -788,7 +793,7 @@ def write_data_source_code(
     write_to_file(text=code, filename=filename, regex_pattern=regex_pattern)
 
     # Format code
-    subprocess.run(["terraform", "fmt"])
+    subprocess.run(["terraform", "fmt"], stdout=subprocess.DEVNULL)
 
     return code
 
@@ -829,6 +834,3 @@ def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
 
     return pretty_list
 
-
-# write_resource_code(provider='azurerm', resource='storage_account', dynamic_blocks=['share_properties_smb'])
-# delete_data_source_code('azurerm', 'azurerm_resource_group', 'main')

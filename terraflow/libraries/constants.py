@@ -18,6 +18,7 @@ ATTRIBUTE = "The name of the Terraform resource attribute."
 BLOCKS = "A list of the blocks where the attribute can be found."
 TERRAFORM_FILENAME = "The name of the Terraform configuration file."
 SCHEMA_FILENAME = "The name of the schema json file to use for resource creation."
+REFRESH = "Refresh the downloaded schema."
 KEYWORD = "Keyword used to filter the list."
 
 # Dictionary of different CLI options
@@ -25,10 +26,19 @@ options = {
     "schema_filename": click.option(
         "--schema-filename",
         type=str,
-        default=None,
+        default="schema.json",
         multiple=False,
         required=False,
         help=SCHEMA_FILENAME,
+    ),
+    "refresh": click.option(
+        "--refresh",
+        type=str,
+        default=False,
+        is_flag=True,
+        multiple=False,
+        required=False,
+        help=REFRESH,
     ),
     "namespace": click.option(
         "--namespace",
@@ -136,7 +146,7 @@ options = {
         default="main.tf",
         multiple=False,
         required=False,
-        help="",
+        help=TERRAFORM_FILENAME,
     ),
     "keyword": click.option(
         "--keyword", type=str, default=None, multiple=True, required=False, help=KEYWORD
@@ -187,6 +197,7 @@ def schema_file_options(func):
     Description
     """
     func = options["schema_filename"](func)
+    func = options["refresh"](func)
 
     return func
 

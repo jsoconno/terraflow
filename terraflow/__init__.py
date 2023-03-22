@@ -95,13 +95,11 @@ def schema():
 # terraflow schema download
 @schema.command("download", context_settings=CONTEXT_SETTINGS)
 @schema_file_options
-def schema_download(schema_filename):
+def schema_download(schema_filename, refresh):
     """
     Download the schema for the Terraform configuration.
     """
-    schema = get_schema()
-
-    download_schema(schema=schema, filename=schema_filename)
+    download_schema(filename=schema_filename, refresh=refresh)
 
 
 # terraflow resource
@@ -146,6 +144,7 @@ def resource_create(
     provider,
     resource,
     schema_filename,
+    refresh,
     name,
     required_attributes_only,
     required_blocks_only,
@@ -237,6 +236,7 @@ def data_source_create(
     provider,
     resource,
     schema_filename,
+    refresh,
     name,
     required_attributes_only,
     required_blocks_only,
@@ -322,6 +322,7 @@ def provider_create(
     namespace,
     provider,
     schema_filename,
+    refresh,
     required_attributes_only,
     required_blocks_only,
     add_descriptions,
