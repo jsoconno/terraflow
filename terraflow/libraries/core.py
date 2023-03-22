@@ -49,25 +49,23 @@ def get_schema(
     else:
         try:
             p = subprocess.run(["terraform", "init"], capture_output=True, text=True)
-            result = subprocess.run(
-                ["terraform", "providers", "schema", "-json"],
-                capture_output=True,
-                text=True,
-                check=True
+            schema = json.loads(
+                subprocess.check_output(
+                    ["terraform", "providers", "schema", "-json"]
+                ).decode("utf-8")
             )
-            return json.loads(result.stdout)
         except subprocess.CalledProcessError:
             print(
                 f'\n{colors(color="WARNING")}Warning:{colors()} The provider versions for this configuration have changed.  Running an upgrade.\n'
             )
-            subprocess.run(["terraform", "init", "-upgrade"], capture_output=True, text=True)
-            result = subprocess.run(
-                ["terraform", "providers", "schema", "-json"],
-                capture_output=True,
-                text=True,
-                check=True
+            p = subprocess.run(
+                ["terraform", "init", "-upgrade"], capture_output=True, text=True
             )
-            return json.loads(result.stdout)
+            schema = json.loads(
+                subprocess.check_output(
+                    ["terraform", "providers", "schema", "-json"]
+                ).decode("utf-8")
+            )
 
     # Get scope schema
     if namespace and provider:
@@ -333,9 +331,8 @@ def levenshtein_distance(s, t):
 
     return normalized_distance
 
-
-def get_resource_documentation(namespace, provider, resource, scope="resource"):
-    url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"
+def get_resource_documentation_url(namespace, provider, resource, scope):
+    url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"  
     response = json.loads(requests.get(url).text)
 
     docs_path = None
@@ -344,13 +341,19 @@ def get_resource_documentation(namespace, provider, resource, scope="resource"):
         if (
             doc["title"] == resource
             or doc["title"] == resource.replace(f"{provider}_", "")
-            and doc["category"] == f"{scope}s"
+            and doc["category"] == f"{scope.replace('_', '-')}s"
         ):
             docs_path = doc["path"]
 
     if docs_path:
-        docs_url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/main/{docs_path}"
+        url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/main/{docs_path}"
+    else:
+        url = None
 
+    return url
+
+def get_resource_documentation(docs_url):
+    if docs_url:
         html_text = requests.get(docs_url).content.decode()
         soup = BeautifulSoup(html_text, features="html.parser")
 
@@ -454,10 +457,9 @@ def recurse_schema(
     # Collect the documentation
     if add_descriptions:
         try:
+            documentation_url = docs_url = get_resource_documentation_url(namespace=kwargs["namespace"], provider=kwargs["provider"], resource=kwargs["resource"], scope=kwargs["scope"])
             documentation_text = get_resource_documentation(
-                namespace=kwargs["namespace"],
-                provider=kwargs["provider"],
-                resource=kwargs["resource"],
+                docs_url=documentation_url
             )
         except:
             documentation_text = None
@@ -614,12 +616,13 @@ def write_provider_code(
     filename="providers.tf",
     schema=None,
 ):
-    schema = get_schema(
-        namespace=namespace, provider=provider, scope="provider", filename=schema
-    )
-
+    scope = 'provider'
     header = f'provider "{provider}" {{'
     regex_pattern = rf'^provider\s+"{provider}"\s+{{[\s\S]*?^}}$'
+
+    schema = get_schema(
+        namespace=namespace, provider=provider, scope=scope, filename=schema
+    )
 
     body = recurse_schema(
         schema=schema,
@@ -635,6 +638,7 @@ def write_provider_code(
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
         attribute_defaults=attribute_defaults,
+        scope=scope
     )
 
     footer = "}"
@@ -681,17 +685,18 @@ def write_resource_code(
     name="main",
     schema=None,
 ):
+    scope = 'resource'
+    resource = "_".join([provider, resource]) if not provider in resource else resource
+    header = f'resource "{resource}" "{name}" {{'
+    regex_pattern = rf'^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
+
     schema = get_schema(
         namespace=namespace,
         provider=provider,
         resource=resource,
-        scope="resource",
+        scope=scope,
         filename=schema,
     )
-
-    resource = "_".join([provider, resource]) if not provider in resource else resource
-    header = f'resource "{resource}" "{name}" {{'
-    regex_pattern = rf'^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
 
     body = recurse_schema(
         schema=schema,
@@ -708,6 +713,7 @@ def write_resource_code(
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
         attribute_defaults=attribute_defaults,
+        scope=scope
     )
 
     footer = "}"
@@ -757,17 +763,18 @@ def write_data_source_code(
     name="main",
     schema=None,
 ):
+    scope = 'data_source'
+    resource = "_".join([provider, resource]) if not provider in resource else resource
+    header = f'data "{resource}" "{name}" {{'
+    regex_pattern = rf'^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
+
     schema = get_schema(
         namespace=namespace,
         provider=provider,
         resource=resource,
-        scope="data_source",
+        scope=scope,
         filename=schema,
     )
-
-    resource = "_".join([provider, resource]) if not provider in resource else resource
-    header = f'data "{resource}" "{name}" {{'
-    regex_pattern = rf'^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
 
     body = recurse_schema(
         schema=schema,
@@ -784,6 +791,7 @@ def write_data_source_code(
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
         attribute_defaults=attribute_defaults,
+        scope=scope
     )
 
     footer = "}"
