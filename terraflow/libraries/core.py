@@ -49,23 +49,25 @@ def get_schema(
     else:
         try:
             p = subprocess.run(["terraform", "init"], capture_output=True, text=True)
-            schema = json.loads(
-                subprocess.check_output(
-                    ["terraform", "providers", "schema", "-json"]
-                ).decode("utf-8")
+            result = subprocess.run(
+                ["terraform", "providers", "schema", "-json"],
+                capture_output=True,
+                text=True,
+                check=True
             )
-        except:
+            return json.loads(result.stdout)
+        except subprocess.CalledProcessError:
             print(
-                f'\n{colors("WARNING")}Warning:{colors()} The dependency lock file does not match the current configuration.  Running terraform init -upgrade to collect the latest schema for the selected provider versions.\n'
+                f'\n{colors(color="WARNING")}Warning:{colors()} The provider versions for this configuration have changed.  Running an upgrade.\n'
             )
-            p = subprocess.run(
-                ["terraform", "init", "-upgrade"], capture_output=True, text=True
+            subprocess.run(["terraform", "init", "-upgrade"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["terraform", "providers", "schema", "-json"],
+                capture_output=True,
+                text=True,
+                check=True
             )
-            schema = json.loads(
-                subprocess.check_output(
-                    ["terraform", "providers", "schema", "-json"]
-                ).decode("utf-8")
-            )
+            return json.loads(result.stdout)
 
     # Get scope schema
     if namespace and provider:
