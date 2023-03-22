@@ -9,18 +9,6 @@ import click
 ALLOWED_SCOPES = ["provider", "resource", "data_source"]
 ALLOWED_ATTRIBUTES = ["optional", "required", "description", "type"]
 
-# Help text
-NAMESPACE = "The namespace for the Terraform provider."
-PROVIDER = "The name of the Terraform provider."
-NAME = "The name of the resource or data source."
-RESOURCE = "The target Terraform resource name."
-ATTRIBUTE = "The name of the Terraform resource attribute."
-BLOCKS = "A list of the blocks where the attribute can be found."
-TERRAFORM_FILENAME = "The name of the Terraform configuration file."
-SCHEMA_FILENAME = "The name of the schema json file to use for resource creation."
-REFRESH = "Refresh the downloaded schema."
-KEYWORD = "Keyword used to filter the list."
-
 # Dictionary of different CLI options
 options = {
     "schema_filename": click.option(
@@ -29,7 +17,7 @@ options = {
         default="schema.json",
         multiple=False,
         required=False,
-        help=SCHEMA_FILENAME,
+        help="The name of the Terraform schema to use locally.",
     ),
     "refresh": click.option(
         "--refresh",
@@ -38,7 +26,7 @@ options = {
         is_flag=True,
         multiple=False,
         required=False,
-        help=REFRESH,
+        help="Refresh the downloaded schema file.",
     ),
     "namespace": click.option(
         "--namespace",
@@ -46,7 +34,7 @@ options = {
         default="hashicorp",
         multiple=False,
         required=True,
-        help=NAMESPACE,
+        help="The namespace of the Terraform provider.",
     ),
     "provider": click.option(
         "--provider",
@@ -54,7 +42,7 @@ options = {
         default=None,
         multiple=False,
         required=True,
-        help=PROVIDER,
+        help="The name of the Terraform provider.",
     ),
     "resource": click.option(
         "--resource",
@@ -62,21 +50,10 @@ options = {
         default=None,
         multiple=False,
         required=True,
-        help=RESOURCE,
-    ),
-    "attribute": click.option(
-        "--attribute",
-        type=str,
-        default=None,
-        multiple=False,
-        required=False,
-        help=ATTRIBUTE,
-    ),
-    "blocks": click.option(
-        "--blocks", type=list, default=None, multiple=False, required=False, help=BLOCKS
+        help="The name of the terraform provider resource.",
     ),
     "name": click.option(
-        "--name", type=str, default="main", multiple=False, required=False, help=NAME
+        "--name", type=str, default="main", multiple=False, required=False, help="The name to give the Terraform resource in the configuration.  For example, 'main' or 'this'."
     ),
     "required_attributes_only": click.option(
         "--required-attributes-only",
@@ -85,7 +62,7 @@ options = {
         default=False,
         multiple=False,
         required=False,
-        help="",
+        help="Only include required attributes in the resource configuration.",
     ),
     "required_blocks_only": click.option(
         "--required-blocks-only",
@@ -94,7 +71,7 @@ options = {
         default=False,
         multiple=False,
         required=False,
-        help="",
+        help="Only include required blocks in the resource configuration.",
     ),
     "add_descriptions": click.option(
         "--add-descriptions",
@@ -103,10 +80,10 @@ options = {
         default=False,
         multiple=False,
         required=False,
-        help="",
+        help="Add descriptions inline with the code for all resource attributes.",
     ),
     "ignore_block": click.option(
-        "--ignore-block", type=str, default=None, multiple=True, required=False, help=""
+        "--ignore-block", type=str, default=None, multiple=True, required=False, help="Blocks to ignore in the configuration."
     ),
     "ignore_attribute": click.option(
         "--ignore-attribute",
@@ -114,7 +91,7 @@ options = {
         default=None,
         multiple=True,
         required=False,
-        help="",
+        help="Attributes to ignore in the configuration."
     ),
     "dynamic_block": click.option(
         "--dynamic-block",
@@ -122,7 +99,7 @@ options = {
         default=None,
         multiple=True,
         required=False,
-        help="",
+        help="Blocks to make dynamic in the configuration."
     ),
     "attribute_default": click.option(
         "--attribute-default",
@@ -130,7 +107,7 @@ options = {
         default=None,
         multiple=True,
         required=False,
-        help="",
+        help="Default values for a given attributes in the format 'attribute=value'."
     ),
     "attribute_value_prefix": click.option(
         "--attribute-value-prefix",
@@ -138,7 +115,7 @@ options = {
         default=None,
         multiple=False,
         required=False,
-        help="",
+        help="A prefix to give to all variables in the resource configuration.  Useful for module development.",
     ),
     "terraform_filename": click.option(
         "--terraform-filename",
@@ -146,10 +123,10 @@ options = {
         default="main.tf",
         multiple=False,
         required=False,
-        help=TERRAFORM_FILENAME,
+        help="The name of the target Terraform file.",
     ),
     "keyword": click.option(
-        "--keyword", type=str, default=None, multiple=True, required=False, help=KEYWORD
+        "--keyword", type=str, default=None, multiple=True, required=False, help="A keyword used to filter results."
     ),
 }
 
