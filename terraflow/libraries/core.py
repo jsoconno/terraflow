@@ -115,6 +115,9 @@ def download_schema(filename='schema.json', refresh=False):
     # Determine if there is an existing schema file locally
     if os.path.exists(filename) and not refresh:
         # If the file exists and refresh is False, exit the function
+        print(
+            f'\n{colors("OK_BLUE")}Tip:{colors()} A schema is already downloaded.  To refresh the schema, rerun this command with the `--refresh` flag.\n'
+        )
         return
     else:
         # If the file doesn't exist or refresh is True, call get_schema()
