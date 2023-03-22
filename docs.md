@@ -346,6 +346,8 @@ terraflow resource create [OPTIONS]
   --ignore-attribute TEXT        Attributes to ignore in the configuration.
   --dynamic-block TEXT           Blocks to make dynamic in the configuration.
   --ignore-block TEXT            Blocks to ignore in the configuration.
+  --add-documentation-url        Add a link to the documentation above the
+                                 resource.
   --add-descriptions             Add descriptions inline with the code for all
                                  resource attributes.
   --required-blocks-only         Only include required blocks in the resource
@@ -387,6 +389,8 @@ Options:
   --ignore-attribute TEXT        Attributes to ignore in the configuration.
   --dynamic-block TEXT           Blocks to make dynamic in the configuration.
   --ignore-block TEXT            Blocks to ignore in the configuration.
+  --add-documentation-url        Add a link to the documentation above the
+                                 resource.
   --add-descriptions             Add descriptions inline with the code for all
                                  resource attributes.
   --required-blocks-only         Only include required blocks in the resource
@@ -527,6 +531,8 @@ terraflow data-source create [OPTIONS]
   --ignore-attribute TEXT        Attributes to ignore in the configuration.
   --dynamic-block TEXT           Blocks to make dynamic in the configuration.
   --ignore-block TEXT            Blocks to ignore in the configuration.
+  --add-documentation-url        Add a link to the documentation above the
+                                 resource.
   --add-descriptions             Add descriptions inline with the code for all
                                  resource attributes.
   --required-blocks-only         Only include required blocks in the resource
@@ -568,6 +574,8 @@ Options:
   --ignore-attribute TEXT        Attributes to ignore in the configuration.
   --dynamic-block TEXT           Blocks to make dynamic in the configuration.
   --ignore-block TEXT            Blocks to ignore in the configuration.
+  --add-documentation-url        Add a link to the documentation above the
+                                 resource.
   --add-descriptions             Add descriptions inline with the code for all
                                  resource attributes.
   --required-blocks-only         Only include required blocks in the resource
@@ -699,6 +707,8 @@ terraflow provider create [OPTIONS]
   --ignore-attribute TEXT        Attributes to ignore in the configuration.
   --dynamic-block TEXT           Blocks to make dynamic in the configuration.
   --ignore-block TEXT            Blocks to ignore in the configuration.
+  --add-documentation-url        Add a link to the documentation above the
+                                 resource.
   --add-descriptions             Add descriptions inline with the code for all
                                  resource attributes.
   --required-blocks-only         Only include required blocks in the resource
@@ -735,6 +745,8 @@ Options:
   --ignore-attribute TEXT        Attributes to ignore in the configuration.
   --dynamic-block TEXT           Blocks to make dynamic in the configuration.
   --ignore-block TEXT            Blocks to ignore in the configuration.
+  --add-documentation-url        Add a link to the documentation above the
+                                 resource.
   --add-descriptions             Add descriptions inline with the code for all
                                  resource attributes.
   --required-blocks-only         Only include required blocks in the resource
