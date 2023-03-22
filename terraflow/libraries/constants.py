@@ -82,6 +82,15 @@ options = {
         required=False,
         help="Add descriptions inline with the code for all resource attributes.",
     ),
+    "add_documentation_url": click.option(
+        "--add-documentation-url",
+        type=bool,
+        is_flag=True,
+        default=False,
+        multiple=False,
+        required=False,
+        help="Add a link to the documentation above the resource.",
+    ),
     "ignore_block": click.option(
         "--ignore-block", type=str, default=None, multiple=True, required=False, help="Blocks to ignore in the configuration."
     ),
@@ -159,6 +168,7 @@ def code_options(func):
     func = options["required_attributes_only"](func)
     func = options["required_blocks_only"](func)
     func = options["add_descriptions"](func)
+    func = options["add_documentation_url"](func)
     func = options["ignore_block"](func)
     func = options["dynamic_block"](func)
     func = options["ignore_attribute"](func)

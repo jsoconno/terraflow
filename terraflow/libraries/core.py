@@ -679,6 +679,7 @@ def write_resource_code(
     required_attributes_only=False,
     required_blocks_only=False,
     add_descriptions=False,
+    add_documentation_url=False,
     attribute_defaults={},
     attribute_value_prefix="",
     filename="main.tf",
@@ -687,8 +688,11 @@ def write_resource_code(
 ):
     scope = 'resource'
     resource = "_".join([provider, resource]) if not provider in resource else resource
+    documentation_url = get_resource_documentation_url(namespace=namespace, provider=provider, resource=resource, scope=scope)
+    regex_pattern = rf'(?:#.*\n)*?^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
+    
+    docs = f'# Terraform docs: {documentation_url}' if documentation_url and add_documentation_url else ''
     header = f'resource "{resource}" "{name}" {{'
-    regex_pattern = rf'^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
 
     schema = get_schema(
         namespace=namespace,
@@ -719,10 +723,10 @@ def write_resource_code(
     footer = "}"
 
     # Combine all code lists
-    code = [header] + body + [footer]
+    code = [docs] + [header] + body + [footer]
 
     # Turn the code list into text
-    code = "\n".join(code)
+    code = "\n".join(code).strip()
 
     # Write file
     write_to_file(text=code, filename=filename, regex_pattern=regex_pattern)
@@ -736,7 +740,7 @@ def write_resource_code(
 def delete_resource_code(provider, resource, name, filename='main.tf'):
 
     resource = "_".join([provider, resource]) if not provider in resource else resource
-    regex_pattern = rf'^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+    regex_pattern = rf'(?:#.*\n)*?^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
 
     with open(filename, "r") as f:
         string = f.read()
@@ -757,6 +761,7 @@ def write_data_source_code(
     required_attributes_only=False,
     required_blocks_only=False,
     add_descriptions=False,
+    add_documentation_url=False,
     attribute_defaults={},
     attribute_value_prefix="",
     filename="data-sources.tf",
@@ -765,8 +770,11 @@ def write_data_source_code(
 ):
     scope = 'data_source'
     resource = "_".join([provider, resource]) if not provider in resource else resource
+    documentation_url = get_resource_documentation_url(namespace=namespace, provider=provider, resource=resource, scope=scope)
+    regex_pattern = rf'(?:#.*\n)*?^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
+
+    docs = f'# Terraform docs: {documentation_url}' if documentation_url and add_documentation_url else ''
     header = f'data "{resource}" "{name}" {{'
-    regex_pattern = rf'^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
 
     schema = get_schema(
         namespace=namespace,
@@ -797,10 +805,10 @@ def write_data_source_code(
     footer = "}"
 
     # Combine all code lists
-    code = [header] + body + [footer]
+    code = [docs] + [header] + body + [footer]
 
     # Turn the code list into text
-    code = "\n".join(code)
+    code = "\n".join(code).strip()
 
     # Write file
     write_to_file(text=code, filename=filename, regex_pattern=regex_pattern)
@@ -812,7 +820,7 @@ def write_data_source_code(
 
 def delete_data_source_code(provider, resource, name, filename='main.tf'):
     resource = "_".join([provider, resource]) if not provider in resource else resource
-    regex_pattern = rf'^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+    regex_pattern = rf'(?:#.*\n)*?^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
 
     with open(filename, "r") as f:
         string = f.read()
