@@ -180,6 +180,7 @@ def resource_create(
         schema=schema_filename,
     )
 
+
 # terraflow resource delete
 @resource.command("delete", context_settings=CONTEXT_SETTINGS)
 @terraform_file_options
@@ -190,11 +191,9 @@ def resource_delete(namespace, provider, resource, name, terraform_filename):
     Delete a resource from the configuration.
     """
     delete_resource_code(
-        provider=provider,
-        resource=resource,
-        name=name,
-        filename=terraform_filename
+        provider=provider, resource=resource, name=name, filename=terraform_filename
     )
+
 
 # terraflow data-source
 @terraflow.group("data-source")
@@ -274,6 +273,7 @@ def data_source_create(
         schema=schema_filename,
     )
 
+
 # terraflow datasource delete
 @data_source.command("delete", context_settings=CONTEXT_SETTINGS)
 @terraform_file_options
@@ -284,11 +284,9 @@ def data_source_delete(namespace, provider, resource, name, terraform_filename):
     Delete a data source from the configuration.
     """
     delete_data_source_code(
-        provider=provider,
-        resource=resource,
-        name=name,
-        filename=terraform_filename
+        provider=provider, resource=resource, name=name, filename=terraform_filename
     )
+
 
 # terraflow variable create --namespace --provider --provider-version --name
 
@@ -358,6 +356,7 @@ def provider_create(
         schema=schema_filename,
     )
 
+
 # terraflow provider delete
 @provider.command("delete", context_settings=CONTEXT_SETTINGS)
 @terraform_file_options
@@ -366,10 +365,8 @@ def provider_delete(namespace, provider, terraform_filename):
     """
     Delete a provider from the configuration.
     """
-    delete_provider_code(
-        provider=provider,
-        filename=terraform_filename
-    )
+    delete_provider_code(provider=provider, filename=terraform_filename)
+
 
 # terraflow documentation
 @terraflow.group("docs")
@@ -401,5 +398,6 @@ def docs_create(module_path, config_filename):
     create_terraform_docs_config_file(config_filename)
     generate_terraform_docs(module_path, config_filename)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     terraflow()

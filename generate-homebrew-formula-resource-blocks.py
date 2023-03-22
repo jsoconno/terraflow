@@ -1,6 +1,7 @@
 import requests
 
-def generate_resource_blocks(requirements_file='requirements.txt'):
+
+def generate_resource_blocks(requirements_file="requirements.txt"):
     pypi_base_url = "https://pypi.org/pypi"
 
     with open(requirements_file, "r") as file:
@@ -38,6 +39,7 @@ def generate_resource_blocks(requirements_file='requirements.txt'):
                 resource_blocks += resource_block
 
     return resource_blocks
+
 
 if __name__ == "__main__":
     resources_text = generate_resource_blocks()

@@ -53,7 +53,12 @@ options = {
         help="The name of the terraform provider resource.",
     ),
     "name": click.option(
-        "--name", type=str, default="main", multiple=False, required=False, help="The name to give the Terraform resource in the configuration.  For example, 'main' or 'this'."
+        "--name",
+        type=str,
+        default="main",
+        multiple=False,
+        required=False,
+        help="The name to give the Terraform resource in the configuration.  For example, 'main' or 'this'.",
     ),
     "required_attributes_only": click.option(
         "--required-attributes-only",
@@ -92,7 +97,12 @@ options = {
         help="Add a link to the documentation above the resource.",
     ),
     "ignore_block": click.option(
-        "--ignore-block", type=str, default=None, multiple=True, required=False, help="Blocks to ignore in the configuration."
+        "--ignore-block",
+        type=str,
+        default=None,
+        multiple=True,
+        required=False,
+        help="Blocks to ignore in the configuration.",
     ),
     "ignore_attribute": click.option(
         "--ignore-attribute",
@@ -100,7 +110,7 @@ options = {
         default=None,
         multiple=True,
         required=False,
-        help="Attributes to ignore in the configuration."
+        help="Attributes to ignore in the configuration.",
     ),
     "dynamic_block": click.option(
         "--dynamic-block",
@@ -108,7 +118,7 @@ options = {
         default=None,
         multiple=True,
         required=False,
-        help="Blocks to make dynamic in the configuration."
+        help="Blocks to make dynamic in the configuration.",
     ),
     "attribute_default": click.option(
         "--attribute-default",
@@ -116,7 +126,7 @@ options = {
         default=None,
         multiple=True,
         required=False,
-        help="Default values for a given attributes in the format 'attribute=value'."
+        help="Default values for a given attributes in the format 'attribute=value'.",
     ),
     "attribute_value_prefix": click.option(
         "--attribute-value-prefix",
@@ -135,7 +145,12 @@ options = {
         help="The name of the target Terraform file.",
     ),
     "keyword": click.option(
-        "--keyword", type=str, default=None, multiple=True, required=False, help="A keyword used to filter results."
+        "--keyword",
+        type=str,
+        default=None,
+        multiple=True,
+        required=False,
+        help="A keyword used to filter results.",
     ),
 }
 
@@ -187,6 +202,7 @@ def schema_file_options(func):
     func = options["refresh"](func)
 
     return func
+
 
 def terraform_file_options(func):
     """

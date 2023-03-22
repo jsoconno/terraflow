@@ -37,7 +37,7 @@ def get_schema(
     resource=None,
     attribute=None,
     blocks=None,
-    filename=None
+    filename=None,
 ):
     """
     Returns the schema for a provider as a dictionary.
@@ -104,12 +104,10 @@ def get_schema(
     return schema
 
 
-def download_schema(filename='schema.json', refresh=False):
+def download_schema(filename="schema.json", refresh=False):
     # Check if the file type is .json
-    if not filename.endswith('.json'):
-        print(
-            f'\n{colors("FAIL")}Error:{colors()} {filename} is not a json file.\n'
-        )
+    if not filename.endswith(".json"):
+        print(f'\n{colors("FAIL")}Error:{colors()} {filename} is not a json file.\n')
         return
 
     # Determine if there is an existing schema file locally
@@ -331,8 +329,9 @@ def levenshtein_distance(s, t):
 
     return normalized_distance
 
+
 def get_resource_documentation_url(namespace, provider, resource, scope):
-    url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"  
+    url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"
     response = json.loads(requests.get(url).text)
 
     docs_path = None
@@ -351,6 +350,7 @@ def get_resource_documentation_url(namespace, provider, resource, scope):
         url = None
 
     return url
+
 
 def get_resource_documentation(docs_url):
     if docs_url:
@@ -457,10 +457,13 @@ def recurse_schema(
     # Collect the documentation
     if add_descriptions:
         try:
-            documentation_url = docs_url = get_resource_documentation_url(namespace=kwargs["namespace"], provider=kwargs["provider"], resource=kwargs["resource"], scope=kwargs["scope"])
-            documentation_text = get_resource_documentation(
-                docs_url=documentation_url
+            documentation_url = docs_url = get_resource_documentation_url(
+                namespace=kwargs["namespace"],
+                provider=kwargs["provider"],
+                resource=kwargs["resource"],
+                scope=kwargs["scope"],
             )
+            documentation_text = get_resource_documentation(docs_url=documentation_url)
         except:
             documentation_text = None
     else:
@@ -616,7 +619,7 @@ def write_provider_code(
     filename="providers.tf",
     schema=None,
 ):
-    scope = 'provider'
+    scope = "provider"
     header = f'provider "{provider}" {{'
     regex_pattern = rf'^provider\s+"{provider}"\s+{{[\s\S]*?^}}$'
 
@@ -638,7 +641,7 @@ def write_provider_code(
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
         attribute_defaults=attribute_defaults,
-        scope=scope
+        scope=scope,
     )
 
     footer = "}"
@@ -657,17 +660,18 @@ def write_provider_code(
 
     return code
 
-def delete_provider_code(provider, filename='providers.tf'):
 
+def delete_provider_code(provider, filename="providers.tf"):
     regex_pattern = rf'^provider\s+"{provider}"\s+{{[\s\S]*?^}}\n*'
 
     with open(filename, "r") as f:
         string = f.read()
 
-    result = re.sub(pattern=regex_pattern, repl='', string=string, flags=re.MULTILINE)
+    result = re.sub(pattern=regex_pattern, repl="", string=string, flags=re.MULTILINE)
 
     with open(filename, "w") as f:
         f.write(result)
+
 
 def write_resource_code(
     provider,
@@ -686,12 +690,18 @@ def write_resource_code(
     name="main",
     schema=None,
 ):
-    scope = 'resource'
+    scope = "resource"
     resource = "_".join([provider, resource]) if not provider in resource else resource
-    documentation_url = get_resource_documentation_url(namespace=namespace, provider=provider, resource=resource, scope=scope)
+    documentation_url = get_resource_documentation_url(
+        namespace=namespace, provider=provider, resource=resource, scope=scope
+    )
     regex_pattern = rf'(?:#.*\n)*?^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
-    
-    docs = f'# Terraform docs: {documentation_url}' if documentation_url and add_documentation_url else ''
+
+    docs = (
+        f"# Terraform docs: {documentation_url}"
+        if documentation_url and add_documentation_url
+        else ""
+    )
     header = f'resource "{resource}" "{name}" {{'
 
     schema = get_schema(
@@ -717,7 +727,7 @@ def write_resource_code(
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
         attribute_defaults=attribute_defaults,
-        scope=scope
+        scope=scope,
     )
 
     footer = "}"
@@ -737,15 +747,16 @@ def write_resource_code(
     return code
 
 
-def delete_resource_code(provider, resource, name, filename='main.tf'):
-
+def delete_resource_code(provider, resource, name, filename="main.tf"):
     resource = "_".join([provider, resource]) if not provider in resource else resource
-    regex_pattern = rf'(?:#.*\n)*?^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+    regex_pattern = (
+        rf'(?:#.*\n)*?^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+    )
 
     with open(filename, "r") as f:
         string = f.read()
 
-    result = re.sub(pattern=regex_pattern, repl='', string=string, flags=re.MULTILINE)
+    result = re.sub(pattern=regex_pattern, repl="", string=string, flags=re.MULTILINE)
 
     with open(filename, "w") as f:
         f.write(result)
@@ -768,12 +779,18 @@ def write_data_source_code(
     name="main",
     schema=None,
 ):
-    scope = 'data_source'
+    scope = "data_source"
     resource = "_".join([provider, resource]) if not provider in resource else resource
-    documentation_url = get_resource_documentation_url(namespace=namespace, provider=provider, resource=resource, scope=scope)
+    documentation_url = get_resource_documentation_url(
+        namespace=namespace, provider=provider, resource=resource, scope=scope
+    )
     regex_pattern = rf'(?:#.*\n)*?^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
 
-    docs = f'# Terraform docs: {documentation_url}' if documentation_url and add_documentation_url else ''
+    docs = (
+        f"# Terraform docs: {documentation_url}"
+        if documentation_url and add_documentation_url
+        else ""
+    )
     header = f'data "{resource}" "{name}" {{'
 
     schema = get_schema(
@@ -799,7 +816,7 @@ def write_data_source_code(
         required_blocks_only=required_blocks_only,
         attribute_value_prefix=attribute_value_prefix,
         attribute_defaults=attribute_defaults,
-        scope=scope
+        scope=scope,
     )
 
     footer = "}"
@@ -818,17 +835,19 @@ def write_data_source_code(
 
     return code
 
-def delete_data_source_code(provider, resource, name, filename='main.tf'):
+
+def delete_data_source_code(provider, resource, name, filename="main.tf"):
     resource = "_".join([provider, resource]) if not provider in resource else resource
     regex_pattern = rf'(?:#.*\n)*?^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
 
     with open(filename, "r") as f:
         string = f.read()
 
-    result = re.sub(pattern=regex_pattern, repl='', string=string, flags=re.MULTILINE)
+    result = re.sub(pattern=regex_pattern, repl="", string=string, flags=re.MULTILINE)
 
     with open(filename, "w") as f:
         f.write(result)
+
 
 def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
     """
@@ -854,4 +873,3 @@ def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
         pretty_list += f"{item_prefix}{option}\n"
 
     return pretty_list
-
