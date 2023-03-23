@@ -2,7 +2,7 @@ import os
 import subprocess
 import yaml
 
-from terraflow.libraries.core import colors
+from terraflow.libraries.core import colors, get_terraform_provider_versions
 
 
 def is_terraform_docs_installed():
@@ -44,9 +44,58 @@ def install_terraform_docs():
             f'\n{colors(color="OK_GREEN")}terraform-docs is already installed.{colors()}\n'
         )
 
+def create_terraform_file(filename, filepath=".", content=""):
+    # Create the module path if it does not exist
+    if filepath and not os.path.exists(filepath):
+        os.makedirs(filepath)
 
-def create_terraform_docs_config_file(config_filename, sort_by="name"):
-    config = {
+    file_path = os.path.join(filepath, filename)
+    with open(file_path, "w") as f:
+        f.write(content)
+
+def create_terraform_main_file(filepath="."):
+    content = """/**
+    * # Main title
+    *
+    * Everything in this comment block will get extracted into docs.
+    *
+    * You can put simple text or complete Markdown content
+    * here. Subsequently if you want to render AsciiDoc format
+    * you can put AsciiDoc compatible content in this comment
+    * block.
+    */\n\n"""
+
+    create_terraform_file(
+        filename="main.tf",
+        filepath=filepath,
+        content=content
+    )
+
+def create_terraform_versions_file(filepath=".", terraform_version=">= 1.0.0", namespace="hashicorp", providers=[]):
+    content = "terraform {\n"
+
+    if terraform_version:
+        content += f'  required_version = "{terraform_version}"\n'
+
+    if providers:
+        content += '  required_providers {\n'
+        for provider in providers:
+            latest_version = get_terraform_provider_versions(namespace=namespace, provider=provider)[-1]
+            content += f'    {provider} = {{\n'
+            content += f'      source = "{namespace}/{provider}"\n'
+            content += f'      version = "{latest_version}"\n'
+            content += '    }\n'
+        content += '  }\n'
+    content += '}\n'
+
+    create_terraform_file(
+        filename="versions.tf",
+        filepath=filepath,
+        content=content
+    )
+
+def create_terraform_docs_config_file(filepath=".", sort_by="name"):
+    content = {
         "formatter": "markdown",
         "version": "",
         "header-from": "main.tf",
@@ -92,9 +141,11 @@ def create_terraform_docs_config_file(config_filename, sort_by="name"):
         },
     }
 
-    if not os.path.exists(config_filename):
-        with open(config_filename, "w") as file:
-            yaml.dump(config, file)
+    create_terraform_file(
+        filename="terraform-docs.yaml",
+        filepath=filepath,
+        content=yaml.dump(content)
+    )
 
 
 def generate_terraform_docs(module_path=".", config_filename="terraform-docs.yaml"):
@@ -118,4 +169,32 @@ def generate_terraform_docs(module_path=".", config_filename="terraform-docs.yam
     except subprocess.CalledProcessError as e:
         print(
             f'\n{colors(color="FAIL")}Failed to generate Terraform documentation:{colors()} {e}\n'
+        )
+
+def initialize_terraform_module(filepath=".", terraform_version=">= 1.0.0", namespace="hashicorp", providers=[], add_terraform_docs_config_file=False):
+    create_terraform_main_file(
+        filepath=filepath
+    )
+    create_terraform_versions_file(
+        filepath=filepath,
+        terraform_version=terraform_version,
+        namespace=namespace,
+        providers=providers
+    )
+    create_terraform_file(
+        filename='data-sources.tf',
+        filepath=filepath,
+    )
+    create_terraform_file(
+        filename='variables.tf',
+        filepath=filepath,
+    )
+    create_terraform_file(
+        filename='outputs.tf',
+        filepath=filepath,
+    )
+
+    if add_terraform_docs_config_file:
+        create_terraform_docs_config_file(
+            filepath=filepath
         )

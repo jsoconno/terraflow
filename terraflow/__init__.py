@@ -398,6 +398,29 @@ def docs_create(module_path, config_filename):
     create_terraform_docs_config_file(config_filename)
     generate_terraform_docs(module_path, config_filename)
 
+@terraflow.group("module")
+def module():
+    """
+    Manage modules.
+    """
+    pass
+
+@module.command("create", context_settings=CONTEXT_SETTINGS)
+@provider_options
+@click.option(
+    "--module-path", required=True, default=".", help="Path to the Terraform module."
+)
+def docs_create(module_path, namespace, provider):
+    """
+    Docs
+    """
+    initialize_terraform_module(
+        filepath=module_path,
+        # terraform_version=terraform_version,
+        namespace=namespace,
+        providers=provider,
+        # add_terraform_docs_config_file=True
+    )
 
 if __name__ == "__main__":
     terraflow()

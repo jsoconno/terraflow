@@ -29,6 +29,17 @@ def colors(color="END"):
 
     return colors[color]
 
+def get_terraform_provider_versions(namespace, provider, latest=False):
+    """
+    Gets a list of versions for a given terraform provider such as aws, gcp, or azurerm.
+    """
+    response = requests.get(f"https://registry.terraform.io/v1/providers/{namespace}/{provider}")
+    data = json.loads(response.text)
+
+    versions = data["versions"]
+    
+    return versions
+
 
 def get_schema(
     namespace="hashicorp",
