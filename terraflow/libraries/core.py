@@ -318,7 +318,7 @@ def levenshtein_distance(s, t):
     return normalized_distance
 
 
-def get_resource_documentation_url(namespace, provider, resource, scope):
+def get_resource_documentation_url(namespace, provider, resource, scope, version='main'):
     url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"
     response = json.loads(requests.get(url).text)
 
@@ -337,7 +337,7 @@ def get_resource_documentation_url(namespace, provider, resource, scope):
             url = f"https://github.com/{namespace}/terraform-provider-{provider}"
         else:
             # TODO: replace "main" with the actual version of the provider from the configuration.
-            url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/main/{docs_path}"
+            url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{version}/{docs_path}"
     else:
         url = None
 
