@@ -333,7 +333,10 @@ def get_resource_documentation_url(namespace, provider, resource, scope):
             docs_path = doc["path"]
 
     if docs_path:
-        url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/main/{docs_path}"
+        if scope == "provider":
+            url = f"https://github.com/{namespace}/terraform-provider-{provider}"
+        else:
+            url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/main/{docs_path}"
     else:
         url = None
 
