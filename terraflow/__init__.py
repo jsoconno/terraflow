@@ -352,6 +352,7 @@ def provider_create(
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         add_descriptions=add_descriptions,
+        add_documentation_url=add_documentation_url,
         attribute_defaults=attribute_defaults,
         attribute_value_prefix=attribute_value_prefix,
         filename=terraform_filename,

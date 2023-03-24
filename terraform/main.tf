@@ -9,59 +9,120 @@
  * block.
  */
 
-# Terraform docs: https://github.com/hashicorp/terraform-provider-azurerm/blob/main/website/docs/r/key_vault.html.markdown
-resource "azurerm_key_vault" "main" {
-  enable_rbac_authorization       = var.enable_rbac_authorization       # (Optional) Boolean flag to specify whether Azure Key Vault uses Role Based Access Control (RBAC) for authorization of data actions.
-  enabled_for_deployment          = var.enabled_for_deployment          # (Optional) Boolean flag to specify whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault.
-  enabled_for_disk_encryption     = var.enabled_for_disk_encryption     # (Optional) Boolean flag to specify whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys.
-  enabled_for_template_deployment = var.enabled_for_template_deployment # (Optional) Boolean flag to specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault.
-  location                        = var.location                        # (Required) Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
-  name                            = data.azurerm_key_vault.main.name    # (Required) Specifies the name of the Key Vault. Changing this forces a new resource to be created. The name must be globally unique. If the vault is in a recoverable state then the vault will need to be purged before reusing the name.
-  public_network_access_enabled   = var.public_network_access_enabled   # (Optional) Whether public network access is allowed for this Key Vault. Defaults to true.
-  purge_protection_enabled        = var.purge_protection_enabled        # (Optional) Is Purge Protection enabled for this Key Vault?
-  resource_group_name             = var.resource_group_name             # (Required) The name of the resource group in which to create the Key Vault. Changing this forces a new resource to be created.
-  sku_name                        = var.sku_name                        # (Required) The Name of the SKU used for this Key Vault. Possible values are standard and premium.
-  soft_delete_retention_days      = var.soft_delete_retention_days      # (Optional) The number of days that items should be retained for once soft-deleted. This value can be between 7 and 90 (the default) days.
-  tags                            = var.tags                            # (Optional) A mapping of tags to assign to the resource.
-  tenant_id                       = var.tenant_id                       # (Required) The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault.
+provider "azurerm" {
+  auxiliary_tenant_ids           = var.auxiliary_tenant_ids
+  client_certificate             = var.client_certificate             # Base64 encoded PKCS#12 certificate bundle to use when authenticating as a Service Principal using a Client Certificate
+  client_certificate_password    = var.client_certificate_password    # The password associated with the Client Certificate. For use when authenticating as a Service Principal using a Client Certificate
+  client_certificate_path        = var.client_certificate_path        # The path to the Client Certificate associated with the Service Principal for use when authenticating as a Service Principal using a Client Certificate.
+  client_id                      = var.client_id                      # The Client ID which should be used.
+  client_secret                  = var.client_secret                  # The Client Secret which should be used. For use When authenticating as a Service Principal using a Client Secret.
+  disable_correlation_request_id = var.disable_correlation_request_id # This will disable the x-ms-correlation-request-id header.
+  disable_terraform_partner_id   = var.disable_terraform_partner_id   # This will disable the Terraform Partner ID which is used if a custom `partner_id` isn't specified.
+  environment                    = var.environment                    # The Cloud Environment which should be used. Possible values are public, usgovernment, and china. Defaults to public.
+  metadata_host                  = var.metadata_host                  # The Hostname which should be used for the Azure Metadata Service.
+  msi_endpoint                   = var.msi_endpoint                   # The path to a custom endpoint for Managed Service Identity - in most circumstances this should be detected automatically. 
+  oidc_request_token             = var.oidc_request_token             # The bearer token for the request to the OIDC provider. For use when authenticating as a Service Principal using OpenID Connect.
+  oidc_request_url               = var.oidc_request_url               # The URL for the OIDC provider from which to request an ID token. For use when authenticating as a Service Principal using OpenID Connect.
+  oidc_token                     = var.oidc_token                     # The OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.
+  oidc_token_file_path           = var.oidc_token_file_path           # The path to a file containing an OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.
+  partner_id                     = var.partner_id                     # A GUID/UUID that is registered with Microsoft to facilitate partner resource usage attribution.
+  skip_provider_registration     = var.skip_provider_registration     # Should the AzureRM Provider skip registering all of the Resource Providers that it supports, if they're not already registered?
+  storage_use_azuread            = var.storage_use_azuread            # Should the AzureRM Provider use AzureAD to access the Storage Data Plane API's?
+  subscription_id                = var.subscription_id                # The Subscription ID which should be used.
+  tenant_id                      = var.tenant_id                      # The Tenant ID which should be used.
+  use_cli                        = var.use_cli                        # Allow Azure CLI to be used for Authentication.
+  use_msi                        = var.use_msi                        # Allow Managed Service Identity to be used for Authentication.
+  use_oidc                       = var.use_oidc                       # Allow OpenID Connect to be used for authentication
 
-  # This block is optional with no minimum number of items and no maximum number of items
-  dynamic "contact" {
-    for_each = var.contact
-    content {
-      email = contact.value["email"] # (Required) E-mail address of the contact.
-      name  = contact.value["name"]  # (Optional) Name of the contact.
-      phone = contact.value["phone"] # (Optional) Phone number of the contact.
+  # This block is required with a minimum of 1 items and a maximum of 1 items
+  features {
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    api_management {
+      purge_soft_delete_on_destroy = var.features_api_management_purge_soft_delete_on_destroy
+      recover_soft_deleted         = var.features_api_management_recover_soft_deleted
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    app_configuration {
+      purge_soft_delete_on_destroy = var.features_app_configuration_purge_soft_delete_on_destroy
+      recover_soft_deleted         = var.features_app_configuration_recover_soft_deleted
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    application_insights {
+      disable_generated_rule = var.features_application_insights_disable_generated_rule
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    cognitive_account {
+      purge_soft_delete_on_destroy = var.features_cognitive_account_purge_soft_delete_on_destroy
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    key_vault {
+      purge_soft_delete_on_destroy                            = var.features_key_vault_purge_soft_delete_on_destroy                            # When enabled soft-deleted `azurerm_key_vault` resources will be permanently deleted (e.g purged), when destroyed
+      purge_soft_deleted_certificates_on_destroy              = var.features_key_vault_purge_soft_deleted_certificates_on_destroy              # When enabled soft-deleted `azurerm_key_vault_certificate` resources will be permanently deleted (e.g purged), when destroyed
+      purge_soft_deleted_hardware_security_modules_on_destroy = var.features_key_vault_purge_soft_deleted_hardware_security_modules_on_destroy # When enabled soft-deleted `azurerm_key_vault_managed_hardware_security_module` resources will be permanently deleted (e.g purged), when destroyed
+      purge_soft_deleted_keys_on_destroy                      = var.features_key_vault_purge_soft_deleted_keys_on_destroy                      # When enabled soft-deleted `azurerm_key_vault_key` resources will be permanently deleted (e.g purged), when destroyed
+      purge_soft_deleted_secrets_on_destroy                   = var.features_key_vault_purge_soft_deleted_secrets_on_destroy                   # When enabled soft-deleted `azurerm_key_vault_secret` resources will be permanently deleted (e.g purged), when destroyed
+      recover_soft_deleted_certificates                       = var.features_key_vault_recover_soft_deleted_certificates                       # When enabled soft-deleted `azurerm_key_vault_certificate` resources will be restored, instead of creating new ones
+      recover_soft_deleted_key_vaults                         = var.features_key_vault_recover_soft_deleted_key_vaults                         # When enabled soft-deleted `azurerm_key_vault` resources will be restored, instead of creating new ones
+      recover_soft_deleted_keys                               = var.features_key_vault_recover_soft_deleted_keys                               # When enabled soft-deleted `azurerm_key_vault_key` resources will be restored, instead of creating new ones
+      recover_soft_deleted_secrets                            = var.features_key_vault_recover_soft_deleted_secrets                            # When enabled soft-deleted `azurerm_key_vault_secret` resources will be restored, instead of creating new ones
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    log_analytics_workspace {
+      permanently_delete_on_destroy = var.features_log_analytics_workspace_permanently_delete_on_destroy
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    managed_disk {
+      expand_without_downtime = var.features_managed_disk_expand_without_downtime
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    network {
+      relaxed_locking = var.features_network_relaxed_locking
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    resource_group {
+      prevent_deletion_if_contains_resources = var.features_resource_group_prevent_deletion_if_contains_resources
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    template_deployment {
+      delete_nested_items_during_deletion = var.features_template_deployment_delete_nested_items_during_deletion
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    virtual_machine {
+      delete_os_disk_on_deletion     = var.features_virtual_machine_delete_os_disk_on_deletion
+      graceful_shutdown              = var.features_virtual_machine_graceful_shutdown
+      skip_shutdown_and_force_delete = var.features_virtual_machine_skip_shutdown_and_force_delete
+    }
+
+    # This block is optional with no minimum number of items and a maximum of 1 items
+    virtual_machine_scale_set {
+      force_delete                  = var.features_virtual_machine_scale_set_force_delete
+      roll_instances_when_required  = var.features_virtual_machine_scale_set_roll_instances_when_required
+      scale_to_zero_before_deletion = var.features_virtual_machine_scale_set_scale_to_zero_before_deletion
     }
   }
-
-  # This block is optional with no minimum number of items and no maximum number of items
-  timeouts {
-    create = timeouts_create # (Defaults to 30 minutes) Used when creating the Key Vault.
-    delete = timeouts_delete # (Defaults to 30 minutes) Used when deleting the Key Vault.
-    read   = timeouts_read   # (Defaults to 5 minutes) Used when retrieving the Key Vault.
-    update = timeouts_update # (Defaults to 30 minutes) Used when updating the Key Vault.
-  }
 }
-
-
-
-data "azurerm_key_vault" "main" {
-  name                = var.test_name
-  resource_group_name = var.test_resource_group_name
-
-  # This block is optional with no minimum number of items and no maximum number of items
-  timeouts {
-    read = var.test_timeouts_read
-  }
-}
-
-
-
-
-
 
 resource "azurerm_resource_group" "main" {
   location = var.location
   name     = var.name
+  tags     = var.tags
+
+  # This block is optional with no minimum number of items and no maximum number of items
+  timeouts {
+    create = var.timeouts_create
+    delete = var.timeouts_delete
+    read   = var.timeouts_read
+    update = var.timeouts_update
+  }
 }

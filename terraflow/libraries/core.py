@@ -354,7 +354,7 @@ def get_resource_documentation(documentation_url):
         documentation = re.sub(r"(\n\s*)+", "\n", documentation)  # Normalize newlines
         documentation = documentation.strip()
     else:
-        print(f'{colors(color="WARNING")}Documentation not found.{colors()}')
+        print(f'\n{colors(color="WARNING")}Warning:{colors()}\n')
         documentation = None
 
     return documentation
@@ -440,6 +440,7 @@ def write_attribute(
     attribute_defaults,
     dynamic_blocks,
     documentation_text=None,
+    add_descriptions=False
 ):
     # Get the value that should be set for the attribute
     attribute_value = set_attribute_value(
@@ -449,26 +450,27 @@ def write_attribute(
         attribute_defaults=attribute_defaults,
         dynamic_blocks=dynamic_blocks,
     )
+    # Get the attribute's description
+    description = ""
 
-    # Get the attribute description if the user providers documentation text
-    if documentation_text:
-        try:
-            attribute_description = get_resource_attribute_description(
+    if add_descriptions:
+        if documentation_text:
+            # Attempt to get the description from the documentation_text
+            description = get_resource_attribute_description(
                 documentation_text=documentation_text,
                 attribute=attribute,
                 block_hierarchy=block_hierarchy,
             )
-        except Exception as e:
-            attribute_description = get_attribute_value(
-                attribute_schema=attribute_schema, attribute="description"
-            )
-        finally:
-            attribute_description = attribute_description.replace('"', "'")
-    else:
-        attribute_description = None
+        
+        if not description:
+            # Attempt to get the description from the attribute_schema
+            description = attribute_schema.get("description", "")
 
-    if attribute_description:
-        line_of_code = f"{attribute} = {attribute_value} # {attribute_description}"
+    # Clean up text so that only single quotes are used in descriptions
+    description = description.replace('"', "'")
+
+    if description:
+        line_of_code = f"{attribute} = {attribute_value} # {description}"
     else:
         line_of_code = f"{attribute} = {attribute_value}"
 
@@ -505,10 +507,10 @@ def write_code(
     content,
     schema,
     attribute_func,
-    namespace,
     provider,
-    resource,
     scope,
+    namespace='hashicorp',
+    resource=None,
     block_hierarchy=[],
     documentation_url=None,
     block_func=None,
@@ -697,6 +699,7 @@ def write_body_code(
     dynamic_blocks=[],
     required_attributes_only=False,
     ignore_attributes=[],
+    add_descriptions=False,
     **kwargs,
 ):
     required_attribute = is_required_attribute(attribute_schema=schema)
@@ -716,6 +719,7 @@ def write_body_code(
             attribute_value_prefix=attribute_value_prefix,
             attribute_defaults=attribute_defaults,
             dynamic_blocks=dynamic_blocks,
+            add_descriptions=add_descriptions
         )
 
         content += f"{attribute}\n"
@@ -732,6 +736,7 @@ def create_provider_code(
     required_attributes_only=False,
     required_blocks_only=False,
     add_descriptions=False,
+    add_documentation_url=False,
     attribute_defaults={},
     attribute_value_prefix="",
     filename="providers.tf",
@@ -760,7 +765,6 @@ def create_provider_code(
         attribute_func=write_body_code,
         namespace=namespace,
         provider=provider,
-        resource=resource,
         scope=scope,
         content="",
         block_func=add_block_wrapper,
@@ -774,7 +778,8 @@ def create_provider_code(
         ignore_blocks=ignore_blocks,
         dynamic_blocks=dynamic_blocks,
         attribute_defaults=attribute_defaults,
-        attribute_value_prefix=attribute_value_prefix
+        attribute_value_prefix=attribute_value_prefix,
+        add_descriptions=add_descriptions
     )
 
     # Write file
@@ -865,7 +870,8 @@ def create_resource_code(
         ignore_blocks=ignore_blocks,
         dynamic_blocks=dynamic_blocks,
         attribute_defaults=attribute_defaults,
-        attribute_value_prefix=attribute_value_prefix
+        attribute_value_prefix=attribute_value_prefix,
+        add_descriptions=add_descriptions
     )
 
     # Write file
@@ -906,7 +912,7 @@ def create_data_source_code(
     attribute_defaults={},
     attribute_value_prefix="",
     comment=None,
-    filename="main.tf",
+    filename="data-sources.tf",
     name="main",
     schema=None,
     refresh=False
@@ -959,7 +965,8 @@ def create_data_source_code(
         ignore_blocks=ignore_blocks,
         dynamic_blocks=dynamic_blocks,
         attribute_defaults=attribute_defaults,
-        attribute_value_prefix=attribute_value_prefix
+        attribute_value_prefix=attribute_value_prefix,
+        add_descriptions=add_descriptions
     )
 
     # Write file
@@ -984,9 +991,9 @@ def delete_data_source_code(provider, resource, name, filename="main.tf"):
         f.write(result)
 
 
-namespace = "hashicorp"
-provider = "azurerm"
-resource = "key_vault"
-scope = "data_source"
+# namespace = "hashicorp"
+# provider = "azurerm"
+# resource = "key_vault"
+# scope = "data_source"
 
-create_data_source_code(provider=provider, resource=resource, name="main", attribute_value_prefix="test")
+# create_data_source_code(provider=provider, resource=resource, name="main", attribute_value_prefix="test")
