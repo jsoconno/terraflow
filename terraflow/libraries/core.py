@@ -336,6 +336,7 @@ def get_resource_documentation_url(namespace, provider, resource, scope):
         if scope == "provider":
             url = f"https://github.com/{namespace}/terraform-provider-{provider}"
         else:
+            # TODO: replace "main" with the actual version of the provider from the configuration.
             url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/main/{docs_path}"
     else:
         url = None
@@ -761,7 +762,6 @@ def create_provider_code(
         provider=provider,
         resource=resource,
         scope=scope,
-        # documentation_text=documentation,
         content="",
         block_func=add_block_wrapper,
         resource_func=add_resource_wrapper,
@@ -773,7 +773,8 @@ def create_provider_code(
         ignore_attributes=ignore_attributes,
         ignore_blocks=ignore_blocks,
         dynamic_blocks=dynamic_blocks,
-        attribute_defaults=attribute_defaults
+        attribute_defaults=attribute_defaults,
+        attribute_value_prefix=attribute_value_prefix
     )
 
     # Write file
@@ -863,7 +864,8 @@ def create_resource_code(
         ignore_attributes=ignore_attributes,
         ignore_blocks=ignore_blocks,
         dynamic_blocks=dynamic_blocks,
-        attribute_defaults=attribute_defaults
+        attribute_defaults=attribute_defaults,
+        attribute_value_prefix=attribute_value_prefix
     )
 
     # Write file
@@ -956,7 +958,8 @@ def create_data_source_code(
         ignore_attributes=ignore_attributes,
         ignore_blocks=ignore_blocks,
         dynamic_blocks=dynamic_blocks,
-        attribute_defaults=attribute_defaults
+        attribute_defaults=attribute_defaults,
+        attribute_value_prefix=attribute_value_prefix
     )
 
     # Write file
@@ -981,9 +984,9 @@ def delete_data_source_code(provider, resource, name, filename="main.tf"):
         f.write(result)
 
 
-# namespace = "hashicorp"
-# provider = "azurerm"
-# resource = "key_vault"
-# scope = "data_source"
+namespace = "hashicorp"
+provider = "azurerm"
+resource = "key_vault"
+scope = "data_source"
 
-# create_data_source_code(provider=provider, resource=resource, name="main", attribute_defaults={"name": "hello"})
+create_data_source_code(provider=provider, resource=resource, name="main", attribute_value_prefix="test")
