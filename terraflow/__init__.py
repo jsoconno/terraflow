@@ -162,7 +162,7 @@ def resource_create(
     """
     attribute_defaults = convert_strings_to_dict(attribute_default)
 
-    write_resource_code(
+    create_resource_code(
         namespace=namespace,
         provider=provider,
         resource=resource,
@@ -178,6 +178,7 @@ def resource_create(
         filename=terraform_filename,
         name=name,
         schema=schema_filename,
+        refresh=refresh
     )
 
 
@@ -255,7 +256,7 @@ def data_source_create(
     """
     attribute_defaults = convert_strings_to_dict(attribute_default)
 
-    write_data_source_code(
+    create_data_source_code(
         namespace=namespace,
         provider=provider,
         resource=resource,
@@ -271,6 +272,7 @@ def data_source_create(
         filename=terraform_filename,
         name=name,
         schema=schema_filename,
+        refresh=refresh
     )
 
 
@@ -341,7 +343,7 @@ def provider_create(
     """
     attribute_defaults = convert_strings_to_dict(attribute_default)
 
-    write_provider_code(
+    create_provider_code(
         namespace=namespace,
         provider=provider,
         ignore_attributes=ignore_attribute,
@@ -354,6 +356,7 @@ def provider_create(
         attribute_value_prefix=attribute_value_prefix,
         filename=terraform_filename,
         schema=schema_filename,
+        refresh=refresh
     )
 
 
