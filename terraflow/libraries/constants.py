@@ -7,7 +7,6 @@ import click
 
 # Validation
 ALLOWED_SCOPES = ["provider", "resource", "data_source"]
-ALLOWED_ATTRIBUTES = ["optional", "required", "description", "type"]
 
 # Dictionary of different CLI options
 options = {
