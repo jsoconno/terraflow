@@ -340,9 +340,9 @@ def get_resource_documentation_url(namespace, provider, resource, scope):
     return url
 
 
-def get_resource_documentation(docs_url):
-    if docs_url:
-        html_text = requests.get(docs_url).content.decode()
+def get_resource_documentation(documentation_url):
+    if documentation_url:
+        html_text = requests.get(documentation_url).content.decode()
         soup = BeautifulSoup(html_text, features="html.parser")
 
         # Extract the text from the HTML document while preserving special characters
@@ -746,7 +746,10 @@ def create_provider_code(
         namespace=namespace, provider=provider, scope=scope, filename=schema
     )
 
-    docs_url = f"https://github.com/hashicorp/terraform-provider-{provider}"
+    if add_documentation_url:
+        documentation_url = f"https://github.com/hashicorp/terraform-provider-{provider}"
+    else:
+        documentation_url = None
 
     code = write_code(
         schema=schema,
@@ -759,7 +762,7 @@ def create_provider_code(
         content="",
         block_func=add_block_wrapper,
         resource_func=add_resource_wrapper,
-        documentation_url=docs_url,
+        documentation_url=documentation_url,
         comment=comment,
         header=header,
         required_attributes_only=required_attributes_only,
@@ -826,11 +829,17 @@ def create_resource_code(
         filename=schema,
     )
 
-    docs_url = get_resource_documentation_url(
-        namespace=namespace, provider=provider, resource=resource, scope=scope
-    )
+    if add_documentation_url or add_descriptions:
+        documentation_url = get_resource_documentation_url(
+            namespace=namespace, provider=provider, resource=resource, scope=scope
+        )
+    else:
+        documentation_url = None
 
-    documentation = get_resource_documentation(docs_url=docs_url)
+    if add_descriptions:
+        documentation = get_resource_documentation(documentation_url=documentation_url)
+    else:
+        documentation = None
 
     code = write_code(
         schema=schema,
@@ -843,7 +852,7 @@ def create_resource_code(
         content="",
         block_func=add_block_wrapper,
         resource_func=add_resource_wrapper,
-        documentation_url=docs_url,
+        documentation_url=documentation_url,
         comment=comment,
         header=header,
         required_attributes_only=required_attributes_only,
@@ -913,11 +922,17 @@ def create_data_source_code(
         filename=schema,
     )
 
-    docs_url = get_resource_documentation_url(
-        namespace=namespace, provider=provider, resource=resource, scope=scope
-    )
+    if add_documentation_url or add_descriptions:
+        documentation_url = get_resource_documentation_url(
+            namespace=namespace, provider=provider, resource=resource, scope=scope
+        )
+    else:
+        documentation_url = None
 
-    documentation = get_resource_documentation(docs_url=docs_url)
+    if add_descriptions:
+        documentation = get_resource_documentation(documentation_url=documentation_url)
+    else:
+        documentation = None
 
     code = write_code(
         schema=schema,
@@ -930,7 +945,7 @@ def create_data_source_code(
         content="",
         block_func=add_block_wrapper,
         resource_func=add_resource_wrapper,
-        documentation_url=docs_url,
+        documentation_url=documentation_url,
         comment=comment,
         header=header,
         required_attributes_only=required_attributes_only,

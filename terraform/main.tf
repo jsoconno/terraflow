@@ -46,28 +46,21 @@ resource "azurerm_key_vault" "main" {
 
 
 
-# Terraform docs: https://github.com/hashicorp/terraform-provider-azurerm/blob/main/website/docs/d/key_vault.html.markdown
 data "azurerm_key_vault" "main" {
-  name                = "hello"                 # Specifies the name of the Key Vault.
-  resource_group_name = var.resource_group_name # The name of the Resource Group in which the Key Vault exists.
+  name                = "hello"
+  resource_group_name = var.resource_group_name
 
   # This block is optional with no minimum number of items and no maximum number of items
   timeouts {
-    read = var.timeouts_read # (Defaults to 5 minutes) Used when retrieving the Key Vault.
+    read = var.timeouts_read
   }
 }
 
+
+
 # Terraform docs: https://github.com/hashicorp/terraform-provider-azurerm/blob/main/website/docs/r/resource_group.html.markdown
 resource "azurerm_resource_group" "main" {
-  location = var.location # (Required) The Azure Region where the Resource Group should exist. Changing this forces a new Resource Group to be created.
-  name     = var.name     # (Required) The Name which should be used for this Resource Group. Changing this forces a new Resource Group to be created.
-  tags     = var.tags     # (Optional) A mapping of tags which should be assigned to the Resource Group.
-
-  # This block is optional with no minimum number of items and no maximum number of items
-  timeouts {
-    create = var.timeouts_create # (Defaults to 90 minutes) Used when creating the Resource Group.
-    delete = var.timeouts_delete # (Defaults to 90 minutes) Used when deleting the Resource Group.
-    read   = var.timeouts_read   # (Defaults to 5 minutes) Used when retrieving the Resource Group.
-    update = var.timeouts_update # (Defaults to 90 minutes) Used when updating the Resource Group.
-  }
+  location = var.location
+  name     = var.name
+  tags     = var.tags
 }
