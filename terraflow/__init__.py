@@ -5,6 +5,7 @@ import click
 from terraflow.libraries.core import *
 from terraflow.libraries.constants import *
 from terraflow.libraries.documentation import *
+from terraflow.libraries.format import *
 from terraflow.version import __version__
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="terraflow")
@@ -370,6 +371,60 @@ def provider_delete(namespace, provider, terraform_filename):
     Delete a provider from the configuration.
     """
     delete_provider_code(provider=provider, filename=terraform_filename)
+
+
+# terraflow outputs
+@terraflow.group("output")
+def output():
+    """
+    Manage Terraform outputs.
+    """
+    pass
+
+
+# terraflow output create
+@output.command("create", context_settings=CONTEXT_SETTINGS)
+@schema_file_options
+@terraform_file_options
+@provider_options
+@code_options
+def provider_create(
+    namespace,
+    provider,
+    schema_filename,
+    refresh,
+    required_attributes_only,
+    required_blocks_only,
+    add_descriptions,
+    add_documentation_url,
+    ignore_block,
+    dynamic_block,
+    ignore_attribute,
+    attribute_default,
+    attribute_value_prefix,
+    terraform_filename
+):
+    """
+    Create an output.
+    """
+    attribute_defaults = convert_strings_to_dict(attribute_default)
+
+    create_provider_code(
+        namespace=namespace,
+        provider=provider,
+        ignore_attributes=ignore_attribute,
+        ignore_blocks=ignore_block,
+        dynamic_blocks=dynamic_block,
+        required_attributes_only=required_attributes_only,
+        required_blocks_only=required_blocks_only,
+        add_descriptions=add_descriptions,
+        add_documentation_url=add_documentation_url,
+        attribute_defaults=attribute_defaults,
+        attribute_value_prefix=attribute_value_prefix,
+        filename=terraform_filename,
+        schema=schema_filename,
+        refresh=refresh
+    )
 
 
 # terraflow documentation

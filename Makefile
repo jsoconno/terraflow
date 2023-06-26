@@ -17,6 +17,7 @@ help:
 	@echo "  build       Build the CLI application"
 	@echo "  dist        Package the CLI application for distribution"
 	@echo "  lint        Run linting checks on the codebase"
+	@echo "  test        Run tests"
 
 run: $(VENV)/bin/activate
 	@echo "\nYour python virtual environment is ready!  To activate it, run the following command:\n\n- source $(VENV)/bin/activate"
@@ -60,3 +61,6 @@ clean:
 	find . -type f -name '*.pyc' -delete
 	find . -type d -name '__pycache__' -exec rm -rf {} +
 	rm -rf build dist *.egg-info
+
+test:
+	pytest

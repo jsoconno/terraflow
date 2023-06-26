@@ -9,25 +9,7 @@ import difflib
 import errno
 
 from terraflow.libraries.constants import *
-
-
-def colors(color="END"):
-    """
-    A standard set of colors used for printing to command line.
-    """
-    colors = {
-        "HEADER": "\033[95m",
-        "OK_BLUE": "\033[94m",
-        "OK_CYAN": "\033[96m",
-        "OK_GREEN": "\033[92m",
-        "WARNING": "\033[93m",
-        "FAIL": "\033[91m",
-        "END": "\033[0m",
-        "BOLD": "\033[1m",
-        "UNDERLINE": "\033[4m",
-    }
-
-    return colors[color]
+from terraflow.libraries.format import *
 
 
 def get_schema(
@@ -469,6 +451,7 @@ def write_attribute(
     # Clean up text so that only single quotes are used in descriptions
     description = description.replace('"', "'")
 
+    # Write line of code
     if description:
         line_of_code = f"{attribute} = {attribute_value} # {description}"
     else:
@@ -477,34 +460,10 @@ def write_attribute(
     return line_of_code
 
 
-def pretty_list(items=[], title=None, top=None, item_prefix=" - "):
-    """
-    Implements logic to make output to CLI more clean and consistent.
-    """
-    pretty_list = "\n"
-
-    if isinstance(items, str):
-        items = [items]
-
-    if len(items) > 1:
-        item_prefix = item_prefix
-    else:
-        item_prefix = ""
-
-    if title:
-        pretty_list += f"{title}\n\n"
-
-    if top:
-        items = items[:top]
-
-    for option in items:
-        pretty_list += f"{item_prefix}{option}\n"
-
-    return pretty_list
-
-
 def write_code(
     content,
+    variables,
+    outputs,
     schema,
     attribute_func,
     provider,
@@ -515,8 +474,11 @@ def write_code(
     documentation_url=None,
     block_func=None,
     resource_func=None,
+    variable_func=None,
+    output_func=None,
     **kwargs,
 ):
+    # Add resource header if resource_func is passed
     if resource_func:
         resource_header, resource_footer = resource_func(
             documentation_url=documentation_url, **kwargs
@@ -532,6 +494,8 @@ def write_code(
         # Call the function that formats code
         content = attribute_func(
             content=content,
+            variables=variables,
+            outputs=outputs,
             schema=attribute_schema,
             block_hierarchy=block_hierarchy,
             attribute=attribute,
@@ -541,6 +505,18 @@ def write_code(
             scope=scope,
             **kwargs,
         )
+
+        # Write outputs
+        output = output_func(
+            resource=resource,
+            attribute=attribute,
+            block_hierarchy=block_hierarchy,
+            **kwargs
+        )
+
+        # Add output if output_func is passed
+        if output_func and output:
+            outputs.append(output)
 
     # Recursively call this function on each block
     for block, block_schema in blocks.items():
@@ -566,8 +542,10 @@ def write_code(
 
         if process_attributes:
             # Recurse through the child attributes
-            content = write_code(
+            content, outputs = write_code(
                 content=content,
+                variables=variables,
+                outputs=outputs,
                 schema=block_schema,
                 attribute_func=attribute_func,
                 block_hierarchy=block_hierarchy,
@@ -576,6 +554,7 @@ def write_code(
                 resource=resource,
                 scope=scope,
                 block_func=block_func,
+                output_func=output_func,
                 **kwargs,
             )
 
@@ -587,10 +566,13 @@ def write_code(
 
         del block_hierarchy[-1:]
 
+    # Add resource footer if resource_func is passed
     if resource_func:
         content += resource_footer
 
-    return content
+    print(outputs)
+
+    return content, outputs
 
 
 def wrap_text(text, line_length=80):
@@ -686,6 +668,8 @@ def add_block_wrapper(
 
 def write_body_code(
     content,
+    variables,
+    outputs,
     schema,
     provider,
     attribute,
@@ -726,6 +710,39 @@ def write_body_code(
 
     return content
 
+def write_output_code(
+    resource,
+    name,
+    attribute,
+    description="",
+    documentation_text="",
+    sensitive=False,
+    block_hierarchy=[],
+    **kwargs
+):
+    # Get the attribute's description
+    if not description:
+        if documentation_text:
+            # Attempt to get the description from the documentation_text
+            description = get_resource_attribute_description(
+                documentation_text=documentation_text,
+                attribute=attribute,
+                block_hierarchy=block_hierarchy,
+            )
+            
+            # If a description was not found
+            if not description:
+                # Attempt to get the description from the attribute_schema
+                description = attribute_schema.get("description", "")
+
+    # Clean up text so that only single quotes are used in descriptions
+    description = description.replace('"', "'")
+    if description == "":
+        output = f'output "{attribute}" {{\n  value = {resource}.{name}.{attribute}\n  sensitive = {sensitive}\n}}'
+    else:
+        output = f'output "{attribute}" {{\n  value = {resource}.{name}.{attribute}\n  description = "{description}"\n  sensitive = {sensitive}\n}}'
+    
+    return output
 
 def create_provider_code(
     provider,
@@ -740,6 +757,8 @@ def create_provider_code(
     attribute_defaults={},
     attribute_value_prefix="",
     filename="providers.tf",
+    variables_filename="variables.tf",
+    outputs_filename="outputs.tf",
     comment=None,
     schema=None,
     refresh=False
@@ -760,13 +779,15 @@ def create_provider_code(
     else:
         documentation_url = None
 
-    code = write_code(
+    code, outputs = write_code(
         schema=schema,
         attribute_func=write_body_code,
         namespace=namespace,
         provider=provider,
         scope=scope,
         content="",
+        variables=[],
+        outputs=[],
         block_func=add_block_wrapper,
         resource_func=add_resource_wrapper,
         documentation_url=documentation_url,
@@ -818,6 +839,8 @@ def create_resource_code(
     attribute_value_prefix="",
     comment=None,
     filename="main.tf",
+    variables_filename="variables.tf",
+    outputs_filename="outputs.tf",
     name="main",
     schema=None,
     refresh=False
@@ -826,6 +849,7 @@ def create_resource_code(
     resource = "_".join([provider, resource]) if not provider in resource else resource
     header = f'resource "{resource}" "{name}" {{'
     regex_pattern = rf'(?:#.*\n)*?^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
+    # outputs_regex_pattern = rf'(?:#.*\n)*?^output\s+"{output_name}"\s+{{[\s\S]*?^}}$'
 
     if refresh:
         download_schema(filename=schema, refresh=refresh)
@@ -850,17 +874,21 @@ def create_resource_code(
     else:
         documentation = None
 
-    code = write_code(
+    code, outputs = write_code(
         schema=schema,
         attribute_func=write_body_code,
         namespace=namespace,
         provider=provider,
         resource=resource,
+        name=name,
         scope=scope,
         documentation_text=documentation,
         content="",
+        variables=[],
+        outputs=[],
         block_func=add_block_wrapper,
         resource_func=add_resource_wrapper,
+        output_func=write_output_code,
         documentation_url=documentation_url,
         comment=comment,
         header=header,
@@ -913,6 +941,8 @@ def create_data_source_code(
     attribute_value_prefix="",
     comment=None,
     filename="data-sources.tf",
+    variables_filename="variables.tf",
+    outputs_filename="outputs.tf",
     name="main",
     schema=None,
     refresh=False
@@ -945,17 +975,21 @@ def create_data_source_code(
     else:
         documentation = None
 
-    code = write_code(
+    code, outputs = write_code(
         schema=schema,
         attribute_func=write_body_code,
         namespace=namespace,
         provider=provider,
         resource=resource,
+        name=name,
         scope=scope,
         documentation_text=documentation,
         content="",
+        variables=[],
+        outputs=[],
         block_func=add_block_wrapper,
         resource_func=add_resource_wrapper,
+        output_func=write_output_code,
         documentation_url=documentation_url,
         comment=comment,
         header=header,
@@ -991,9 +1025,9 @@ def delete_data_source_code(provider, resource, name, filename="main.tf"):
         f.write(result)
 
 
-# namespace = "hashicorp"
-# provider = "azurerm"
-# resource = "key_vault"
-# scope = "data_source"
+namespace = "hashicorp"
+provider = "azurerm"
+resource = "key_vault"
+scope = "resource"
 
-# create_data_source_code(provider=provider, resource=resource, name="main", attribute_value_prefix="test")
+create_resource_code(provider=provider, resource=resource, name="main", attribute_value_prefix="test", add_descriptions=True)
