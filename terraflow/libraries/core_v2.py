@@ -93,6 +93,38 @@ def recurse_schema():
 # providers, resources, and data sources and using that for each
 # of the individual list functions.
 
+# Terraform functions.
+
+def create_terraform():
+    """
+    Create a terraform block.
+    """
+    pass
+
+def delete_terraform():
+    """
+    Delete a terraform block.
+    """
+    pass
+
+def list_terraform_versions():
+    """
+    Get a list of valid Terraform versions.
+    """
+    pass
+
+def get_terraform_version():
+    """
+    Get the current Terraform version from the terraform block..
+    """
+    pass
+
+def set_terraform_version():
+    """
+    Set the Terraform version in the terraform block.
+    """
+    pass
+
 # Provider functions.
 
 def create_providers():
@@ -116,6 +148,18 @@ def list_providers():
 def get_providers():
     """
     Get a list of all available providers for a given namespace.
+    """
+    pass
+
+def get_provider_versions():
+    """
+    Get a list of all valid Terraform provider versions.
+    """
+    pass
+
+def set_provider_version():
+    """
+    Set a provider version in the Terraform block.
     """
     pass
 
@@ -322,5 +366,11 @@ def calculate_levenshtein_distance():
 def convert_strings_to_dict():
     """
     Converts a string to a dictionary based on a delimiter.
+    """
+    pass
+
+def validate_version():
+    """
+    Checks whether or not a provided Terraform or provider version is valid.
     """
     pass
