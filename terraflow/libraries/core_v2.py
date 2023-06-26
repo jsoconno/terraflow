@@ -125,6 +125,32 @@ def set_terraform_version():
     """
     pass
 
+# Backend functions.
+
+def create_backend():
+    """
+    Create a backend block.
+    """
+    pass
+
+def delete_backend():
+    """
+    Delete a backend block.
+    """
+    pass
+
+def get_backend():
+    """
+    Get the current backend.
+    """
+    pass
+
+def set_backend():
+    """
+    Set the backend.
+    """
+    pass
+
 # Provider functions.
 
 def create_providers():
