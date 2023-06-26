@@ -1025,9 +1025,9 @@ def delete_data_source_code(provider, resource, name, filename="main.tf"):
         f.write(result)
 
 
-namespace = "hashicorp"
-provider = "azurerm"
-resource = "key_vault"
-scope = "resource"
+# namespace = "hashicorp"
+# provider = "azurerm"
+# resource = "key_vault"
+# scope = "resource"
 
-create_resource_code(provider=provider, resource=resource, name="main", attribute_value_prefix="test", add_descriptions=True)
+# create_resource_code(provider=provider, resource=resource, name="main", attribute_value_prefix="test", add_descriptions=True)

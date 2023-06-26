@@ -5,7 +5,9 @@ from enum import Enum
 import os
 import click
 
-# Validation
+# Constants
+TERRAFLOW_DIR = ".terraflow"
+TERRAFORM_REGISTRY_BASE = "registry.terraform.io"
 ALLOWED_SCOPES = ["provider", "resource", "data_source"]
 
 # Dictionary of different CLI options
