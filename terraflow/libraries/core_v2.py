@@ -23,22 +23,44 @@ def write_terraform_to_file():
     """
     pass
 
-def read_json_file(filename):
+def read_json_file(filename: str) -> dict:
     """
-    Reads json from a file.
+    Reads JSON from a file.
+
+    Args:
+        filename: The name of the file to read.
+
+    Returns:
+        A dictionary representing the JSON data.
     """
     with open(filename, "r") as json_file:
         return json.loads(json_file.read())
 
-def write_json_file(filename, data):
+def write_json_file(filename: str, data: dict) -> None:
+    """
+    Writes data as JSON to a file.
+
+    Args:
+        filename: The name of the file to write.
+        data: The data to be written as JSON.
+    """
     with open(filename, "w") as f:
         json.dump(data, f)
 
 # Formatting functions.
 
-def format_list(items: list, title: str = None, top: int = None, prefix: str = " - "):
+def format_list(items: list, title: str = None, top: int = None, prefix: str = " - ") -> str:
     """
     Format a list for output in the terminal.
+
+    Args:
+        items: The list of items to format.
+        title: The optional title for the formatted list.
+        top: The optional maximum number of items to include.
+        prefix: The prefix string to prepend to each item.
+
+    Returns:
+        The formatted list as a string.
     """
     formatted_list = "\n"
 
@@ -53,9 +75,15 @@ def format_list(items: list, title: str = None, top: int = None, prefix: str = "
 
     return formatted_list
 
-def colors(color="END"):
+def colors(color: str = "END") -> str:
     """
-    A standard set of colors used for printing to command line.
+    Returns ANSI color codes for printing to the command line.
+
+    Args:
+        color: The color name to retrieve the code for.
+
+    Returns:
+        The ANSI color code as a string.
     """
     colors = {
         "HEADER": "\033[95m",
@@ -73,9 +101,15 @@ def colors(color="END"):
 
 # Schema functions.
 
-def get_schema(filename=None):
+def get_schema(filename: str = None) -> dict:
     """
     Returns the schema for a provider as a dictionary.
+
+    Args:
+        filename: The optional filename of the schema JSON file.
+
+    Returns:
+        The schema dictionary.
     """
     # Create the .terraflow directory if it doesn't already exist
     if not os.path.exists(TERRAFLOW_DIR):
@@ -89,31 +123,39 @@ def get_schema(filename=None):
 
     return schema
 
-def fetch_schema():
+def fetch_schema() -> dict:
     """
     Gets a provider schema from Terraform.
+
+    Returns:
+        The schema dictionary fetched from Terraform.
     """
     try:
         p = subprocess.run(["terraform", "init"], capture_output=True, text=True)
         return json.loads(subprocess.check_output(["terraform", "providers", "schema", "-json"]).decode("utf-8"))
     except subprocess.CalledProcessError:
         print(
-            f'\n{colors(color="WARNING")}Warning:{colors()} The provider versions for this configuration have changed.  Running an upgrade.\n'
+            f'\n{colors(color="WARNING")}Warning:{colors()} The provider versions for this configuration have changed. Running an upgrade.\n'
         )
         p = subprocess.run(["terraform", "init", "-upgrade"], capture_output=True, text=True)
         return json.loads(subprocess.check_output(["terraform", "providers", "schema", "-json"]).decode("utf-8"))
 
-def cache_schema(schema=None, filename=".terraflow/schema.json", refresh=False):
+def cache_schema(schema: dict = None, filename: str = ".terraflow/schema.json", refresh: bool = False) -> None:
     """
     Cache the downloaded Terraform schema as ".terraflow/schema.json".
+
+    Args:
+        schema: The schema dictionary to be cached.
+        filename: The filename to save the schema as.
+        refresh: Flag indicating whether to refresh the schema if it already exists.
     """
     _, ext = os.path.splitext(filename)
     if ext.lower() != ".json":
-        print(f'\n{colors("FAIL")}Error:{colors()} {filename} is not a json file.\n')
+        print(f'\n{colors("FAIL")}Error:{colors()} {filename} is not a JSON file.\n')
         return
 
     if os.path.exists(filename) and not refresh:
-        print(f'\n{colors("OK_BLUE")}Tip:{colors()} A schema is already downloaded.  To refresh the schema, rerun this command with the `--refresh` flag.\n')
+        print(f'\n{colors("OK_BLUE")}Tip:{colors()} A schema is already downloaded. To refresh the schema, rerun this command with the `--refresh` flag.\n')
     else:
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):
@@ -127,35 +169,69 @@ def cache_schema(schema=None, filename=".terraflow/schema.json", refresh=False):
         except Exception as e:
             print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the schema: {traceback.format_exc()}\n')
 
-def get_provider_schema(schema, namespace, provider):
+def get_provider_schema(schema: dict, namespace: str, provider: str) -> dict:
     """
     Get the schema for a given provider.
+
+    Args:
+        schema: The schema dictionary.
+        namespace: The provider's namespace.
+        provider: The provider name.
+
+    Returns:
+        The schema for the given provider.
     """
     return schema["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["provider"]
 
-def get_resource_schema(schema, namespace, provider, resource):
+def get_resource_schema(schema: dict, namespace: str, provider: str, resource: str) -> dict:
     """
     Get the schema for a given provider resource.
+
+    Args:
+        schema: The schema dictionary.
+        namespace: The provider's namespace.
+        provider: The provider name.
+        resource: The resource name.
+
+    Returns:
+        The schema for the given provider resource.
     """
     # Allow resource shorthand without the provider
-    if resource and not provider in resource:
+    if resource and provider not in resource:
         resource = f"{provider}_{resource}"
 
     return schema["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["resource_schemas"][resource]
 
-def get_data_source_schema(schema, namespace, provider, data_source):
+def get_data_source_schema(schema: dict, namespace: str, provider: str, data_source: str) -> dict:
     """
     Get the schema for a given provider data source.
+
+    Args:
+        schema: The schema dictionary.
+        namespace: The provider's namespace.
+        provider: The provider name.
+        data_source: The data source name.
+
+    Returns:
+        The schema for the given provider data source.
     """
-    # Allow resource shorthand without the provider
-    if data_source and not provider in data_source:
+    # Allow data source shorthand without the provider
+    if data_source and provider not in data_source:
         data_source = f"{provider}_{data_source}"
 
-    return schema["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["data_source_schemas"][resource]
+    return schema["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["data_source_schemas"][data_source]
 
-def get_attribute_schema(schema, blocks=None, attribute=None):
+def get_attribute_schema(schema: dict, blocks: list = None, attribute: str = None) -> dict:
     """
     Get the schema for a given provider, resource, or data source attribute.
+
+    Args:
+        schema: The schema dictionary.
+        blocks: The list of blocks to traverse.
+        attribute: The attribute name.
+
+    Returns:
+        The schema for the given attribute.
     """
     try:
         if blocks:
