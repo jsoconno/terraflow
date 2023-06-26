@@ -7,6 +7,7 @@ import click
 
 # Constants
 TERRAFLOW_DIR = ".terraflow"
+DOCUMENTATION_DIR = os.path.join(TERRAFLOW_DIR, "documentation")
 TERRAFORM_REGISTRY_BASE = "registry.terraform.io"
 ALLOWED_SCOPES = ["provider", "resource", "data_source"]
 

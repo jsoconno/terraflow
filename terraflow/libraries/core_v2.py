@@ -2,10 +2,10 @@ import json
 # from pathlib import Path
 import subprocess
 import traceback
-# import requests
-# from bs4 import BeautifulSoup
-# import re
-# import os
+import requests
+from bs4 import BeautifulSoup
+import re
+import os
 # import difflib
 # import errno
 
@@ -17,11 +17,29 @@ from terraflow.libraries.constants import *
 
 # File and folder manipulation functions.
 
-def write_terraform_to_file():
+def read_text_file(filename: str) -> str:
     """
-    Write a Terraform provider, resource, data source, variable, or output block to a file based on a regex pattern.
+    Read the contents of a text file.
+
+    Args:
+        filename: The name of the file to read.
+
+    Returns:
+        The contents of the text file as a string.
     """
-    pass
+    with open(filename, "r") as file:
+        return file.read()
+
+def write_text_file(filename: str, content: str) -> None:
+    """
+    Write content to a text file.
+
+    Args:
+        filename: The name of the file to write.
+        content: The content to be written.
+    """
+    with open(filename, "w") as file:
+        file.write(content)
 
 def read_json_file(filename: str) -> dict:
     """
@@ -46,6 +64,12 @@ def write_json_file(filename: str, data: dict) -> None:
     """
     with open(filename, "w") as f:
         json.dump(data, f)
+
+def write_terraform_to_file():
+    """
+    Write a Terraform provider, resource, data source, variable, or output block to a file based on a regex pattern.
+    """
+    pass
 
 # Formatting functions.
 
@@ -98,6 +122,12 @@ def colors(color: str = "END") -> str:
     }
 
     return colors[color]
+
+def format_terminal_text():
+    """
+    Formats text for terminal output.
+    """
+    pass
 
 # Schema functions.
 
@@ -246,29 +276,103 @@ def get_attribute_schema(schema: dict, blocks: list = None, attribute: str = Non
 
 # Documentation functions.
 
-def get_documentation_url():
+def get_documentation_url(namespace: str, provider: str, resource: str, scope: str, version: str = 'main') -> str:
     """
-    Get the url where the documentation exists.
-    """
-    pass
+    Get the documentation URL for a provider resource or data source.
 
-def get_documentation():
-    """
-    Get documentation for a provider resource or data source from the internet.
-    """
-    pass
+    Args:
+        namespace: The namespace of the provider.
+        provider: The provider name.
+        resource: The resource or data source name.
+        scope: The scope of the documentation (resource or data source).
+        version: The version of the provider (default: 'main').
 
-def cache_documentation():
+    Returns:
+        The documentation URL as a string.
+    """
+    url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"
+    response = json.loads(requests.get(url).text)
+
+    docs_path = None
+
+    for doc in response["docs"]:
+        if (
+            doc["title"] == resource
+            or doc["title"] == resource.replace(f"{provider}_", "")
+        ) and doc["category"] == f"{scope.replace('_', '-')}s":
+            docs_path = doc["path"]
+
+    if docs_path:
+        if scope == "provider":
+            url = f"https://github.com/{namespace}/terraform-provider-{provider}"
+        else:
+            # TODO: replace "main" with the actual version of the provider from the configuration.
+            url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{version}/{docs_path}"
+    else:
+        url = None
+
+    return url
+
+def get_documentation(documentation_url: str) -> str:
+    """
+    Get the documentation content from a URL.
+
+    Args:
+        documentation_url: The URL of the documentation.
+
+    Returns:
+        The documentation content as a string.
+    """
+    # TODO: add logic to only capture the actual content, not the header and footer info, for example.
+    if documentation_url:
+        html_text = requests.get(documentation_url).content.decode()
+        soup = BeautifulSoup(html_text, features="html.parser")
+
+        # Extract the text from the HTML document while preserving special characters
+        documentation = re.sub(r"<[^>]*>", "", soup.text)  # Remove all HTML tags
+        documentation = re.sub(r"(\n\s*)+", "\n", documentation)  # Normalize newlines
+        documentation = documentation.strip()
+    else:
+        print(f'\n{colors(color="WARNING")}Warning:{colors()} The documentation URL is not available.\n')
+        documentation = None
+
+    return documentation
+
+def cache_documentation(namespace: str, provider: str, scope: str, resource: str, documentation: str) -> None:
     """
     Store documentation for a provider resource or data source locally.
-    """
-    pass
 
-def format_terminal_text():
+    Args:
+        namespace: The namespace of the provider.
+        provider: The provider name.
+        scope: The scope of the documentation (resource or data source).
+        resource: The resource or data source name.
+        documentation: The documentation content to be cached.
     """
-    Formats text for terminal output.
-    """
-    pass
+    # TODO: Remember to add the provider version later once we have a function to get it.
+    filename = f"{namespace}.{provider}.{scope}.{resource}.txt"
+    path = os.path.join(DOCUMENTATION_DIR, filename)
+
+    try:
+        if not os.path.exists(DOCUMENTATION_DIR):
+            os.makedirs(DOCUMENTATION_DIR)
+
+        write_text_file(path, documentation)
+
+        print(f'\n{colors("OK_GREEN")}Success:{colors()} Documentation cached successfully.\n')
+    except Exception:
+        print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the documentation.\n')
+
+namespace = "hashicorp"
+provider = "azurerm"
+resource = "key_vault"
+scope = "resource"
+
+documentation_url = get_documentation_url(namespace, provider, resource, scope)
+documentation = get_documentation(documentation_url)
+print(documentation)
+
+cache_documentation(namespace, provider, scope, resource, documentation)
 
 # Shared functions.
 
@@ -375,6 +479,12 @@ def list_providers():
 def get_providers():
     """
     Get a list of all available providers for a given namespace.
+    """
+    pass
+
+def get_provider_version():
+    """
+    Get the current version of a given provider in the configuration.
     """
     pass
 
