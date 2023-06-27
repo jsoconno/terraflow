@@ -129,6 +129,84 @@ def format_terminal_text():
     """
     pass
 
+# Helper functions
+
+def calculate_levenshtein_distance(s: str, t: str) -> float:
+    """
+    Calculate the normalized Levenshtein distance between two strings.
+
+    Args:
+        s: The first string.
+        t: The second string.
+
+    Returns:
+        The normalized Levenshtein distance between the two strings as a float.
+    """
+    # Convert the strings to lowercase
+    s = s.lower()
+    t = t.lower()
+
+    # Initialize the distance matrix with zeros
+    d = [[0 for _ in range(len(t) + 1)] for _ in range(len(s) + 1)]
+
+    # Fill the first row and column of the matrix
+    for i in range(len(s) + 1):
+        d[i][0] = i
+    for j in range(len(t) + 1):
+        d[0][j] = j
+
+    # Compute the minimum edit distance
+    for j in range(1, len(t) + 1):
+        for i in range(1, len(s) + 1):
+            if s[i - 1] == t[j - 1]:
+                d[i][j] = d[i - 1][j - 1]
+            else:
+                d[i][j] = min(d[i - 1][j], d[i][j - 1], d[i - 1][j - 1]) + 1
+
+    # Compute the maximum possible distance
+    max_distance = max(len(s), len(t))
+
+    # Normalize the distance
+    if max_distance == 0:
+        normalized_distance = 0.0
+    else:
+        normalized_distance = d[len(s)][len(t)] / max_distance
+
+    return normalized_distance
+
+
+def convert_strings_to_dict(text: str, delimiter: str = "=") -> dict:
+    """
+    Converts a string to a dictionary based on a delimiter.
+
+    Args:
+        text: The string to convert.
+        delimiter: The delimiter used to split the string (default: "=").
+
+    Returns:
+        A dictionary created from the string, where the keys and values are separated by the delimiter.
+    """
+    dictionary = {}
+    for x in text:
+        k, v = x.split(delimiter)
+        dictionary[k] = v
+
+    return dictionary
+
+
+def is_valid_version(version: str, valid_versions: list) -> bool:
+    """
+    Checks whether a provided version is valid based on a given list.
+
+    Args:
+        version: The version to validate.
+        valid_versions: A list of valid versions.
+
+    Returns:
+        True if the version is valid, False otherwise.
+    """
+    return version in valid_versions
+
 # Schema functions.
 
 def get_schema(filename: str = None) -> dict:
@@ -715,25 +793,5 @@ def set_block_header():
 def is_required_block():
     """
     Determines if a block is required based on the schema.
-    """
-    pass
-
-# Helper functions
-
-def calculate_levenshtein_distance():
-    """
-    Calculate the normalized levenshtein distance between two strings.
-    """
-    pass
-
-def convert_strings_to_dict():
-    """
-    Converts a string to a dictionary based on a delimiter.
-    """
-    pass
-
-def validate_version():
-    """
-    Checks whether or not a provided Terraform or provider version is valid.
     """
     pass
