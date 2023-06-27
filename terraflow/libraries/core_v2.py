@@ -3,6 +3,7 @@ import json
 import subprocess
 import traceback
 import requests
+from requests.exceptions import RequestException
 from bs4 import BeautifulSoup
 import re
 import os
@@ -207,6 +208,44 @@ def is_valid_version(version: str, valid_versions: list) -> bool:
     """
     return version in valid_versions
 
+def scrape_website(url: str, tag: str = None, selector: str = None, list_output: bool = False) -> str:
+    """
+    Scrape content from a URL. If a tag or selector is specified, only content within that tag or selector is scraped.
+
+    Args:
+        url: The URL to scrape.
+        tag: Optional; an HTML tag name to scrape (e.g. "p" for paragraph tags, "div" for div tags, etc.).
+        selector: Optional; a CSS selector to scrape.
+        list_output: Optional; whether to return the output as a list (default is False).
+
+    Returns:
+        The scraped content as a string or a list of strings.
+    """
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+
+    try:
+        response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
+        response.raise_for_status()  # If the response contains an HTTP error status code, raise an exception
+    except RequestException as e:
+        print(f"Failed to get the webpage. Error: {e}")
+        return None
+
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    if tag:
+        elements = soup.find_all(tag)
+    elif selector:
+        elements = soup.select(selector)
+    else:
+        return '\n'.join(line.strip() for line in soup.text.split('\n') if line.strip())
+
+    texts = ['\n'.join(line.strip() for line in elem.get_text().split('\n') if line.strip()) for elem in elements]
+
+    if list_output:
+        return texts
+    else:
+        return '\n'.join(texts)
+
 # Schema functions.
 
 def get_schema(filename: str = None) -> dict:
@@ -263,7 +302,7 @@ def cache_schema(schema: dict = None, filename: str = ".terraflow/schema.json", 
         return
 
     if os.path.exists(filename) and not refresh:
-        print(f'\n{colors("OK_BLUE")}Tip:{colors()} A schema is already downloaded. To refresh the schema, rerun this command with the `--refresh` flag.\n')
+        print(f'\n{colors("OK_BLUE")}Info:{colors()} A schema is already downloaded. To refresh the schema, rerun this command with the `--refresh` flag.\n')
     else:
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname):
@@ -354,7 +393,7 @@ def get_attribute_schema(schema: dict, blocks: list = None, attribute: str = Non
 
 # Documentation functions.
 
-def get_documentation_url(namespace: str, provider: str, resource: str, scope: str, version: str = 'main') -> str:
+def get_terraform_documentation_url(namespace: str, provider: str, resource: str, scope: str, version: str = 'main') -> str:
     """
     Get the documentation URL for a provider resource or data source.
 
@@ -391,65 +430,55 @@ def get_documentation_url(namespace: str, provider: str, resource: str, scope: s
 
     return url
 
-def get_documentation(documentation_url: str) -> str:
+def get_terraform_documentation(namespace: str, provider: str, scope: str, resource: str, version: str = 'main', cache: bool = True) -> str:
     """
-    Get the documentation content from a URL.
-
-    Args:
-        documentation_url: The URL of the documentation.
-
-    Returns:
-        The documentation content as a string.
-    """
-    # TODO: add logic to only capture the actual content, not the header and footer info, for example.
-    if documentation_url:
-        html_text = requests.get(documentation_url).content.decode()
-        soup = BeautifulSoup(html_text, features="html.parser")
-
-        # Extract the text from the HTML document while preserving special characters
-        documentation = re.sub(r"<[^>]*>", "", soup.text)  # Remove all HTML tags
-        documentation = re.sub(r"(\n\s*)+", "\n", documentation)  # Normalize newlines
-        documentation = documentation.strip()
-    else:
-        print(f'\n{colors(color="WARNING")}Warning:{colors()} The documentation URL is not available.\n')
-        documentation = None
-
-    return documentation
-
-def cache_documentation(namespace: str, provider: str, scope: str, resource: str, documentation: str) -> None:
-    """
-    Store documentation for a provider resource or data source locally.
+    Get the documentation for a provider resource or data source and cache it if required.
 
     Args:
         namespace: The namespace of the provider.
         provider: The provider name.
         scope: The scope of the documentation (resource or data source).
         resource: The resource or data source name.
-        documentation: The documentation content to be cached.
+        version: The version of the provider (default: 'main').
+        cache: Whether to cache the documentation (default: True).
+
+    Returns:
+        The documentation content as a string.
     """
-    # TODO: Remember to add the provider version later once we have a function to get it.
+    # Determine the filename for the cached documentation
     filename = f"{namespace}.{provider}.{resource}.{scope}.txt"
     path = os.path.join(DOCUMENTATION_DIR, filename)
 
-    try:
-        if not os.path.exists(DOCUMENTATION_DIR):
-            os.makedirs(DOCUMENTATION_DIR)
+    # If the file exists, read the cached documentation
+    if os.path.exists(path):
+        print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache.\n')
+        return read_text_file(path)
 
-        write_text_file(path, documentation)
+    # If the file does not exist, get the documentation URL and the documentation
+    documentation_url = get_terraform_documentation_url(namespace, provider, resource, scope, version)
+    documentation = scrape_website(documentation_url, tag="article")
 
-        print(f'\n{colors("OK_GREEN")}Success:{colors()} Documentation cached successfully.\n')
-    except Exception:
-        print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the documentation.\n')
+    # If caching is enabled, cache the documentation
+    if cache:
+        try:
+            if not os.path.exists(DOCUMENTATION_DIR):
+                os.makedirs(DOCUMENTATION_DIR)
 
-# namespace = "hashicorp"
-# provider = "azurerm"
-# resource = "key_vault"
-# scope = "resource"
+            write_text_file(path, documentation)
 
-# documentation_url = get_documentation_url(namespace, provider, resource, scope)
-# documentation = get_documentation(documentation_url)
+            print(f'\n{colors("OK_GREEN")}Success:{colors()} Documentation read and cached successfully.\n')
+        except Exception:
+            print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the documentation.\n')
 
-# cache_documentation(namespace, provider, scope, resource, documentation)
+    return documentation
+
+
+namespace = "hashicorp"
+provider = "azurerm"
+resource = "key_vault"
+scope = "resource"
+
+get_terraform_documentation(namespace, provider, scope, resource, cache=True)
 
 # Shared functions.
 
