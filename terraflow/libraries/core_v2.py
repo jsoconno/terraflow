@@ -350,7 +350,7 @@ def cache_documentation(namespace: str, provider: str, scope: str, resource: str
         documentation: The documentation content to be cached.
     """
     # TODO: Remember to add the provider version later once we have a function to get it.
-    filename = f"{namespace}.{provider}.{scope}.{resource}.txt"
+    filename = f"{namespace}.{provider}.{resource}.{scope}.txt"
     path = os.path.join(DOCUMENTATION_DIR, filename)
 
     try:
@@ -363,16 +363,15 @@ def cache_documentation(namespace: str, provider: str, scope: str, resource: str
     except Exception:
         print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the documentation.\n')
 
-namespace = "hashicorp"
-provider = "azurerm"
-resource = "key_vault"
-scope = "resource"
+# namespace = "hashicorp"
+# provider = "azurerm"
+# resource = "key_vault"
+# scope = "resource"
 
-documentation_url = get_documentation_url(namespace, provider, resource, scope)
-documentation = get_documentation(documentation_url)
-print(documentation)
+# documentation_url = get_documentation_url(namespace, provider, resource, scope)
+# documentation = get_documentation(documentation_url)
 
-cache_documentation(namespace, provider, scope, resource, documentation)
+# cache_documentation(namespace, provider, scope, resource, documentation)
 
 # Shared functions.
 
@@ -412,11 +411,23 @@ def delete_terraform():
     """
     pass
 
-def list_terraform_versions():
+def get_terraform_versions() -> list:
     """
-    Get a list of valid Terraform versions.
+    Gets a list of Terraform versions.
+
+    Returns:
+        A list of valid Terraform versions.
     """
-    pass
+    response = requests.get("https://releases.hashicorp.com/terraform")
+    
+    pattern = r'terraform_((\d+)\.*(\d+)*\.*(\d+)*-?([\S]*))</a>'
+    versions = re.findall(pattern, response.text)
+
+    versions = [version[0] for version in versions]
+
+    return versions
+
+# print(get_terraform_versions())
 
 def get_terraform_version():
     """
@@ -488,11 +499,26 @@ def get_provider_version():
     """
     pass
 
-def get_provider_versions():
+def get_provider_versions(namespace: str, provider: str) -> list:
     """
-    Get a list of all valid Terraform provider versions.
+    Gets a list of versions for a given Terraform provider.
+
+    Args:
+        namespace: The namespace of the provider.
+        provider: The provider name.
+
+    Returns:
+        A list versions for the provider.
     """
-    pass
+    url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"
+    response = requests.get(url)
+    data = json.loads(response.text)
+
+    versions = data["versions"]
+
+    return versions
+
+# print(get_provider_versions("hashicorp", "azurerm"))
 
 def set_provider_version():
     """
