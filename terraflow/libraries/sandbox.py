@@ -3,13 +3,13 @@ import os
 from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_source_schema, get_attribute_schema
 from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description
 
-class TerraformGenerator:
-    def __init__(self, provider, namespace="hashicorp", add_description=False):
+class Terraform:
+    def __init__(self, provider, namespace="hashicorp"):
         self.provider = provider
         self.namespace = namespace
         self.content = ""
         self.outputs = []
-        self.add_description = add_description
+        self.config = {}
 
     def write_line(self, line):
         self.content += line
@@ -29,17 +29,17 @@ class TerraformGenerator:
 
         return header_content, footer
 
-class BlockGenerator(TerraformGenerator):
-    def __init__(self, provider, namespace="hashicorp", add_description=False):
-        super().__init__(provider, namespace, add_description)
+class Block(Terraform):
+    def __init__(self, provider, namespace="hashicorp"):
+        super().__init__(provider, namespace)
 
     def add_attribute(self, attribute, attribute_schema, block_hierarchy=[]):
         # Get attribute description from the pre-loaded documentation
-        if isinstance(self, ProviderGenerator):
+        if isinstance(self, Provider):
             description = attribute_schema.get('description', '')
         else:
             description = ""
-            if self.documentation_text and self.add_description:
+            if self.documentation_text and self.config.get('add_description', False):
                 description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
 
         # Construct the attribute name
@@ -83,13 +83,15 @@ class BlockGenerator(TerraformGenerator):
             self.write_code(block_schema, block_hierarchy + [block])
             self.write_line(block_footer)
 
-class ProviderGenerator(BlockGenerator):
-    def __init__(self, provider, namespace="hashicorp", add_description=False):
-        super().__init__(provider, namespace, add_description)
+class Provider(Block):
+    def __init__(self, provider, namespace="hashicorp"):
+        super().__init__(provider, namespace)     
 
-        # Load provider schema
+    def get_schema(self):
         schema = get_schema()
-        self.schema = get_provider_schema(schema=schema, namespace=self.namespace, provider=self.provider)
+        provider_schema = get_provider_schema(schema=schema, namespace=self.namespace, provider=self.provider)
+
+        return provider_schema
 
     def write_provider_code(self, schema):
         header = f'provider "{self.provider}" {{\n'
@@ -98,75 +100,94 @@ class ProviderGenerator(BlockGenerator):
         self.write_code(schema)
         self.write_line(footer)
 
-    def generate(self):
-        self.write_provider_code(self.schema)
-        print(self.content)
-
-# Use the classes
-# provider_generator = ProviderGenerator("azurerm")
-# provider_generator.generate()
-
-
-class ResourceGenerator(BlockGenerator):
-    def __init__(self, provider, resource_type, namespace="hashicorp", add_description=False):
-        super().__init__(provider, namespace, add_description)
-        self.resource_type = resource_type
-
-        # Load provider schema
-        schema = get_schema()
-        self.schema = get_resource_schema(schema=schema, namespace=self.namespace, provider=self.provider, resource=self.resource_type)
-
-        # Load the documentation at initialization
-        self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'resource', self.resource_type)
-        self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'resource', self.resource_type)
-
-    def write_resource_code(self, schema, resource_name):
-        header = f'resource "{self.provider}_{self.resource_type}" "{resource_name}" {{\n'
-        footer = "}\n"
-        self.write_line(header)
-        self.write_code(schema)
-        self.write_line(footer)
-
-    def generate(self, resource_name='main'):
-        self.write_resource_code(schema=self.schema, resource_name=resource_name)
-        print(self.content)
-
-# resource_generator = ResourceGenerator(provider="azurerm", resource_type="virtual_network")
-# resource_generator.generate(resource_name="my_virtual_network")
-
-class DataSourceGenerator(BlockGenerator):
-    def __init__(self, provider, data_source_type, namespace="hashicorp", add_description=False):
-        super().__init__(provider, namespace, add_description)
-        self.data_source_type = data_source_type
-
-        # Load provider schema
-        schema = get_schema()
-        self.schema = get_data_source_schema(schema=schema, namespace=self.namespace, provider=self.provider, data_source=self.data_source_type)
-
-        # Load the documentation at initialization
-        self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'data_source', self.data_source_type)
-        self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'data_source', self.data_source_type)
-
-    def write_data_source_code(self, schema, data_source_name):
-        header = f'data "{self.provider}_{self.data_source_type}" "{data_source_name}" {{\n'
-        footer = "}\n"
-        self.write_line(header)
-        self.write_code(schema)
-        self.write_line(footer)
-
-    def generate(self, data_source_name='main'):
-        self.write_data_source_code(schema=self.schema, data_source_name='main')
-        print(self.content)
+    def code(self, config={}):
+        self.config = config
+        schema = self.get_schema()
+        self.write_provider_code(schema=schema)
         
+        return self.content
 
-data_source_generator = DataSourceGenerator(provider="azurerm", data_source_type="subnet")
-data_source_generator.generate(data_source_name="my_subnet")
+# provider = Provider(provider="azurerm")
+# code = provider.code()
+# print(code)
+
+
+class Resource(Block):
+    def __init__(self, provider, resource, namespace="hashicorp"):
+        super().__init__(provider, namespace)
+        self.resource = resource
+
+        # Load the documentation at initialization
+        self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'resource', self.resource)
+        self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'resource', self.resource)
+
+    def get_schema(self):
+        schema = get_schema()
+        resource_schema = get_resource_schema(schema=schema, namespace=self.namespace, provider=self.provider, resource=self.resource)
+
+        return resource_schema
+
+    def write_resource_code(self, schema, name):
+        header = f'resource "{self.provider}_{self.resource}" "{name}" {{\n'
+        footer = "}\n"
+        self.write_line(header)
+        self.write_code(schema)
+        self.write_line(footer)
+
+    def code(self, name='main', config={}):
+        self.config = config
+        schema = self.get_schema()
+        self.write_resource_code(schema=schema, name=name)
+        
+        return self.content
+
+# resource = Resource(provider="azurerm", resource="virtual_network")
+# code = resource.code(name="my_virtual_network")
+# print(code)
+
+class DataSource(Block):
+    def __init__(self, provider, data_source, namespace="hashicorp"):
+        super().__init__(provider, namespace)
+        self.data_source = data_source
+
+        # Load the documentation at initialization
+        self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'data_source', self.data_source)
+        self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'data_source', self.data_source)
+
+    def get_schema(self):
+        schema = get_schema()
+        data_source_schema = get_data_source_schema(schema=schema, namespace=self.namespace, provider=self.provider, data_source=self.data_source)
+
+        return data_source_schema
+
+    def write_data_source_code(self, schema, name):
+        header = f'data "{self.provider}_{self.data_source}" "{name}" {{\n'
+        footer = "}\n"
+        self.write_line(header)
+        self.write_code(schema)
+        self.write_line(footer)
+
+    def code(self, name='main', config={}):
+        self.config = config
+        schema = self.get_schema()
+        self.write_data_source_code(schema=schema, name='main')
+        
+        return self.content
+        
+data_source = DataSource(provider="azurerm", data_source="subnet")
+code = data_source.code(name="my_subnet", config={"add_description": False})
+print(code)
 
 
 
 
 
-# class VariableGenerator(BlockGenerator):
+
+
+
+
+
+# class Variable(Block):
 #     def __init__(self, namespace, provider, object_type, variable_names=None, variable_description=None, variable_type=None, variable_default=None):
 #         super().__init__(provider, namespace)
 #         self.object_type = object_type
@@ -223,7 +244,7 @@ data_source_generator.generate(data_source_name="my_subnet")
 #             if variable not in self.variables:
 #                 self.add_variable(attribute, variable)
 
-#     def generate(self):
+#     def code(self):
 #         content = ""
 #         # Iterate over all .tf files in the current directory
 #         for file_name in os.listdir(os.getcwd()):
@@ -236,6 +257,6 @@ data_source_generator.generate(data_source_name="my_subnet")
 
 #         return self.variables
 
-# variable_generator = VariableGenerator(namespace="hashicorp", provider="azurerm", object_type="key_vault", variable_names=["test_name"])
-# variables = variable_generator.generate()
+# variable = Variable(namespace="hashicorp", provider="azurerm", object_type="key_vault", variable_names=["test_name"])
+# variables = variable.code()
 # print(variables)
