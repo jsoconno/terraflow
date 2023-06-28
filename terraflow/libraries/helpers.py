@@ -225,6 +225,26 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
     else:
         return '\n'.join(texts)
 
+def format_attribute_type(attribute_type):
+    """
+    Formats the attribute type from the provider schema for use in variables.
+    """
+    if isinstance(attribute_type, str):
+        return attribute_type
+    elif isinstance(attribute_type, list):
+        element_type = format_attribute_type(attribute_type[-1])
+        for i in range(len(attribute_type) - 2, -1, -1):
+            element_type = f"{attribute_type[i]}({element_type})"
+        return element_type
+    elif isinstance(attribute_type, dict):
+        object_type = "{\n"
+        for key, value in attribute_type.items():
+            object_type += f"{key} = {format_attribute_type(value)}\n"
+        object_type += "}"
+        return object_type
+    else:
+        raise ValueError(f"Invalid Terraform data type: {attribute_type}")
+
 # File and folder manipulation functions.
 
 def read_text_file(filename: str) -> str:
@@ -274,6 +294,23 @@ def write_json_file(filename: str, data: dict) -> None:
     """
     with open(filename, "w") as f:
         json.dump(data, f)
+
+def read_files(file_extensions: list = ['.tf']) -> str:
+    """
+    Loop through all files with the provided extensions in the current directory and return a single string with all code.
+
+    Args:
+        file_extensions (List[str], optional): List of file extensions to include. Defaults to ['.tf'].
+
+    Returns:
+        str: A string containing the contents of the files.
+    """
+    content = ""
+    for file_name in os.listdir(os.getcwd()):
+        if any(file_name.endswith(extension) for extension in file_extensions):
+            with open(file_name, 'r') as file:
+                content += file.read()
+    return content
 
 def write_terraform_to_file():
     """

@@ -350,26 +350,6 @@ def set_attribute_value():
     """
     pass
 
-def format_attribute_type(attribute_type):
-    """
-    Formats the attribute type from the provider schema for use in variables.
-    """
-    if isinstance(attribute_type, str):
-        return attribute_type
-    elif isinstance(attribute_type, list):
-        element_type = format_attribute_type(attribute_type[-1])
-        for i in range(len(attribute_type) - 2, -1, -1):
-            element_type = f"{attribute_type[i]}({element_type})"
-        return element_type
-    elif isinstance(attribute_type, dict):
-        object_type = "{\n"
-        for key, value in attribute_type.items():
-            object_type += f"{key} = {format_attribute_type(value)}\n"
-        object_type += "}"
-        return object_type
-    else:
-        raise ValueError(f"Invalid Terraform data type: {attribute_type}")
-
 def is_required_attribute():
     """
     Determines if an attribute is required based on the schema.

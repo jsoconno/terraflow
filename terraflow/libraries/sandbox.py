@@ -1,7 +1,7 @@
 import re
 import os
 from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_source_schema, get_attribute_schema
-from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description
+from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, format_attribute_type
 
 class Terraform:
     def __init__(self, provider, namespace="hashicorp"):
@@ -32,6 +32,22 @@ class Terraform:
 class Block(Terraform):
     def __init__(self, provider, namespace="hashicorp"):
         super().__init__(provider, namespace)
+        self.variables = {}
+        self.code = ""
+        self.variables_text = ""
+
+        # # Get the schema and write the code during initialization
+        # schema = self.get_schema()
+        # self.write_code(schema)
+
+    def add_variable(self, variable_name, variable_type, description, optional):  # Copy this method from the Variable class
+        if variable_name not in self.variables:
+            default_value = 'null' if optional else ''
+            self.variables[variable_name] = {
+                'type': variable_type,
+                'description': description,
+                'default': default_value
+            }
 
     def add_attribute(self, attribute, attribute_schema, block_hierarchy=[]):
         # Get attribute description from the pre-loaded documentation
@@ -52,8 +68,48 @@ class Block(Terraform):
             attribute_content = f"{attribute} = var.{attribute_name} # {description}\n"
         else:
             attribute_content = f"{attribute} = var.{attribute_name}\n"
+
+        # Add variable when you add an attribute
+        if attribute_schema:
+            variable_type = attribute_schema.get('type')
+            optional = attribute_schema.get('optional', False)
+            self.add_variable(attribute_name, variable_type, description, optional)
         
         self.write_line(attribute_content)
+
+    def write_variables_code(self, schema=None, block_hierarchy=[]):
+        if schema is None:
+            schema = self.get_schema()
+        
+        variables_text = ""
+        attributes = schema.get("block", {}).get("attributes", {})
+        blocks = schema.get("block", {}).get("block_types", {})
+
+        for attribute, attribute_schema in attributes.items():
+            # Construct the attribute name
+            if block_hierarchy:
+                attribute_name = "_".join(block_hierarchy + [attribute])
+            else:
+                attribute_name = attribute
+
+            if attribute_name in self.variables:
+                properties = self.variables[attribute_name]
+                variables_text += f'variable "{attribute_name}" {{\n'
+                variables_text += f'type = {format_attribute_type(properties["type"])}\n'
+                if self.config.get('add_description', False):
+                    description = properties["description"]
+                    if self.documentation_text:
+                        description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
+                variables_text += f'description = "{description}"\n'
+                if properties['default']:
+                    variables_text += f'default = {properties["default"]}\n'
+                variables_text += '}\n\n'
+            
+        for block, block_schema in blocks.items():
+            variables_text += self.write_variables_code(schema=block_schema, block_hierarchy=block_hierarchy + [block])
+            
+        return variables_text
+
 
     def add_block_wrapper(self, schema, block, block_hierarchy):
         header = ""
@@ -83,9 +139,22 @@ class Block(Terraform):
             self.write_code(block_schema, block_hierarchy + [block])
             self.write_line(block_footer)
 
+    def get_code(self, config={}):
+        self.config = config
+        schema = self.get_schema()
+        self.code = self.write_code(schema)
+        return self.code
+
+    def get_variables(self, config={}):
+        self.config = config
+        self.variables_text = self.write_variables_code()
+        return self.variables_text
+
 class Provider(Block):
     def __init__(self, provider, namespace="hashicorp"):
-        super().__init__(provider, namespace)     
+        super().__init__(provider, namespace)
+        self.code = self.get_code()
+        # self.variables_text = self.get_variables()
 
     def get_schema(self):
         schema = get_schema()
@@ -100,7 +169,7 @@ class Provider(Block):
         self.write_code(schema)
         self.write_line(footer)
 
-    def code(self, config={}):
+    def get_code(self, config={}):
         self.config = config
         schema = self.get_schema()
         self.write_provider_code(schema=schema)
@@ -108,8 +177,8 @@ class Provider(Block):
         return self.content
 
 # provider = Provider(provider="azurerm")
-# code = provider.code()
-# print(code)
+# print(provider.get_code())
+# print(provider.get_variables())
 
 
 class Resource(Block):
@@ -120,6 +189,8 @@ class Resource(Block):
         # Load the documentation at initialization
         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'resource', self.resource)
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'resource', self.resource)
+
+        self.code = self.get_code(name='main')
 
     def get_schema(self):
         schema = get_schema()
@@ -134,16 +205,16 @@ class Resource(Block):
         self.write_code(schema)
         self.write_line(footer)
 
-    def code(self, name='main', config={}):
+    def get_code(self, name='main', config={}):
         self.config = config
         schema = self.get_schema()
         self.write_resource_code(schema=schema, name=name)
         
         return self.content
 
-# resource = Resource(provider="azurerm", resource="virtual_network")
-# code = resource.code(name="my_virtual_network")
-# print(code)
+resource = Resource(provider="azurerm", resource="virtual_network")
+print(resource.get_code(name="my_virtual_network", config={'add_description': True}))
+print(resource.get_variables(config={'add_description': True}))
 
 class DataSource(Block):
     def __init__(self, provider, data_source, namespace="hashicorp"):
@@ -153,6 +224,9 @@ class DataSource(Block):
         # Load the documentation at initialization
         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'data_source', self.data_source)
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'data_source', self.data_source)
+
+        self.code = self.get_code(name='main')
+        # self.variables_text = self.get_variables()
 
     def get_schema(self):
         schema = get_schema()
@@ -167,16 +241,17 @@ class DataSource(Block):
         self.write_code(schema)
         self.write_line(footer)
 
-    def code(self, name='main', config={}):
+    def get_code(self, name='main', config={}):
         self.config = config
         schema = self.get_schema()
         self.write_data_source_code(schema=schema, name='main')
         
         return self.content
         
-data_source = DataSource(provider="azurerm", data_source="subnet")
-code = data_source.code(name="my_subnet", config={"add_description": False})
-print(code)
+# data_source = DataSource(provider="azurerm", data_source="subnet")
+# print(data_source.get_code(name="my_subnet", config={"add_description": False}))
+# print(data_source.get_variables())
+
 
 
 
@@ -244,7 +319,7 @@ print(code)
 #             if variable not in self.variables:
 #                 self.add_variable(attribute, variable)
 
-#     def code(self):
+#     def get_code(self):
 #         content = ""
 #         # Iterate over all .tf files in the current directory
 #         for file_name in os.listdir(os.getcwd()):
@@ -258,5 +333,5 @@ print(code)
 #         return self.variables
 
 # variable = Variable(namespace="hashicorp", provider="azurerm", object_type="key_vault", variable_names=["test_name"])
-# variables = variable.code()
+# variables = variable.get_code()
 # print(variables)
