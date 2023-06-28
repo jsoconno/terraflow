@@ -36,9 +36,9 @@ class Block(Terraform):
         self.code = ""
         self.variables_text = ""
 
-        # # Get the schema and write the code during initialization
-        # schema = self.get_schema()
-        # self.write_code(schema)
+        # Load the documentation at initialization
+        self.documentation_url = ""
+        self.documentation_text = ""
 
     def add_variable(self, variable_name, variable_type, description, optional):  # Copy this method from the Variable class
         if variable_name not in self.variables:
@@ -96,11 +96,12 @@ class Block(Terraform):
                 properties = self.variables[attribute_name]
                 variables_text += f'variable "{attribute_name}" {{\n'
                 variables_text += f'type = {format_attribute_type(properties["type"])}\n'
-                if self.config.get('add_description', False):
+                if self.config.get('add_description', False) and self.documentation_text:
+                    description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
+                else:
                     description = properties["description"]
-                    if self.documentation_text:
-                        description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
-                variables_text += f'description = "{description}"\n'
+                if description:
+                    variables_text += f'description = "{description}"\n'
                 if properties['default']:
                     variables_text += f'default = {properties["default"]}\n'
                 variables_text += '}\n\n'
@@ -176,9 +177,9 @@ class Provider(Block):
         
         return self.content
 
-# provider = Provider(provider="azurerm")
-# print(provider.get_code())
-# print(provider.get_variables())
+provider = Provider(provider="azurerm")
+print(provider.get_code())
+print(provider.get_variables(config={'add_description': True}))
 
 
 class Resource(Block):
@@ -212,9 +213,9 @@ class Resource(Block):
         
         return self.content
 
-resource = Resource(provider="azurerm", resource="virtual_network")
-print(resource.get_code(name="my_virtual_network", config={'add_description': True}))
-print(resource.get_variables(config={'add_description': True}))
+# resource = Resource(provider="azurerm", resource="virtual_network")
+# print(resource.get_code(name="my_virtual_network"))
+# print(resource.get_variables(config={'add_description': True}))
 
 class DataSource(Block):
     def __init__(self, provider, data_source, namespace="hashicorp"):
@@ -250,7 +251,7 @@ class DataSource(Block):
         
 # data_source = DataSource(provider="azurerm", data_source="subnet")
 # print(data_source.get_code(name="my_subnet", config={"add_description": False}))
-# print(data_source.get_variables())
+# print(data_source.get_variables(config={'add_description': True}))
 
 
 
