@@ -37,3 +37,32 @@ resource "azurerm_key_vault" "main" {
     update = var.test_timeouts_update # (Defaults to 30 minutes) Used when updating the Key Vault.
   }
 }
+
+resource "azurerm_virtual_network" "my_virtual_network" {
+  address_space           = var.address_space           # (Required) The address space that is used the virtual network. You can supply more than one address space.
+  bgp_community           = var.bgp_community           # (Optional) The BGP community attribute in format <as-number>:<community-value>.
+  dns_servers             = var.dns_servers             # (Optional) List of IP addresses of DNS servers
+  edge_zone               = var.edge_zone               # (Optional) Specifies the Edge Zone within the Azure Region where this Virtual Network should exist. Changing this forces a new Virtual Network to be created.
+  flow_timeout_in_minutes = var.flow_timeout_in_minutes # (Optional) The flow timeout in minutes for the Virtual Network, which is used to enable connection tracking for intra-VM flows. Possible values are between 4 and 30 minutes.
+  guid                    = var.guid                    # The GUID of the virtual network.
+  id                      = var.id                      # (Required) The ID of DDoS Protection Plan.
+  location                = var.location                # (Required) The location/region where the virtual network is created. Changing this forces a new resource to be created.
+  name                    = var.name                    # (Required) The name of the virtual network. Changing this forces a new resource to be created.
+  resource_group_name     = var.resource_group_name     # (Required) The name of the resource group in which to create the virtual network. Changing this forces a new resource to be created.
+  subnet                  = var.subnet                  # (Optional) Can be specified multiple times to define multiple subnets. Each subnet block supports fields documented below.
+  tags                    = var.tags                    # (Optional) A mapping of tags to assign to the resource.
+
+  # This block is optional
+  ddos_protection_plan {
+    enable = var.ddos_protection_plan_enable # (Required) Enable/disable DDoS Protection Plan on Virtual Network.
+    id     = var.ddos_protection_plan_id     # (Required) The ID of DDoS Protection Plan.
+  }
+
+  # This block is optional
+  timeouts {
+    create = var.timeouts_create # (Defaults to 30 minutes) Used when creating the Virtual Network.
+    delete = var.timeouts_delete # (Defaults to 30 minutes) Used when deleting the Virtual Network.
+    read   = var.timeouts_read   # (Defaults to 5 minutes) Used when retrieving the Virtual Network.
+    update = var.timeouts_update # (Defaults to 30 minutes) Used when updating the Virtual Network.
+  }
+}
