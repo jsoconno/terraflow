@@ -8,7 +8,6 @@ class Terraform:
         self.provider = provider
         self.namespace = namespace
         self.content = ""
-        self.outputs = []
         self.config = {}
 
     def write_line(self, line):
@@ -33,8 +32,10 @@ class Block(Terraform):
     def __init__(self, provider, namespace="hashicorp"):
         super().__init__(provider, namespace)
         self.variables = {}
+        self.outputs = {}
         self.code = ""
         self.variables_text = ""
+        self.outputs_text = ""
 
         # Load the documentation at initialization
         self.documentation_url = ""
@@ -48,6 +49,12 @@ class Block(Terraform):
                 'description': description,
                 'default': default_value
             }
+
+    def add_output(self, output_name, description, depends_on=None):
+        self.outputs[output_name] = {
+            'description': description,
+            'depends_on': depends_on or []
+        }
 
     def add_attribute(self, attribute, attribute_schema, block_hierarchy=[]):
         # Get attribute description from the pre-loaded documentation
@@ -111,6 +118,39 @@ class Block(Terraform):
             
         return variables_text
 
+    def write_outputs_code(self, schema=None, block_hierarchy=[]):
+        if schema is None:
+            schema = self.get_schema()
+
+        outputs_text = ""
+        attributes = schema.get("block", {}).get("attributes", {})
+        blocks = schema.get("block", {}).get("block_types", {})
+
+        for attribute, attribute_schema in attributes.items():
+            # Construct the attribute name
+            if block_hierarchy:
+                attribute_name = "_".join(block_hierarchy + [attribute])
+            else:
+                attribute_name = attribute
+
+            outputs_text += f'output "{attribute_name}" {{\n'
+            # standardize resource and data source attribute so we can remove some of this logic
+            if isinstance(self, Resource):
+                outputs_text += f'value = {self.provider}_{self.resource}.{self.name}.{".".join(block_hierarchy + [attribute])}\n'
+            if isinstance(self, DataSource):
+                outputs_text += f'value = {self.provider}_{self.data_source}.{self.name}.{".".join(block_hierarchy + [attribute])}\n'
+            # TODO: Fix the description functionality
+            description = ""
+            if self.config.get('add_description', False) and self.documentation_text:
+                description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
+            if description:
+                outputs_text += f'description = "{description}"\n'
+            outputs_text += '}\n\n'
+            
+        for block, block_schema in blocks.items():
+            outputs_text += self.write_outputs_code(schema=block_schema, block_hierarchy=block_hierarchy + [block])
+            
+        return outputs_text
 
     def add_block_wrapper(self, schema, block, block_hierarchy):
         header = ""
@@ -144,12 +184,22 @@ class Block(Terraform):
         self.config = config
         schema = self.get_schema()
         self.code = self.write_code(schema)
+
         return self.code
 
     def get_variables(self, config={}):
         self.config = config
-        self.variables_text = self.write_variables_code()
+        schema = self.get_schema()
+        self.variables_text = self.write_variables_code(schema)
+
         return self.variables_text
+
+    def get_outputs(self, config={}):
+        self.config = config
+        schema = self.get_schema()
+        self.outputs_text = self.write_outputs_code(schema=schema)
+
+        return self.outputs_text
 
 class Provider(Block):
     def __init__(self, provider, namespace="hashicorp"):
@@ -177,21 +227,23 @@ class Provider(Block):
         
         return self.content
 
-provider = Provider(provider="azurerm")
-print(provider.get_code())
-print(provider.get_variables(config={'add_description': True}))
+# provider = Provider(provider="azurerm")
+# print(provider.get_code())
+# print(provider.get_variables(config={'add_description': True}))
+# print(provider.get_outputs())
 
 
 class Resource(Block):
-    def __init__(self, provider, resource, namespace="hashicorp"):
+    def __init__(self, provider, resource, name="main", namespace="hashicorp"):
         super().__init__(provider, namespace)
         self.resource = resource
+        self.name = name
 
         # Load the documentation at initialization
         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'resource', self.resource)
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'resource', self.resource)
 
-        self.code = self.get_code(name='main')
+        self.code = self.get_code()
 
     def get_schema(self):
         schema = get_schema()
@@ -206,27 +258,29 @@ class Resource(Block):
         self.write_code(schema)
         self.write_line(footer)
 
-    def get_code(self, name='main', config={}):
+    def get_code(self, config={}):
         self.config = config
         schema = self.get_schema()
-        self.write_resource_code(schema=schema, name=name)
+        self.write_resource_code(schema=schema, name=self.name)
         
         return self.content
 
-# resource = Resource(provider="azurerm", resource="virtual_network")
-# print(resource.get_code(name="my_virtual_network"))
+# resource = Resource(provider="azurerm", resource="virtual_network", name="this")
+# print(resource.get_code())
 # print(resource.get_variables(config={'add_description': True}))
+# print(resource.get_outputs())
 
 class DataSource(Block):
-    def __init__(self, provider, data_source, namespace="hashicorp"):
+    def __init__(self, provider, data_source, name="main", namespace="hashicorp"):
         super().__init__(provider, namespace)
         self.data_source = data_source
+        self.name = name
 
         # Load the documentation at initialization
         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'data_source', self.data_source)
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'data_source', self.data_source)
 
-        self.code = self.get_code(name='main')
+        self.code = self.get_code()
         # self.variables_text = self.get_variables()
 
     def get_schema(self):
@@ -242,16 +296,17 @@ class DataSource(Block):
         self.write_code(schema)
         self.write_line(footer)
 
-    def get_code(self, name='main', config={}):
+    def get_code(self, config={}):
         self.config = config
         schema = self.get_schema()
-        self.write_data_source_code(schema=schema, name='main')
+        self.write_data_source_code(schema=schema, name=self.name)
         
         return self.content
         
-# data_source = DataSource(provider="azurerm", data_source="subnet")
-# print(data_source.get_code(name="my_subnet", config={"add_description": False}))
-# print(data_source.get_variables(config={'add_description': True}))
+data_source = DataSource(provider="azurerm", data_source="subnet", name="this")
+print(data_source.get_code())
+print(data_source.get_variables(config={'add_description': True}))
+print(data_source.get_outputs())
 
 
 
