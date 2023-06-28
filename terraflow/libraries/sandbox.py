@@ -98,15 +98,13 @@ class ProviderGenerator(BlockGenerator):
         self.write_code(schema)
         self.write_line(footer)
 
-    def generate(self, schema):
-        self.write_provider_code(schema)
+    def generate(self):
+        self.write_provider_code(self.schema)
         print(self.content)
 
-# # Use the classes
+# Use the classes
 # provider_generator = ProviderGenerator("azurerm")
-# schema = get_schema()
-# provider_schema = get_provider_schema(schema, "hashicorp", "azurerm")
-# provider_generator.generate(provider_schema)
+# provider_generator.generate()
 
 
 class ResourceGenerator(BlockGenerator):
@@ -122,21 +120,19 @@ class ResourceGenerator(BlockGenerator):
         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'resource', self.resource_type)
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'resource', self.resource_type)
 
-    def write_resource_code(self, resource_name, schema):
+    def write_resource_code(self, schema, resource_name):
         header = f'resource "{self.provider}_{self.resource_type}" "{resource_name}" {{\n'
         footer = "}\n"
         self.write_line(header)
         self.write_code(schema)
         self.write_line(footer)
 
-    def generate(self, resource_name, schema):
-        self.write_resource_code(resource_name, schema)
+    def generate(self, resource_name='main'):
+        self.write_resource_code(schema=self.schema, resource_name=resource_name)
         print(self.content)
 
-# resource_generator = ResourceGenerator("azurerm", "virtual_network")
-# schema = get_schema()
-# resource_schema = get_resource_schema(schema, "hashicorp", "azurerm", "virtual_network")
-# resource_generator.generate("my_virtual_network", resource_schema)
+# resource_generator = ResourceGenerator(provider="azurerm", resource_type="virtual_network")
+# resource_generator.generate(resource_name="my_virtual_network")
 
 class DataSourceGenerator(BlockGenerator):
     def __init__(self, provider, data_source_type, namespace="hashicorp", add_description=False):
@@ -151,22 +147,20 @@ class DataSourceGenerator(BlockGenerator):
         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'data_source', self.data_source_type)
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'data_source', self.data_source_type)
 
-    def write_data_source_code(self, data_source_name, schema):
+    def write_data_source_code(self, schema, data_source_name):
         header = f'data "{self.provider}_{self.data_source_type}" "{data_source_name}" {{\n'
         footer = "}\n"
         self.write_line(header)
         self.write_code(schema)
         self.write_line(footer)
 
-    def generate(self, data_source_name, schema):
-        self.write_data_source_code(data_source_name, schema)
+    def generate(self, data_source_name='main'):
+        self.write_data_source_code(schema=self.schema, data_source_name='main')
         print(self.content)
         
 
-# data_source_generator = DataSourceGenerator("azurerm", "subnet")
-# schema = get_schema()
-# data_source_schema = get_data_source_schema(schema, "hashicorp", "azurerm", "subnet")
-# data_source_generator.generate("my_subnet", data_source_schema)
+data_source_generator = DataSourceGenerator(provider="azurerm", data_source_type="subnet")
+data_source_generator.generate(data_source_name="my_subnet")
 
 
 
