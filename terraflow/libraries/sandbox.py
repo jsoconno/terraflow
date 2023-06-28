@@ -35,9 +35,12 @@ class BlockGenerator(TerraformGenerator):
 
     def add_attribute(self, attribute, attribute_schema, block_hierarchy=[]):
         # Get attribute description from the pre-loaded documentation
-        description = ""
-        if self.documentation_text and self.add_description:
-            description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
+        if isinstance(self, ProviderGenerator):
+            description = attribute_schema.get('description', '')
+        else:
+            description = ""
+            if self.documentation_text and self.add_description:
+                description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
 
         # Construct the attribute name
         if block_hierarchy:
@@ -84,6 +87,10 @@ class ProviderGenerator(BlockGenerator):
     def __init__(self, provider, namespace="hashicorp", add_description=False):
         super().__init__(provider, namespace, add_description)
 
+        # Load provider schema
+        schema = get_schema()
+        self.schema = get_provider_schema(schema=schema, namespace=self.namespace, provider=self.provider)
+
     def write_provider_code(self, schema):
         header = f'provider "{self.provider}" {{\n'
         footer = "}\n"
@@ -107,6 +114,10 @@ class ResourceGenerator(BlockGenerator):
         super().__init__(provider, namespace, add_description)
         self.resource_type = resource_type
 
+        # Load provider schema
+        schema = get_schema()
+        self.schema = get_resource_schema(schema=schema, namespace=self.namespace, provider=self.provider, resource=self.resource_type)
+
         # Load the documentation at initialization
         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'resource', self.resource_type)
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'resource', self.resource_type)
@@ -122,15 +133,19 @@ class ResourceGenerator(BlockGenerator):
         self.write_resource_code(resource_name, schema)
         print(self.content)
 
-resource_generator = ResourceGenerator("azurerm", "virtual_network")
-schema = get_schema()
-resource_schema = get_resource_schema(schema, "hashicorp", "azurerm", "virtual_network")
-resource_generator.generate("my_virtual_network", resource_schema)
+# resource_generator = ResourceGenerator("azurerm", "virtual_network")
+# schema = get_schema()
+# resource_schema = get_resource_schema(schema, "hashicorp", "azurerm", "virtual_network")
+# resource_generator.generate("my_virtual_network", resource_schema)
 
 class DataSourceGenerator(BlockGenerator):
     def __init__(self, provider, data_source_type, namespace="hashicorp", add_description=False):
         super().__init__(provider, namespace, add_description)
         self.data_source_type = data_source_type
+
+        # Load provider schema
+        schema = get_schema()
+        self.schema = get_data_source_schema(schema=schema, namespace=self.namespace, provider=self.provider, data_source=self.data_source_type)
 
         # Load the documentation at initialization
         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'data_source', self.data_source_type)
