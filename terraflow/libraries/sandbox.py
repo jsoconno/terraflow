@@ -1,7 +1,8 @@
-import re
-import os
+from dataclasses import asdict
+
 from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_source_schema, get_attribute_schema
 from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, format_attribute_type
+from terraflow.libraries.configuration import ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 
 class Terraform:
     def __init__(self, provider, namespace="hashicorp"):
@@ -58,7 +59,7 @@ class Block(Terraform):
 
     def add_attribute(self, attribute, attribute_schema, block_hierarchy=[]):
         # Get attribute description from the pre-loaded documentation
-        if isinstance(self, Provider):
+        if isinstance(self, Provider) and self.config.get('add_description', False):
             description = attribute_schema.get('description', '')
         else:
             description = ""
@@ -205,7 +206,7 @@ class Provider(Block):
     def __init__(self, provider, namespace="hashicorp"):
         super().__init__(provider, namespace)
         self.code = self.get_code()
-        # self.variables_text = self.get_variables()
+        self.variables_text = self.get_variables()
 
     def get_schema(self):
         schema = get_schema()
@@ -226,12 +227,6 @@ class Provider(Block):
         self.write_provider_code(schema=schema)
         
         return self.content
-
-# provider = Provider(provider="azurerm")
-# print(provider.get_code())
-# print(provider.get_variables(config={'add_description': True}))
-# print(provider.get_outputs())
-
 
 class Resource(Block):
     def __init__(self, provider, resource, name="main", namespace="hashicorp"):
@@ -265,11 +260,6 @@ class Resource(Block):
         
         return self.content
 
-# resource = Resource(provider="azurerm", resource="virtual_network", name="this")
-# print(resource.get_code())
-# print(resource.get_variables(config={'add_description': True}))
-# print(resource.get_outputs())
-
 class DataSource(Block):
     def __init__(self, provider, data_source, name="main", namespace="hashicorp"):
         super().__init__(provider, namespace)
@@ -281,7 +271,7 @@ class DataSource(Block):
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'data_source', self.data_source)
 
         self.code = self.get_code()
-        # self.variables_text = self.get_variables()
+        self.variables_text = self.get_variables()
 
     def get_schema(self):
         schema = get_schema()
@@ -302,92 +292,26 @@ class DataSource(Block):
         self.write_data_source_code(schema=schema, name=self.name)
         
         return self.content
-        
-data_source = DataSource(provider="azurerm", data_source="subnet", name="this")
-print(data_source.get_code())
-print(data_source.get_variables(config={'add_description': True}))
-print(data_source.get_outputs())
 
+# Set configurations
+config = ProviderConfiguration(add_description=False)
+variable_config = VariableConfiguration(add_description=True)
+output_config = OutputConfiguration(add_description=True)
 
+# Create Provider code
+# provider = Provider(provider="azurerm")
+# print(provider.get_code(config=asdict(config)))
+# print(provider.get_variables(config=asdict(variable_config)))
+# print(provider.get_outputs(config=asdict(output_config)))
 
+# Create Resource code
+resource = Resource(provider="azurerm", resource="virtual_network", name="this")
+# print(resource.get_code(config=asdict(config)))
+# print(resource.get_variables(config=asdict(variable_config)))
+# print(resource.get_outputs(config=asdict(output_config)))
 
-
-
-
-
-
-
-
-# class Variable(Block):
-#     def __init__(self, namespace, provider, object_type, variable_names=None, variable_description=None, variable_type=None, variable_default=None):
-#         super().__init__(provider, namespace)
-#         self.object_type = object_type
-#         self.variable_names = variable_names or []
-#         if isinstance(self.variable_names, str):
-#             self.variable_names = [self.variable_names]  # Convert to list if only one name is provided
-#         self.variable_description = variable_description or ""
-#         self.variable_type = variable_type or "any"
-#         self.variable_default = variable_default or "null"
-#         self.variables = {}
-
-#         # Load the documentation at initialization
-#         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'resource', self.object_type)
-#         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'resource', self.object_type)
-    
-#     def add_variable(self, attribute_name, variable_name):
-#         # Get the description if not provided
-#         if not self.variable_description or len(self.variable_names) > 1:
-#             self.variable_description = get_resource_attribute_description(
-#                 self.documentation_text, attribute_name, block_hierarchy=[])
-
-#         # Get the attribute schema
-#         attribute_schema = get_attribute_schema(self.provider, blocks=None, attribute=attribute_name)
-
-#         # Get and format the attribute type
-#         if attribute_schema and "type" in attribute_schema:
-#             attribute_type = format_attribute_type(attribute_schema["type"])
-#             if not self.variable_type or len(self.variable_names) > 1:
-#                 self.variable_type = attribute_type
-
-#         variable_code = f'variable "{variable_name}" {{\ndescription = "{self.variable_description}"\ntype = {self.variable_type}'
-
-#         # Check if "default" should be added
-#         if "(Required)" not in self.variable_description:
-#             variable_code += f'\ndefault = {self.variable_default}'
-#         variable_code += '\n}}'
-
-#         # Add the variable to the dictionary
-#         self.variables[variable_name] = variable_code
-
-#     def search_attributes(self, content):
-#         # regex pattern to find attributes and variable pairs in content
-#         pattern = r'\s*?(.*?)\s*?=\s*?var.(.*?)\s+\n?'
-#         matches = re.findall(pattern, content, re.MULTILINE)
-
-#         # Create Terraform variable for each match
-#         for attribute, variable in matches:
-#             attribute = attribute.strip()
-#             variable = variable.strip()
-#             # if specific variable is given, only add it
-#             if self.variable_names and variable not in self.variable_names:
-#                 continue
-#             # avoid adding same variable twice
-#             if variable not in self.variables:
-#                 self.add_variable(attribute, variable)
-
-#     def get_code(self):
-#         content = ""
-#         # Iterate over all .tf files in the current directory
-#         for file_name in os.listdir(os.getcwd()):
-#             if file_name.endswith('.tf'):
-#                 with open(file_name, 'r') as tf_file:
-#                     content += tf_file.read()
-
-#         # Search attributes in the aggregated content
-#         self.search_attributes(content)
-
-#         return self.variables
-
-# variable = Variable(namespace="hashicorp", provider="azurerm", object_type="key_vault", variable_names=["test_name"])
-# variables = variable.get_code()
-# print(variables)
+# Create Data Source code
+data_source = DataSource(provider="azurerm", data_source="virtual_network", name="this")
+print(data_source.get_code(config=asdict(config)))
+print(data_source.get_variables(config=asdict(variable_config)))
+print(data_source.get_outputs(config=asdict(output_config)))

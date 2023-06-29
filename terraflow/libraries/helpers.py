@@ -552,7 +552,7 @@ def get_terraform_documentation(namespace: str, provider: str, scope: str, resou
 
     # If the file exists, read the cached documentation
     if os.path.exists(path):
-        print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache.\n')
+        print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache for the {namespace} {provider} {resource} {scope}.\n')
         return read_text_file(path)
 
     # If the file does not exist, get the documentation URL and the documentation
@@ -567,7 +567,7 @@ def get_terraform_documentation(namespace: str, provider: str, scope: str, resou
 
             write_text_file(path, documentation)
 
-            print(f'\n{colors("OK_GREEN")}Success:{colors()} Documentation read and cached successfully.\n')
+            print(f'\n{colors("OK_GREEN")}Success:{colors()} Documentation read and cached successfully for the {namespace} {provider} {resource} {scope}.\n')
         except Exception:
             print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the documentation.\n')
 
