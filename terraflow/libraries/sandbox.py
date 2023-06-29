@@ -58,6 +58,10 @@ class Block(Terraform):
         }
 
     def add_attribute(self, attribute, attribute_schema, block_hierarchy=[]):
+        # Skip items that are not 
+        print(f'{attribute}: {attribute_schema}')
+        if not attribute_schema.get('required', False) and (attribute_schema.get('computed', False) or "_".join(block_hierarchy + [attribute]) in self.config.get('exclude_attributes', [])):
+            return
         # Get attribute description from the pre-loaded documentation
         if isinstance(self, Provider) and self.config.get('add_description', False):
             description = attribute_schema.get('description', '')
@@ -294,7 +298,7 @@ class DataSource(Block):
         return self.content
 
 # Set configurations
-config = ProviderConfiguration(add_description=False)
+config = ProviderConfiguration(add_description=False, exclude_attributes=['name', 'tags', 'timeouts_read'])
 variable_config = VariableConfiguration(add_description=True)
 output_config = OutputConfiguration(add_description=True)
 
@@ -305,7 +309,7 @@ output_config = OutputConfiguration(add_description=True)
 # print(provider.get_outputs(config=asdict(output_config)))
 
 # Create Resource code
-resource = Resource(provider="azurerm", resource="virtual_network", name="this")
+# resource = Resource(provider="azurerm", resource="virtual_network", name="this")
 # print(resource.get_code(config=asdict(config)))
 # print(resource.get_variables(config=asdict(variable_config)))
 # print(resource.get_outputs(config=asdict(output_config)))
@@ -313,5 +317,5 @@ resource = Resource(provider="azurerm", resource="virtual_network", name="this")
 # Create Data Source code
 data_source = DataSource(provider="azurerm", data_source="virtual_network", name="this")
 print(data_source.get_code(config=asdict(config)))
-print(data_source.get_variables(config=asdict(variable_config)))
-print(data_source.get_outputs(config=asdict(output_config)))
+# print(data_source.get_variables(config=asdict(variable_config)))
+# print(data_source.get_outputs(config=asdict(output_config)))
