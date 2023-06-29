@@ -58,8 +58,7 @@ class Block(Terraform):
         }
 
     def add_attribute(self, attribute, attribute_schema, block_hierarchy=[]):
-        # Skip items that are not 
-        print(f'{attribute}: {attribute_schema}')
+        # Skip items that are in the exclude_attributes list or that are computed and that are not required
         if not attribute_schema.get('required', False) and (attribute_schema.get('computed', False) or "_".join(block_hierarchy + [attribute]) in self.config.get('exclude_attributes', [])):
             return
         # Get attribute description from the pre-loaded documentation
@@ -179,6 +178,9 @@ class Block(Terraform):
             self.add_attribute(attribute, attribute_schema, block_hierarchy)
 
         for block, block_schema in blocks.items():
+            # Skip blocks that are in the exclude_blocks list and are not required
+            if block_schema.get("min_items", 0) == 0 and "_".join(block_hierarchy + [block]) in self.config.get('exclude_blocks', []):
+                continue
             block_header, block_footer = self.add_block_wrapper(block_schema, block, block_hierarchy)
             self.write_line(block_header)
             # Recursive call to handle nested blocks
@@ -298,7 +300,11 @@ class DataSource(Block):
         return self.content
 
 # Set configurations
-config = ProviderConfiguration(add_description=False, exclude_attributes=['name', 'tags', 'timeouts_read'])
+config = ProviderConfiguration(
+    add_description=False,
+    exclude_attributes=['name', 'tags'],
+    exclude_blocks=["timeouts"]
+)
 variable_config = VariableConfiguration(add_description=True)
 output_config = OutputConfiguration(add_description=True)
 
