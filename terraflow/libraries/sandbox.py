@@ -1,7 +1,7 @@
 from dataclasses import asdict
 
 from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_source_schema, get_attribute_schema
-from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, format_attribute_type
+from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, format_attribute_type, handle_attribute
 from terraflow.libraries.configuration import ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 
 class Terraform:
@@ -58,22 +58,10 @@ class Block(Terraform):
         }
 
     def add_attribute(self, attribute, attribute_schema, block_hierarchy=[]):
-        # Skip items that are in the exclude_attributes list or that are computed and that are not required
-        if not attribute_schema.get('required', False) and (attribute_schema.get('computed', False) or "_".join(block_hierarchy + [attribute]) in self.config.get('exclude_attributes', [])):
+        attribute_name, description, optional, formatted_type = handle_attribute(attribute, attribute_schema, block_hierarchy, self.config, self.documentation_text)
+        # If attribute_name is None, the attribute was skipped in handle_attribute
+        if attribute_name is None:
             return
-        # Get attribute description from the pre-loaded documentation
-        if isinstance(self, Provider) and self.config.get('add_description', False):
-            description = attribute_schema.get('description', '')
-        else:
-            description = ""
-            if self.documentation_text and self.config.get('add_description', False):
-                description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
-
-        # Construct the attribute name
-        if block_hierarchy:
-            attribute_name = "_".join(block_hierarchy + [attribute])
-        else:
-            attribute_name = attribute
 
         if description:
             attribute_content = f"{attribute} = var.{attribute_name} # {description}\n"
@@ -82,10 +70,8 @@ class Block(Terraform):
 
         # Add variable when you add an attribute
         if attribute_schema:
-            variable_type = attribute_schema.get('type')
-            optional = attribute_schema.get('optional', False)
-            self.add_variable(attribute_name, variable_type, description, optional)
-        
+            self.add_variable(attribute_name, formatted_type, description, optional)
+
         self.write_line(attribute_content)
 
     def write_variables_code(self, schema=None, block_hierarchy=[]):
@@ -143,7 +129,6 @@ class Block(Terraform):
                 outputs_text += f'value = {self.provider}_{self.resource}.{self.name}.{".".join(block_hierarchy + [attribute])}\n'
             if isinstance(self, DataSource):
                 outputs_text += f'value = {self.provider}_{self.data_source}.{self.name}.{".".join(block_hierarchy + [attribute])}\n'
-            # TODO: Fix the description functionality
             description = ""
             if self.config.get('add_description', False) and self.documentation_text:
                 description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
@@ -315,13 +300,13 @@ output_config = OutputConfiguration(add_description=True)
 # print(provider.get_outputs(config=asdict(output_config)))
 
 # Create Resource code
-# resource = Resource(provider="azurerm", resource="virtual_network", name="this")
+resource = Resource(provider="azurerm", resource="virtual_network", name="this")
 # print(resource.get_code(config=asdict(config)))
-# print(resource.get_variables(config=asdict(variable_config)))
+print(resource.get_variables(config=asdict(variable_config)))
 # print(resource.get_outputs(config=asdict(output_config)))
 
 # Create Data Source code
-data_source = DataSource(provider="azurerm", data_source="virtual_network", name="this")
-print(data_source.get_code(config=asdict(config)))
+# data_source = DataSource(provider="azurerm", data_source="virtual_network", name="this")
+# print(data_source.get_code(config=asdict(config)))
 # print(data_source.get_variables(config=asdict(variable_config)))
 # print(data_source.get_outputs(config=asdict(output_config)))

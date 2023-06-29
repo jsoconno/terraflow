@@ -705,3 +705,30 @@ def is_valid_version(version: str, valid_versions: list) -> bool:
 
 # versions = ["1.0.0", "1.1.0", "0.1.3", "0.1.1-alpha", "2.0.0"]
 # print(sort_versions(versions))
+
+def handle_attribute(attribute, attribute_schema, block_hierarchy, config, documentation_text):
+    # Skip items that are in the exclude_attributes list or that are computed and not required
+    if not attribute_schema.get('required', False) and (
+            attribute_schema.get('computed', False) or "_".join(block_hierarchy + [attribute]) in config.get(
+            'exclude_attributes', [])):
+        return None, None, None, None
+
+    # Get attribute description from the pre-loaded documentation
+    description = ""
+    if documentation_text and config.get('add_description', False):
+        description = get_resource_attribute_description(documentation_text, attribute, block_hierarchy)
+
+    # Construct the attribute name
+    if block_hierarchy:
+        attribute_name = "_".join(block_hierarchy + [attribute])
+    else:
+        attribute_name = attribute
+
+    # Check if the attribute is optional
+    optional = attribute_schema.get('optional', False)
+    
+    # Get and format attribute type
+    attribute_type = attribute_schema.get('type')
+    formatted_type = format_attribute_type(attribute_type)
+
+    return attribute_name, description, optional, formatted_type
