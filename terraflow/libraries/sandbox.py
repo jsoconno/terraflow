@@ -1,7 +1,7 @@
 from dataclasses import asdict
 
 from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_source_schema, get_attribute_schema
-from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, format_attribute_type, handle_attribute
+from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, format_attribute_type, handle_attribute, format_terraform_code
 from terraflow.libraries.configuration import ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 
 class Terraform:
@@ -62,7 +62,6 @@ class Block(Terraform):
         # If attribute_name is None, the attribute was skipped in handle_attribute
         if attribute_name is None:
             return
-
         if description:
             attribute_content = f"{attribute} = var.{attribute_name} # {description}\n"
         else:
@@ -83,6 +82,12 @@ class Block(Terraform):
         blocks = schema.get("block", {}).get("block_types", {})
 
         for attribute, attribute_schema in attributes.items():
+            attribute_name, description, optional, formatted_type = handle_attribute(attribute, attribute_schema, block_hierarchy, self.config, self.documentation_text)
+            if self.config.get('include_variables', []) != [] and attribute_name not in self.config.get('include_variables', []):
+                continue
+            # If the attribute is not required and the required_attributes_only flag is set, then skip the attribute
+            if self.config.get('required_attributes_only', False) and attribute_schema.get('optional', False) == True:
+                continue
             # Construct the attribute name
             if block_hierarchy:
                 attribute_name = "_".join(block_hierarchy + [attribute])
@@ -93,7 +98,7 @@ class Block(Terraform):
                 properties = self.variables[attribute_name]
                 variables_text += f'variable "{attribute_name}" {{\n'
                 variables_text += f'type = {format_attribute_type(properties["type"])}\n'
-                if self.config.get('add_description', False) and self.documentation_text:
+                if self.config.get('add_descriptions', False) and self.documentation_text:
                     description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
                 else:
                     description = properties["description"]
@@ -117,6 +122,11 @@ class Block(Terraform):
         blocks = schema.get("block", {}).get("block_types", {})
 
         for attribute, attribute_schema in attributes.items():
+            if self.config.get('include_outputs', []) and attribute not in self.config.get('include_outputs', []):
+                continue
+            # If the attribute is not required and the required_attributes_only flag is set, then skip the attribute
+            if self.config.get('required_attributes_only', False) and attribute_schema.get('optional', False) == True:
+                continue
             # Construct the attribute name
             if block_hierarchy:
                 attribute_name = "_".join(block_hierarchy + [attribute])
@@ -130,7 +140,7 @@ class Block(Terraform):
             if isinstance(self, DataSource):
                 outputs_text += f'value = {self.provider}_{self.data_source}.{self.name}.{".".join(block_hierarchy + [attribute])}\n'
             description = ""
-            if self.config.get('add_description', False) and self.documentation_text:
+            if self.config.get('add_descriptions', False) and self.documentation_text:
                 description = get_resource_attribute_description(self.documentation_text, attribute, block_hierarchy)
             if description:
                 outputs_text += f'description = "{description}"\n'
@@ -160,11 +170,13 @@ class Block(Terraform):
         blocks = schema.get("block", {}).get("block_types", {})
 
         for attribute, attribute_schema in attributes.items():
-            self.add_attribute(attribute, attribute_schema, block_hierarchy)
+            if not self.config.get('required_attributes_only', False) or attribute_schema.get('optional', False) == False:
+                self.add_attribute(attribute, attribute_schema, block_hierarchy)
 
         for block, block_schema in blocks.items():
-            # Skip blocks that are in the exclude_blocks list and are not required
-            if block_schema.get("min_items", 0) == 0 and "_".join(block_hierarchy + [block]) in self.config.get('exclude_blocks', []):
+            # If the block is in the exclude_blocks list and is not required, or if the required_blocks_only flag is set and the block is not required, then skip the block
+            if ((block_schema.get("min_items", 0) == 0 and "_".join(block_hierarchy + [block]) in self.config.get('exclude_blocks', [])) or
+                (self.config.get('required_blocks_only', False) and block_schema.get("min_items", 0) == 0)):
                 continue
             block_header, block_footer = self.add_block_wrapper(block_schema, block, block_hierarchy)
             self.write_line(block_header)
@@ -196,8 +208,6 @@ class Block(Terraform):
 class Provider(Block):
     def __init__(self, provider, namespace="hashicorp"):
         super().__init__(provider, namespace)
-        self.code = self.get_code()
-        self.variables_text = self.get_variables()
 
     def get_schema(self):
         schema = get_schema()
@@ -217,7 +227,7 @@ class Provider(Block):
         schema = self.get_schema()
         self.write_provider_code(schema=schema)
         
-        return self.content
+        return format_terraform_code(self.content)
 
 class Resource(Block):
     def __init__(self, provider, resource, name="main", namespace="hashicorp"):
@@ -228,8 +238,6 @@ class Resource(Block):
         # Load the documentation at initialization
         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'resource', self.resource)
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'resource', self.resource)
-
-        self.code = self.get_code()
 
     def get_schema(self):
         schema = get_schema()
@@ -249,7 +257,7 @@ class Resource(Block):
         schema = self.get_schema()
         self.write_resource_code(schema=schema, name=self.name)
         
-        return self.content
+        return format_terraform_code(self.content)
 
 class DataSource(Block):
     def __init__(self, provider, data_source, name="main", namespace="hashicorp"):
@@ -260,9 +268,6 @@ class DataSource(Block):
         # Load the documentation at initialization
         self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'data_source', self.data_source)
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'data_source', self.data_source)
-
-        self.code = self.get_code()
-        self.variables_text = self.get_variables()
 
     def get_schema(self):
         schema = get_schema()
@@ -282,16 +287,18 @@ class DataSource(Block):
         schema = self.get_schema()
         self.write_data_source_code(schema=schema, name=self.name)
         
-        return self.content
+        return format_terraform_code(self.content)
 
 # Set configurations
-config = ProviderConfiguration(
-    add_description=False,
-    exclude_attributes=['name', 'tags'],
-    exclude_blocks=["timeouts"]
-)
-variable_config = VariableConfiguration(add_description=True)
-output_config = OutputConfiguration(add_description=True)
+# config = ProviderConfiguration(
+#     add_descriptions=False,
+#     exclude_attributes=['name', 'tags'],
+#     exclude_blocks=["timeouts"],
+#     required_blocks_only=True,
+#     required_attributes_only=True
+# )
+# variable_config = VariableConfiguration(add_descriptions=True, include_variables=['name'])
+# output_config = OutputConfiguration(add_descriptions=True, include_outputs=['name'])
 
 # Create Provider code
 # provider = Provider(provider="azurerm")
@@ -300,9 +307,9 @@ output_config = OutputConfiguration(add_description=True)
 # print(provider.get_outputs(config=asdict(output_config)))
 
 # Create Resource code
-resource = Resource(provider="azurerm", resource="virtual_network", name="this")
+# resource = Resource(provider="azurerm", resource="windows_function_app", name="this")
 # print(resource.get_code(config=asdict(config)))
-print(resource.get_variables(config=asdict(variable_config)))
+# print(resource.get_variables(config=asdict(variable_config)))
 # print(resource.get_outputs(config=asdict(output_config)))
 
 # Create Data Source code

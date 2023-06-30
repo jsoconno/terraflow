@@ -138,4 +138,4 @@ terraform/*.json
 /*.tf
 
 # Terraflow
-*schema.json
+**/.terraflow/**/*

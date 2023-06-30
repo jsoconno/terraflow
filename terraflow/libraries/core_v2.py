@@ -18,21 +18,10 @@ from terraflow.libraries.helpers import *
 
 # Shared functions.
 
-def get_object_list():
-    """
-    Get a list of providers for a namespace or resources or data sources for a provider.
-    """
-    pass
 
 def set_object_attribute_value():
     """
     Explicitly set the value for a provider, resource, or data source attribute.
-    """
-    pass
-
-def recurse_schema():
-    """
-    Recurse the schema to write providers, resources, data sources, outputs, and variables.
     """
     pass
 

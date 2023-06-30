@@ -8,12 +8,13 @@ from terraflow.libraries.helpers import *
 
 # Schema functions.
 
-def get_schema(filename: str = 'schema.json') -> dict:
+def get_schema(filename: str = 'schema.json', refresh: bool = False) -> dict:
     """
     Returns the schema for a provider as a dictionary.
 
     Args:
         filename: The optional filename of the schema JSON file.
+        refresh: Flag indicating whether to refresh the schema if it already exists.
 
     Returns:
         The schema dictionary.
@@ -22,8 +23,8 @@ def get_schema(filename: str = 'schema.json') -> dict:
     if not os.path.exists(TERRAFLOW_DIR):
         os.makedirs(TERRAFLOW_DIR)
 
-    # Get the schema from file
-    if filename and os.path.exists(filename):
+    # Get the schema from file if it exists and no refresh is requested
+    if filename and os.path.exists(filename) and not refresh:
         schema = read_json_file(filename)
     else:
         schema = fetch_schema()
@@ -47,34 +48,30 @@ def fetch_schema() -> dict:
         p = subprocess.run(["terraform", "init", "-upgrade"], capture_output=True, text=True)
         return json.loads(subprocess.check_output(["terraform", "providers", "schema", "-json"]).decode("utf-8"))
 
-def cache_schema(schema: dict = None, filename: str = ".terraflow/schema.json", refresh: bool = False) -> None:
+def cache_schema(schema: dict = None, filename: str = ".terraflow/schema.json") -> None:
     """
     Cache the downloaded Terraform schema as ".terraflow/schema.json".
 
     Args:
         schema: The schema dictionary to be cached.
         filename: The filename to save the schema as.
-        refresh: Flag indicating whether to refresh the schema if it already exists.
     """
     _, ext = os.path.splitext(filename)
     if ext.lower() != ".json":
         print(f'\n{colors("FAIL")}Error:{colors()} {filename} is not a JSON file.\n')
         return
 
-    if os.path.exists(filename) and not refresh:
-        print(f'\n{colors("OK_BLUE")}Info:{colors()} A schema is already downloaded. To refresh the schema, rerun this command with the `--refresh` flag.\n')
-    else:
-        dirname = os.path.dirname(filename)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
 
-        try:
-            if schema is None:
-                schema = get_schema()
-            write_json_file(filename, schema)
-            print(f'\n{colors("OK_GREEN")}Success:{colors()} Schema downloaded successfully.\n')
-        except Exception as e:
-            print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the schema: {traceback.format_exc()}\n')
+    try:
+        if schema is None:
+            schema = get_schema(filename=filename, refresh=True)
+        write_json_file(filename, schema)
+        print(f'\n{colors("OK_GREEN")}Success:{colors()} Schema downloaded successfully.\n')
+    except Exception as e:
+        print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the schema: {traceback.format_exc()}\n')
 
 def get_provider_schema(schema: dict, namespace: str, provider: str) -> dict:
     """

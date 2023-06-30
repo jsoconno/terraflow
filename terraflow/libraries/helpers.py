@@ -2,6 +2,7 @@ import os
 import re
 import json
 import requests
+import subprocess
 from requests.exceptions import RequestException
 from bs4 import BeautifulSoup
 from typing import List, Tuple, Optional
@@ -59,11 +60,47 @@ def write_json_file(filename: str, data: dict) -> None:
     with open(filename, "w") as f:
         json.dump(data, f)
 
-def write_terraform_to_file():
-    """
-    Write a Terraform provider, resource, data source, variable, or output block to a file based on a regex pattern.
-    """
-    pass
+# def write_terraform_to_file(filename: str, new_code: str, block_type: str, name: str, provider=None, resource=None):
+#     """
+#     Write a Terraform provider, resource, data source, variable, or output block to a file based on a regex pattern.
+
+#     Args:
+#         filename (str): The name of the file where the Terraform block will be written.
+#         new_code (str): The new Terraform code to be written to the file.
+#         block_type (str): The type of the block that the new code will replace (provider, resource, or data).
+#         name (str): The name of the block that the new code will replace.
+#         provider (str, optional): The provider of the block. Required if block_type is provider.
+#         resource (str, optional): The resource of the block. Required if block_type is resource or data.
+#     """
+#     # Create a regex pattern to match the Terraform block
+#     if block_type == 'provider':
+#         pattern = rf'(?:#.*\n)*?^provider\s+"{provider}"\s+{{[\s\S]*?^}}$'
+#     elif block_type in ['resource', 'data']:
+#         pattern = rf'(?:#.*\n)*?^{block_type}\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
+#     else:
+#         raise ValueError('Invalid block_type. Must be one of ["provider", "resource", "data"].')
+
+#     # Try to read the existing contents of the file
+#     try:
+#         with open(filename, "r+") as f:
+#             contents = f.read()
+#     except:
+#         contents = ""
+
+#     # If the file isn't empty and doesn't end with a newline, append a newline
+#     if contents and not contents.endswith("\n"):
+#         contents += "\n\n"
+
+#     # Replace or append the new code
+#     if re.search(pattern, contents, flags=re.MULTILINE):
+#         current_text = re.findall(pattern, contents, flags=re.MULTILINE)[0]
+#         new_contents = contents.replace(current_text, new_code)
+#     else:
+#         new_contents = contents + new_code
+
+#     # Write the new contents back to the file
+#     with open(filename, "w+") as f:
+#         f.write(new_contents.strip())
 
 # Formatting functions.
 
@@ -312,11 +349,56 @@ def read_files(file_extensions: list = ['.tf']) -> str:
                 content += file.read()
     return content
 
-def write_terraform_to_file():
+import re
+
+import re
+
+import re
+
+def write_terraform_to_file(filename: str, new_code: str):#, provider=None, resource=None):
     """
     Write a Terraform provider, resource, data source, variable, or output block to a file based on a regex pattern.
+
+    Args:
+        filename (str): The name of the file where the Terraform block will be written.
+        new_code (str): The new Terraform code to be written to the file.
     """
-    pass
+    # Try to read the existing contents of the file
+    try:
+        with open(filename, "r+") as f:
+            contents = f.read()
+    except FileNotFoundError:
+        contents = ""
+
+    # If the file isn't empty and doesn't end with a newline, append a newline
+    if contents and not contents.endswith("\n"):
+        contents += "\n\n"
+
+    # Define regex pattern that can be used to collect all objects, regardless of type
+    pattern = r'(((?:#.*\n)*?^(.*?)\s+(?:"(.*?)"\s+)?\s?"(.*?)"\s+{)[\s\S]*?^}$)'
+
+    # Split new_code into blocks
+    old_code_blocks = re.findall(pattern, contents, flags=re.MULTILINE)
+    new_code_blocks = re.findall(pattern, new_code, flags=re.MULTILINE)
+    
+    # print(f'old_code: {old_code_blocks}')
+    # print(f'new_code: {new_code_blocks}')
+
+    # Construct dictionaries for old and new blocks using block type and name as keys
+    old_blocks_dict = {block_id: code for code, block_id, block_type, resource_type, name in old_code_blocks}
+    new_blocks_dict = {block_id: code for code, block_id, block_type, resource_type, name in new_code_blocks}
+
+    # Merge old and new blocks dictionaries
+    merged_blocks_dict = {**old_blocks_dict, **new_blocks_dict}
+
+    # Construct the final contents by joining all the blocks in merged_blocks_dict
+    merged_code = "\n\n".join(block for block in merged_blocks_dict.values())
+
+    # Write the new contents back to the file
+    with open(filename, "w+") as f:
+        f.write(merged_code.strip())
+
+    return merged_code
 
 # Formatting functions.
 
@@ -375,6 +457,41 @@ def format_terminal_text():
     Formats text for terminal output.
     """
     pass
+
+def format_terraform_code(code: str, indentation='  '):
+    """
+    Indent Terraform code so that it is formatted correctly.
+
+    Args:
+        code (str): The Terraform code to format.
+        indentation (str): The string used for each level of indentation. Defaults to two spaces.
+    """
+
+    # Split the code into lines
+    lines = code.split('\n')
+
+    # Initialize a counter for the current level of indentation
+    indent_level = 0
+
+    # Process each line
+    for i, line in enumerate(lines):
+        # Increase the indent level if the line opens a block
+        if '{' in line and '}' not in line:
+            lines[i] = indent_level * indentation + line.lstrip()
+            indent_level += 1
+        # Decrease the indent level if the line closes a block
+        elif '}' in line and '{' not in line:
+            indent_level -= 1
+            lines[i] = indent_level * indentation + line.lstrip()
+        # No change in indent level if the line both opens and closes a block
+        elif '{' in line and '}' in line:
+            lines[i] = indent_level * indentation + line.lstrip()
+        # Otherwise, just add the current level of indentation
+        else:
+            lines[i] = indent_level * indentation + line.lstrip()
+
+    # Join the lines back together and return the result
+    return '\n'.join(lines)
 
 # Helper functions
 
@@ -715,7 +832,7 @@ def handle_attribute(attribute, attribute_schema, block_hierarchy, config, docum
 
     # Get attribute description from the pre-loaded documentation
     description = ""
-    if documentation_text and config.get('add_description', False):
+    if documentation_text and config.get('add_descriptions', False):
         description = get_resource_attribute_description(documentation_text, attribute, block_hierarchy)
 
     # Construct the attribute name
@@ -732,3 +849,81 @@ def handle_attribute(attribute, attribute_schema, block_hierarchy, config, docum
     formatted_type = format_attribute_type(attribute_type)
 
     return attribute_name, description, optional, formatted_type
+
+def list_items(schema, namespace="hashicorp", provider=None, scope="resource", keywords=None):
+    """
+    Get a list of providers for a namespace or resources or data sources for a provider.
+    
+    Parameters:
+    schema (dict): The schema dictionary containing provider information.
+    namespace (str): The namespace of the provider, defaults to 'hashicorp'.
+    provider (str): The specific provider to consider, defaults to None.
+    scope (str): The scope to consider (either 'provider' or 'resource'), defaults to 'resource'.
+    keywords (list): A list of keywords to filter the items, defaults to None.
+
+    Returns:
+    list: A list of items based on the provided configuration.
+    """
+    items = []
+
+    try:
+        if scope == "provider":
+            schema = schema["provider_schemas"]
+            for provider_name in schema:
+                provider_name = provider_name.replace("registry.terraform.io/", "").split("/")[1]
+                items.append(provider_name)
+        elif scope in ALLOWED_SCOPES:
+            schema = schema["provider_schemas"][
+                f"registry.terraform.io/{namespace}/{provider}"
+            ][f"{scope}_schemas"]
+            for source in schema:
+                items.append(source.replace(f"{provider}_", ""))
+        else:
+            print(f"The scope must be one of {ALLOWED_SCOPES}.")
+    except KeyError:
+        print("No items were found.")
+
+    if keywords:
+        items = [item for item in items if any(keyword in item for keyword in keywords)]
+
+    return items
+
+def delete_provider_code(provider, filename="providers.tf"):
+    regex_pattern = rf'^provider\s+"{provider}"\s+{{[\s\S]*?^}}\n*'
+
+    with open(filename, "r") as f:
+        string = f.read()
+
+    result = re.sub(pattern=regex_pattern, repl="", string=string, flags=re.MULTILINE)
+
+    with open(filename, "w") as f:
+        f.write(result)
+
+def delete_resource_code(provider, resource, name, filename="main.tf"):
+    resource = "_".join([provider, resource]) if not provider in resource else resource
+    regex_pattern = (
+        rf'(?:#.*\n)*?^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+    )
+
+    with open(filename, "r") as f:
+        string = f.read()
+
+    result = re.sub(pattern=regex_pattern, repl="", string=string, flags=re.MULTILINE)
+
+    with open(filename, "w") as f:
+        f.write(result)
+
+def delete_data_source_code(provider, resource, name, filename="main.tf"):
+    resource = "_".join([provider, resource]) if not provider in resource else resource
+    regex_pattern = rf'(?:#.*\n)*?^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+
+    with open(filename, "r") as f:
+        string = f.read()
+
+    result = re.sub(pattern=regex_pattern, repl="", string=string, flags=re.MULTILINE)
+
+    with open(filename, "w") as f:
+        f.write(result)
+
+def run_terraform_fmt():
+    subprocess.run(["terraform", "fmt"], stdout=subprocess.DEVNULL)

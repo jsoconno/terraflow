@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class Configuration:
-    add_description: bool = False
+    add_descriptions: bool = False
     required_attributes_only: bool = False
     required_blocks_only: bool = False
     exclude_blocks: list = field(default_factory=list)

@@ -13,14 +13,6 @@ ALLOWED_SCOPES = ["provider", "resource", "data_source"]
 
 # Dictionary of different CLI options
 options = {
-    "schema_filename": click.option(
-        "--schema-filename",
-        type=str,
-        default="schema.json",
-        multiple=False,
-        required=False,
-        help="The name of the Terraform schema to use locally.",
-    ),
     "refresh": click.option(
         "--refresh",
         type=str,
@@ -89,15 +81,15 @@ options = {
         required=False,
         help="Add descriptions inline with the code for all resource attributes.",
     ),
-    "add_documentation_url": click.option(
-        "--add-documentation-url",
-        type=bool,
-        is_flag=True,
-        default=False,
-        multiple=False,
-        required=False,
-        help="Add a link to the documentation above the resource.",
-    ),
+    # "add_documentation_url": click.option(
+    #     "--add-documentation-url",
+    #     type=bool,
+    #     is_flag=True,
+    #     default=False,
+    #     multiple=False,
+    #     required=False,
+    #     help="Add a link to the documentation above the resource.",
+    # ),
     "ignore_block": click.option(
         "--ignore-block",
         type=str,
@@ -114,14 +106,14 @@ options = {
         required=False,
         help="Attributes to ignore in the configuration.",
     ),
-    "dynamic_block": click.option(
-        "--dynamic-block",
-        type=str,
-        default=None,
-        multiple=True,
-        required=False,
-        help="Blocks to make dynamic in the configuration.",
-    ),
+    # "dynamic_block": click.option(
+    #     "--dynamic-block",
+    #     type=str,
+    #     default=None,
+    #     multiple=True,
+    #     required=False,
+    #     help="Blocks to make dynamic in the configuration.",
+    # ),
     "attribute_default": click.option(
         "--attribute-default",
         type=str,
@@ -130,14 +122,14 @@ options = {
         required=False,
         help="Default values for a given attributes in the format 'attribute=value'.",
     ),
-    "attribute_value_prefix": click.option(
-        "--attribute-value-prefix",
-        type=str,
-        default=None,
-        multiple=False,
-        required=False,
-        help="A prefix to give to all variables in the resource configuration.  Useful for module development.",
-    ),
+    # "attribute_value_prefix": click.option(
+    #     "--attribute-value-prefix",
+    #     type=str,
+    #     default=None,
+    #     multiple=False,
+    #     required=False,
+    #     help="A prefix to give to all variables in the resource configuration.  Useful for module development.",
+    # ),
     "terraform_filename": click.option(
         "--terraform-filename",
         type=str,
@@ -153,6 +145,14 @@ options = {
         multiple=True,
         required=False,
         help="A keyword used to filter results.",
+    ),
+    "include_variable": click.option(
+        "--include-variable",
+        type=str,
+        default=None,
+        multiple=True,
+        required=False,
+        help="A variable to target for updates.  If not provided, all variables are updated.",
     ),
 }
 
@@ -185,12 +185,12 @@ def code_options(func):
     func = options["required_attributes_only"](func)
     func = options["required_blocks_only"](func)
     func = options["add_descriptions"](func)
-    func = options["add_documentation_url"](func)
+    # func = options["add_documentation_url"](func)
     func = options["ignore_block"](func)
-    func = options["dynamic_block"](func)
+    # func = options["dynamic_block"](func)
     func = options["ignore_attribute"](func)
     func = options["attribute_default"](func)
-    func = options["attribute_value_prefix"](func)
+    # func = options["attribute_value_prefix"](func)
     func = options["terraform_filename"](func)
 
     return func
@@ -200,7 +200,6 @@ def schema_file_options(func):
     """
     Description
     """
-    func = options["schema_filename"](func)
     func = options["refresh"](func)
 
     return func
@@ -220,5 +219,13 @@ def filter_options(func):
     Description
     """
     func = options["keyword"](func)
+
+    return func
+
+def variable_options(func):
+    """
+    Description
+    """
+    func = options["include_variable"](func)
 
     return func
