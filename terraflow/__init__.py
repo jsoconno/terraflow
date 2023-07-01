@@ -131,6 +131,7 @@ def resource_create(
     required_attributes_only,
     required_blocks_only,
     add_descriptions,
+    sync_variables,
     # add_documentation_url,
     ignore_block,
     # dynamic_block,
@@ -138,6 +139,8 @@ def resource_create(
     attribute_default,
     # attribute_value_prefix,
     terraform_filename,
+    include_variable,
+    variables_filename
 ):
     """
     Create a Terraform resource.
@@ -165,6 +168,22 @@ def resource_create(
         new_code=code,
         filename=terraform_filename
     )
+
+    # Remove hard coding and add flag later
+
+    if sync_variables:
+        variable_config = ResourceConfiguration(
+            add_descriptions=True
+        )
+
+        variables_code = this.get_variables(config=asdict(variable_config))
+
+        write_terraform_to_file(
+            new_code=variables_code,
+            filename=variables_filename
+        )
+
+        remove_unused_variables()
 
     run_terraform_fmt()
 

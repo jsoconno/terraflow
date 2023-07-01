@@ -27,4 +27,12 @@ resource "azurerm_key_vault" "main" {
     ip_rules                   = var.network_acls_ip_rules
     virtual_network_subnet_ids = var.network_acls_virtual_network_subnet_ids
   }
+
+  # This block is optional
+  timeouts {
+    create = var.timeouts_create
+    delete = var.timeouts_delete
+    read   = var.timeouts_read
+    update = var.timeouts_update
+  }
 }

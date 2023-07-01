@@ -60,47 +60,7 @@ def write_json_file(filename: str, data: dict) -> None:
     with open(filename, "w") as f:
         json.dump(data, f)
 
-# def write_terraform_to_file(filename: str, new_code: str, block_type: str, name: str, provider=None, resource=None):
-#     """
-#     Write a Terraform provider, resource, data source, variable, or output block to a file based on a regex pattern.
 
-#     Args:
-#         filename (str): The name of the file where the Terraform block will be written.
-#         new_code (str): The new Terraform code to be written to the file.
-#         block_type (str): The type of the block that the new code will replace (provider, resource, or data).
-#         name (str): The name of the block that the new code will replace.
-#         provider (str, optional): The provider of the block. Required if block_type is provider.
-#         resource (str, optional): The resource of the block. Required if block_type is resource or data.
-#     """
-#     # Create a regex pattern to match the Terraform block
-#     if block_type == 'provider':
-#         pattern = rf'(?:#.*\n)*?^provider\s+"{provider}"\s+{{[\s\S]*?^}}$'
-#     elif block_type in ['resource', 'data']:
-#         pattern = rf'(?:#.*\n)*?^{block_type}\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}$'
-#     else:
-#         raise ValueError('Invalid block_type. Must be one of ["provider", "resource", "data"].')
-
-#     # Try to read the existing contents of the file
-#     try:
-#         with open(filename, "r+") as f:
-#             contents = f.read()
-#     except:
-#         contents = ""
-
-#     # If the file isn't empty and doesn't end with a newline, append a newline
-#     if contents and not contents.endswith("\n"):
-#         contents += "\n\n"
-
-#     # Replace or append the new code
-#     if re.search(pattern, contents, flags=re.MULTILINE):
-#         current_text = re.findall(pattern, contents, flags=re.MULTILINE)[0]
-#         new_contents = contents.replace(current_text, new_code)
-#     else:
-#         new_contents = contents + new_code
-
-#     # Write the new contents back to the file
-#     with open(filename, "w+") as f:
-#         f.write(new_contents.strip())
 
 # Formatting functions.
 
@@ -346,14 +306,9 @@ def read_files(file_extensions: list = ['.tf']) -> str:
     for file_name in os.listdir(os.getcwd()):
         if any(file_name.endswith(extension) for extension in file_extensions):
             with open(file_name, 'r') as file:
-                content += file.read()
+                content += file.read() + '\n'
+
     return content
-
-import re
-
-import re
-
-import re
 
 def write_terraform_to_file(filename: str, new_code: str):#, provider=None, resource=None):
     """
@@ -380,9 +335,6 @@ def write_terraform_to_file(filename: str, new_code: str):#, provider=None, reso
     # Split new_code into blocks
     old_code_blocks = re.findall(pattern, contents, flags=re.MULTILINE)
     new_code_blocks = re.findall(pattern, new_code, flags=re.MULTILINE)
-    
-    # print(f'old_code: {old_code_blocks}')
-    # print(f'new_code: {new_code_blocks}')
 
     # Construct dictionaries for old and new blocks using block type and name as keys
     old_blocks_dict = {block_id: code for code, block_id, block_type, resource_type, name in old_code_blocks}
@@ -399,6 +351,43 @@ def write_terraform_to_file(filename: str, new_code: str):#, provider=None, reso
         f.write(merged_code.strip())
 
     return merged_code
+
+def remove_unused_variables():
+    """
+    This function collects all code, collects all variables, determines which ones to delete, and deletes them.
+    """
+    code = read_files()
+
+    # Collect all variables from the configuration
+    pattern = r'.*?\s+=\s+var.(.*?)(?:\s|#)'
+    variables_list = re.findall(pattern, code, re.MULTILINE)
+
+    # Establish a pattern for collecting all variable declarations
+    pattern = r'((?:#.*\n)*?^variable\s+(?:".*?"\s+)?\s?"(.*?)"\s+{[\s\S]*?^}$)'
+    variable_declarations = re.findall(pattern, code, re.MULTILINE)
+    variable_declarations_dict = {variable: code for code, variable in variable_declarations}
+
+    # Create a list of items that are in variable_declarations_dict that are not in variables_list
+    unused_variables = [var for var in variable_declarations_dict.keys() if var not in variables_list]
+
+    # Loop through each item in the unused_variables list and do a find an replace to remove code
+    for var in unused_variables:
+        # replace the unused variables in the code string
+        code = code.replace(variable_declarations_dict[var], "")
+
+    # Now we'll write the modified code back into the Terraform files
+    for file_name in os.listdir(os.getcwd()):
+        if any(file_name.endswith(extension) for extension in ".tf"):
+            with open(file_name, 'r') as file:
+                file_content = file.read()
+            for var in unused_variables:
+                # replace the unused variables in each file's content
+                file_content = file_content.replace(variable_declarations_dict[var], "")
+            # Now write the modified content back into the file
+            with open(file_name, 'w') as file:
+                file.write(file_content)
+
+remove_unused_variables()
 
 # Formatting functions.
 

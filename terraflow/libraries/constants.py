@@ -81,6 +81,15 @@ options = {
         required=False,
         help="Add descriptions inline with the code for all resource attributes.",
     ),
+    "sync_variables": click.option(
+        "--sync-variables",
+        type=bool,
+        is_flag=True,
+        default=False,
+        multiple=False,
+        required=False,
+        help="Automatically sync variables for the created resource.",
+    ),
     # "add_documentation_url": click.option(
     #     "--add-documentation-url",
     #     type=bool,
@@ -136,7 +145,15 @@ options = {
         default="main.tf",
         multiple=False,
         required=False,
-        help="The name of the target Terraform file.",
+        help="The name of file to store Terraform resources in.",
+    ),
+    "variables_filename": click.option(
+        "--variables-filename",
+        type=str,
+        default="variables.tf",
+        multiple=False,
+        required=False,
+        help="The name of the file to store variables in.",
     ),
     "keyword": click.option(
         "--keyword",
@@ -185,6 +202,8 @@ def code_options(func):
     func = options["required_attributes_only"](func)
     func = options["required_blocks_only"](func)
     func = options["add_descriptions"](func)
+    func = options["sync_variables"](func)
+    func = options["include_variable"](func)
     # func = options["add_documentation_url"](func)
     func = options["ignore_block"](func)
     # func = options["dynamic_block"](func)
@@ -192,6 +211,7 @@ def code_options(func):
     func = options["attribute_default"](func)
     # func = options["attribute_value_prefix"](func)
     func = options["terraform_filename"](func)
+    func = options["variables_filename"](func)
 
     return func
 
@@ -226,6 +246,6 @@ def variable_options(func):
     """
     Description
     """
-    func = options["include_variable"](func)
+    func = options["variables_filename"](func)
 
     return func
