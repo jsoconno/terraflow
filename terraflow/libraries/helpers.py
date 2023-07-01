@@ -356,7 +356,9 @@ def remove_unused_variables():
     """
     This function collects all code, collects all variables, determines which ones to delete, and deletes them.
     """
-    code = read_files()
+    # Get the current code from Terraform files in the current working directory
+    file_extensions = [".tf"]
+    code = read_files(file_extensions)
 
     # Collect all variables from the configuration
     pattern = r'.*?\s+=\s+var.(.*?)(?:\s|#)'
@@ -370,19 +372,16 @@ def remove_unused_variables():
     # Create a list of items that are in variable_declarations_dict that are not in variables_list
     unused_variables = [var for var in variable_declarations_dict.keys() if var not in variables_list]
 
-    # Loop through each item in the unused_variables list and do a find an replace to remove code
-    for var in unused_variables:
-        # replace the unused variables in the code string
-        code = code.replace(variable_declarations_dict[var], "")
-
     # Now we'll write the modified code back into the Terraform files
     for file_name in os.listdir(os.getcwd()):
-        if any(file_name.endswith(extension) for extension in ".tf"):
+        if any(file_name.endswith(extension) for extension in file_extensions):
             with open(file_name, 'r') as file:
                 file_content = file.read()
             for var in unused_variables:
                 # replace the unused variables in each file's content
                 file_content = file_content.replace(variable_declarations_dict[var], "")
+            # Now remove all excessive newlines, but keep one newline between items
+            file_content = re.sub("\n{2,}", "\n\n", file_content)
             # Now write the modified content back into the file
             with open(file_name, 'w') as file:
                 file.write(file_content)
