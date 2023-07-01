@@ -8,7 +8,7 @@ from terraflow.libraries.helpers import *
 
 # Schema functions.
 
-def get_schema(filename: str = 'schema.json', refresh: bool = False) -> dict:
+def get_schema(filename: str = '.terraflow/schema.json', cache: bool = True, refresh: bool = False) -> dict:
     """
     Returns the schema for a provider as a dictionary.
 
@@ -26,8 +26,11 @@ def get_schema(filename: str = 'schema.json', refresh: bool = False) -> dict:
     # Get the schema from file if it exists and no refresh is requested
     if filename and os.path.exists(filename) and not refresh:
         schema = read_json_file(filename)
+        print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading provider schema from cache.\n')
     else:
         schema = fetch_schema()
+        cache_schema(schema=schema)
+        print(f'\n{colors("OK_GREEN")}Success:{colors()} Schema downloaded successfully.\n')
 
     return schema
 
