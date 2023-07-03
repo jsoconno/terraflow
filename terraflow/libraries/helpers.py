@@ -330,7 +330,7 @@ def write_terraform_to_file(filename: str, new_code: str):#, provider=None, reso
         contents += "\n\n"
 
     # Define regex pattern that can be used to collect all objects, regardless of type
-    pattern = r'(((?:#.*\n)*?^(.*?)\s+(?:"(.*?)"\s+)?\s?"(.*?)"\s+{)[\s\S]*?^}$)'
+    pattern = r'((?:#.*\n)*?(^(.*?)\s+(?:"(.*?)"\s+)?\s?"(.*?)"\s+{)[\s\S]*?^}$)'
 
     # Split new_code into blocks
     old_code_blocks = re.findall(pattern, contents, flags=re.MULTILINE)
@@ -445,6 +445,32 @@ def format_terminal_text():
     Formats text for terminal output.
     """
     pass
+
+def format_comments(comments):
+    if comments:
+        formatted_comments = "\n".join([f"# {comment}" for comment in comments])
+        return f"{formatted_comments}\n"
+    else:
+        return ""
+
+def wrap_text(text, line_length=80):
+    words = text.split()
+    lines = []
+    current_line = ""
+
+    for word in words:
+        if len(current_line + word) + 1 <= line_length:
+            if current_line:
+                current_line += " "
+            current_line += word
+        else:
+            lines.append(current_line)
+            current_line = word
+
+    if current_line:
+        lines.append(current_line)
+
+    return lines
 
 def format_terraform_code(code: str, indentation='  '):
     """
