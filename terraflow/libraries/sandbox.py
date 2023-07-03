@@ -1,7 +1,7 @@
 from dataclasses import asdict
 
 from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_source_schema, get_attribute_schema
-from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, format_attribute_type, handle_attribute, format_terraform_code
+from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, format_attribute_type, handle_attribute, format_terraform_code, wrap_text
 from terraflow.libraries.configuration import ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 
 class Terraform:
@@ -216,8 +216,8 @@ class Provider(Block):
         return provider_schema
 
     def write_provider_code(self, schema):
-        header = f'provider "{self.provider}" {{\n'
-        footer = "}\n"
+        header = f'provider "{self.provider}" {{'
+        header, footer = self.add_resource_wrapper(header=header)
         self.write_line(header)
         self.write_code(schema)
         self.write_line(footer)
@@ -246,8 +246,8 @@ class Resource(Block):
         return resource_schema
 
     def write_resource_code(self, schema, name):
-        header = f'resource "{self.provider}_{self.resource}" "{name}" {{\n'
-        footer = "}\n"
+        header = f'resource "{self.provider}_{self.resource}" "{name}" {{'
+        header, footer = self.add_resource_wrapper(header=header, comment="hello")
         self.write_line(header)
         self.write_code(schema)
         self.write_line(footer)
@@ -276,8 +276,8 @@ class DataSource(Block):
         return data_source_schema
 
     def write_data_source_code(self, schema, name):
-        header = f'data "{self.provider}_{self.data_source}" "{name}" {{\n'
-        footer = "}\n"
+        header = f'data "{self.provider}_{self.data_source}" "{name}" {{'
+        header, footer = self.add_resource_wrapper(header=header)
         self.write_line(header)
         self.write_code(schema)
         self.write_line(footer)
