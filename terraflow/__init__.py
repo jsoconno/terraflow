@@ -200,6 +200,7 @@ def resource_delete(namespace, provider, resource, name, terraform_filename):
         provider=provider, resource=resource, name=name, filename=terraform_filename
     )
 
+    remove_unused_variables()
 
 # terraflow data-source
 @terraflow.group("data-source")
