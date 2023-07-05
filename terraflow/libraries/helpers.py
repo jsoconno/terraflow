@@ -625,7 +625,7 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
 
 # Documentation functions.
 
-def get_terraform_documentation_url(namespace: str, provider: str, resource: str, scope: str, version: str = 'main') -> str:
+def get_terraform_documentation_url(namespace: str, provider: str, resource: str = None, version: str = 'main') -> str:
     """
     Get the documentation URL for a provider resource or data source.
 
@@ -639,30 +639,28 @@ def get_terraform_documentation_url(namespace: str, provider: str, resource: str
     Returns:
         The documentation URL as a string.
     """
-    url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"
-    response = json.loads(requests.get(url).text)
+    # TODO: Clean this up if it ends up not being needed as it reduces a dependency on an api call
+    # url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"
+    # response = json.loads(requests.get(url).text)
 
-    docs_path = None
+    # docs_path = None
 
-    for doc in response["docs"]:
-        if (
-            doc["title"] == resource
-            or doc["title"] == resource.replace(f"{provider}_", "")
-        ) and doc["category"] == f"{scope.replace('_', '-')}s":
-            docs_path = doc["path"]
+    # for doc in response["docs"]:
+    #     if (
+    #         doc["title"] == resource
+    #         or doc["title"] == resource.replace(f"{provider}_", "")
+    #     ) and doc["category"] == f"{scope.replace('_', '-')}s":
+    #         docs_path = doc["path"]
 
-    if docs_path:
-        if scope == "provider":
-            url = f"https://github.com/{namespace}/terraform-provider-{provider}"
-        else:
-            # TODO: replace "main" with the actual version of the provider from the configuration.
-            url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{version}/{docs_path}"
+    # if docs_path:
+    if resource:
+        url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{version}/website/docs/r/{resource}.html.markdown"
     else:
-        url = None
+        url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{version}/website/docs/index.html.markdown"
 
     return url
 
-def get_terraform_documentation(namespace: str, provider: str, scope: str, resource: str, version: str = 'main', cache: bool = True) -> str:
+def get_terraform_documentation(namespace: str, provider: str, scope: str, resource: str = None, version: str = 'main', cache: bool = True) -> str:
     """
     Get the documentation for a provider resource or data source and cache it.
 
@@ -678,16 +676,21 @@ def get_terraform_documentation(namespace: str, provider: str, scope: str, resou
         The documentation content as a string.
     """
     # Determine the filename for the cached documentation
-    filename = f"{namespace}.{provider}.{resource}.{scope}.txt"
+    # TODO: Add function to get the version based off of the configuration and remove variable.
+    if resource:
+        filename = f"{namespace}.{provider}.{version}.{scope}.{resource}.txt"
+    else:
+        filename = f"{namespace}.{provider}.{version}.txt"
     path = os.path.join(DOCUMENTATION_DIR, filename)
 
     # If the file exists, read the cached documentation
     if os.path.exists(path):
-        print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache for the {namespace} {provider} {resource} {scope}.\n')
+        print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache for the {namespace} {provider} ({version}) {resource} {scope}.\n')
         return read_text_file(path)
 
     # If the file does not exist, get the documentation URL and the documentation
-    documentation_url = get_terraform_documentation_url(namespace, provider, resource, scope, version)
+    # TODO: Consider adding support for collection feature block definitions - https://github.com/hashicorp/terraform-provider-azurerm/blob/main/website/docs/guides/features-block.html.markdown
+    documentation_url = get_terraform_documentation_url(namespace, provider, resource, version)
     documentation = scrape_website(documentation_url, tag="article")
 
     # If caching is enabled, cache the documentation
@@ -698,7 +701,7 @@ def get_terraform_documentation(namespace: str, provider: str, scope: str, resou
 
             write_text_file(path, documentation)
 
-            print(f'\n{colors("OK_GREEN")}Success:{colors()} Documentation read and cached successfully for the {namespace} {provider} {resource} {scope}.\n')
+            print(f'\n{colors("OK_GREEN")}Success:{colors()} Documentation read and cached successfully for the {namespace} {provider} ({version}) {version} {resource} {scope}.\n')
         except Exception:
             print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the documentation.\n')
 

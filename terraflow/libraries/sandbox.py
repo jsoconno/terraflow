@@ -6,28 +6,13 @@ from terraflow.libraries.configuration import ProviderConfiguration, ResourceCon
 
 class Terraform:
     def __init__(self, provider, namespace="hashicorp"):
-        self.provider = provider
         self.namespace = namespace
+        self.provider = provider
         self.content = ""
         self.config = {}
 
     def write_line(self, line):
         self.content += line
-
-    def add_resource_wrapper(self, header, documentation_url=None, comment=None):
-        header_content = ""
-
-        if documentation_url:
-            header_content += f"# Terraform docs: {documentation_url}\n"
-
-        if comment:
-            wrapped_comment = "\n".join(["# " + line for line in wrap_text(text=comment)])
-            header_content += f"{wrapped_comment}\n"
-
-        header_content += f"{header}\n"
-        footer = "}\n"
-
-        return header_content, footer
 
 class Block(Terraform):
     def __init__(self, provider, namespace="hashicorp"):
@@ -165,6 +150,21 @@ class Block(Terraform):
 
         return header, footer
 
+    def add_resource_wrapper(self, header, documentation_url=None, comment=None):
+        header_content = ""
+
+        if documentation_url:
+            header_content += f"# Terraform docs: {documentation_url}\n"
+
+        if comment:
+            wrapped_comment = "\n".join(["# " + line for line in wrap_text(text=comment)])
+            header_content += f"{wrapped_comment}\n"
+
+        header_content += f"{header}\n"
+        footer = "}\n"
+
+        return header_content, footer
+
     def write_code(self, schema, block_hierarchy=[]):
         attributes = schema.get("block", {}).get("attributes", {})
         blocks = schema.get("block", {}).get("block_types", {})
@@ -209,6 +209,11 @@ class Provider(Block):
     def __init__(self, provider, namespace="hashicorp"):
         super().__init__(provider, namespace)
 
+        # Load the documentation at initialization
+        # TODO: Add support for version
+        self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider)
+        self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'provider')
+
     def get_schema(self):
         schema = get_schema()
         provider_schema = get_provider_schema(schema=schema, namespace=self.namespace, provider=self.provider)
@@ -236,7 +241,8 @@ class Resource(Block):
         self.name = name
 
         # Load the documentation at initialization
-        self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'resource', self.resource)
+        # TODO: Add support for version
+        self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, self.resource)
         self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'resource', self.resource)
 
     def get_schema(self):
@@ -247,7 +253,7 @@ class Resource(Block):
 
     def write_resource_code(self, schema, name):
         header = f'resource "{self.provider}_{self.resource}" "{name}" {{'
-        header, footer = self.add_resource_wrapper(header=header, comment="hello")
+        header, footer = self.add_resource_wrapper(header=header)
         self.write_line(header)
         self.write_code(schema)
         self.write_line(footer)
@@ -266,8 +272,9 @@ class DataSource(Block):
         self.name = name
 
         # Load the documentation at initialization
-        self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, 'data_source', self.data_source)
-        self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'data_source', self.data_source)
+        # TODO: Add support for version
+        self.documentation_url = get_terraform_documentation_url(self.namespace, self.provider, self.resource)
+        self.documentation_text = get_terraform_documentation(self.namespace, self.provider, 'data_source', self.resource)
 
     def get_schema(self):
         schema = get_schema()
@@ -291,13 +298,12 @@ class DataSource(Block):
 
 # Set configurations
 # config = ProviderConfiguration(
-#     add_descriptions=False,
-#     exclude_attributes=['name', 'tags'],
+#     add_descriptions=True,
 #     exclude_blocks=["timeouts"],
-#     required_blocks_only=True,
-#     required_attributes_only=True
+    # required_blocks_only=True,
+    # required_attributes_only=True
 # )
-# variable_config = VariableConfiguration(add_descriptions=True, include_variables=['name'])
+# variable_config = VariableConfiguration(add_descriptions=True)
 # output_config = OutputConfiguration(add_descriptions=True, include_outputs=['name'])
 
 # Create Provider code

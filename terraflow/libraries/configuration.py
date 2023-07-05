@@ -9,6 +9,7 @@ class Configuration:
     exclude_attributes: list = field(default_factory=list)
     attribute_defaults: dict = field(default_factory=dict)
     attribute_value_prefix: str = ""
+    comments: list = field(default_factory=list)
 
 @dataclass
 class ProviderConfiguration(Configuration):
