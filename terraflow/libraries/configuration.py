@@ -5,8 +5,10 @@ class Configuration:
     add_descriptions: bool = False
     required_attributes_only: bool = False
     required_blocks_only: bool = False
-    exclude_blocks: list = field(default_factory=list)
     exclude_attributes: list = field(default_factory=list)
+    exclude_computed_attributes: bool = True
+    exclude_blocks: list = field(default_factory=list)
+    exclude_computed_blocks: bool = True
     attribute_defaults: dict = field(default_factory=dict)
     attribute_value_prefix: str = ""
     comments: list = field(default_factory=list)

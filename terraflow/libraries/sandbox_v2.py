@@ -186,8 +186,7 @@ class DataSource(Terraform):
 
 config = ResourceConfiguration(
     add_descriptions=True,
-    exclude_blocks=['timeouts'],
-    exclude_attributes=['id']
+    exclude_blocks=['timeouts']
 )
 
 x = Resource(
