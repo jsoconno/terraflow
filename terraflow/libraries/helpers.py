@@ -889,14 +889,14 @@ def filter_attributes(attributes: dict, configuration: object) -> dict:
 def filter_blocks(blocks: dict, configuration: object) -> dict:
     # Exclude specified blocks if any
     if configuration.exclude_blocks:
-        blocks = {k: v for k, v in blocks.items() if k not in configuration.exclude_blocks or v.get('required', False)}
+        blocks = {k: v for k, v in blocks.items() if k not in configuration.exclude_blocks or v.get("min_items", 0) > 0}
 
     # Exclude computed blocks if configuration flag is set
     if configuration.exclude_computed_blocks:
-        blocks = {k: v for k, v in blocks.items() if not v.get('computed', False) or v.get('required', False)}
+        blocks = {k: v for k, v in blocks.items() if not v.get('computed', False) or v.get("min_items", 0) > 0}
 
     # Include only required blocks if specified
     if configuration.required_blocks_only:
-        blocks = {k: v for k, v in blocks.items() if v.get('required', False)}
+        blocks = {k: v for k, v in blocks.items() if v.get('min_items', 0) > 0}
 
     return blocks
