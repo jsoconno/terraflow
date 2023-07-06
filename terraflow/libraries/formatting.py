@@ -5,7 +5,7 @@ def format_comments(comments):
     else:
         return ""
 
-def wrap_text(text, line_length=80):
+def wrap_text(text, line_length=80, prefix=''):
     words = text.split()
     lines = []
     current_line = ""
@@ -21,6 +21,9 @@ def wrap_text(text, line_length=80):
 
     if current_line:
         lines.append(current_line)
+
+    # Adding prefix to each line
+    lines = [f"{prefix} {line}".strip() for line in lines]
 
     return lines
 
@@ -106,8 +109,25 @@ def format_block_header(schema, block, block_hierarchy):
 
     return header, footer
 
-def format_attribute(attribute, attribute_schema, docs, block_hierarchy=[]):
-    pass
+def format_attribute(attribute: str, attribute_schema: dict, attribute_description: str = None, block_hierarchy: list = [], configuration: object = None):
+    # Join block hierarchy and attribute with '_'
+    hierarchy_key = "_".join(block_hierarchy + [attribute])
+
+    # If hierarchy_key exists in attribute_defaults dictionary, set attribute_value accordingly
+    if hierarchy_key in configuration.attribute_defaults:
+        attribute_value = f'"{configuration.attribute_defaults[hierarchy_key]}"'
+    elif configuration.attribute_value_prefix:  # If attribute_value_prefix is given
+        attribute_value = f'var.{configuration.attribute_value_prefix}_{hierarchy_key}'
+    else:
+        attribute_value = f'var.{hierarchy_key}'
+    
+    # Construct the attribute line
+    if configuration.add_inline_descriptions and attribute_description:
+        attribute_line = f'{attribute} = {attribute_value} # {attribute_description}' + '\n'
+    else:
+        attribute_line = f'{attribute} = {attribute_value}'+ '\n'
+    
+    return attribute_line
 
 def format_attribute_type(attribute_type):
     """

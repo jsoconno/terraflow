@@ -2,7 +2,7 @@ from dataclasses import asdict
 
 from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema, get_attribute_schema
 from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, handle_attribute, get_provider_version, get_terraform_version, filter_attributes, filter_blocks
-from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_attribute_type, format_terraform_code, format_comments, wrap_text
+from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_attribute_type, format_terraform_code
 from terraflow.libraries.configuration import Configuration, ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 
 class Terraform():
@@ -52,11 +52,16 @@ class Terraform():
 
             # Update the attribute schema with the description
             attribute_schema['description'] = attribute_description
-
             self.attributes.update({'_'.join(block_hierarchy + [attribute]): attribute_schema})
 
             # Write line
-            self.code += f"{attribute} = var.{attribute}" + '\n'
+            self.code += format_attribute(
+                attribute=attribute,
+                attribute_schema=attribute_schema,
+                attribute_description=attribute_description,
+                block_hierarchy=block_hierarchy,
+                configuration=self.configuration
+            )
 
         # Loop through blocks
         for block, block_schema in blocks.items():
@@ -82,7 +87,13 @@ class Terraform():
         """
         Generates the terraform code for a specific type.
         """
-        header, footer = format_resource_header(type=type, name=self.name, kind=getattr(self, 'kind', None))
+        header, footer = format_resource_header(
+            type=type,
+            name=self.name,
+            kind=self.kind,
+            documentation_url=(self.docs_url if self.configuration.add_header_terraform_docs_url else None),
+            comment=(self.configuration.header_comment)
+        )
 
         # Write code
         self._write_code_line(header)
@@ -185,16 +196,20 @@ class DataSource(Terraform):
         )
 
 config = ResourceConfiguration(
-    add_descriptions=True,
-    exclude_blocks=['timeouts']
+    add_inline_descriptions=False,
+    exclude_blocks=['timeouts'],
+    add_header_terraform_docs_url=True,
+    attribute_value_prefix="test",
+    attribute_defaults={'location': 'eastus'},
+    header_comment='This key vault is used for storing keys, secrets, and certificates for the application.'
 )
 
-x = Provider(
+x = Resource(
     namespace='hashicorp',
-    name='azurerm',
-    # kind='key_vault',
-    # name='main',
-    # configuration=config
+    provider='azurerm',
+    kind='key_vault',
+    name='test',
+    configuration=config
 )
 
 print(x.code)

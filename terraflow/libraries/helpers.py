@@ -137,13 +137,11 @@ def convert_strings_to_dict(text: str, delimiter: str = "=") -> dict:
 def scrape_website(url: str, tag: str = None, selector: str = None, list_output: bool = False) -> str:
     """
     Scrape content from a URL. If a tag or selector is specified, only content within that tag or selector is scraped.
-
     Args:
         url: The URL to scrape.
         tag: Optional; an HTML tag name to scrape (e.g. "p" for paragraph tags, "div" for div tags, etc.).
         selector: Optional; a CSS selector to scrape.
         list_output: Optional; whether to return the output as a list (default is False).
-
     Returns:
         The scraped content as a string or a list of strings.
     """
@@ -563,6 +561,9 @@ def get_terraform_documentation(namespace: str, provider: str, scope: str, resou
     # TODO: Consider adding support for collection feature block definitions - https://github.com/hashicorp/terraform-provider-azurerm/blob/main/website/docs/guides/features-block.html.markdown
     documentation_url = get_terraform_documentation_url(scope, namespace, provider, resource, version)
     documentation = scrape_website(documentation_url, tag="article")
+
+    # Make sure newlines are translated from //n to /n for writing to file:
+    documentation = documentation.replace("\\n", "\n")
 
     # If caching is enabled, cache the documentation
     if cache:
