@@ -72,8 +72,8 @@ options = {
         required=False,
         help="Only include required blocks in the resource configuration.",
     ),
-    "add_descriptions": click.option(
-        "--add-descriptions",
+    "add_inline_descriptions": click.option(
+        "--add-inline-descriptions",
         type=bool,
         is_flag=True,
         default=False,
@@ -81,24 +81,24 @@ options = {
         required=False,
         help="Add descriptions inline with the code for all resource attributes.",
     ),
-    "sync_variables": click.option(
-        "--sync-variables",
-        type=bool,
-        is_flag=True,
-        default=False,
-        multiple=False,
-        required=False,
-        help="Automatically sync variables for the created resource.",
-    ),
-    # "add_documentation_url": click.option(
-    #     "--add-documentation-url",
+    # "sync_variables": click.option(
+    #     "--sync-variables",
     #     type=bool,
     #     is_flag=True,
     #     default=False,
     #     multiple=False,
     #     required=False,
-    #     help="Add a link to the documentation above the resource.",
+    #     help="Automatically sync variables for the created resource.",
     # ),
+    "add_terraform_docs_url": click.option(
+        "--add-terraform-docs-url",
+        type=bool,
+        is_flag=True,
+        default=False,
+        multiple=False,
+        required=False,
+        help="Add a link to the documentation above the resource.",
+    ),
     "ignore_block": click.option(
         "--ignore-block",
         type=str,
@@ -114,6 +114,14 @@ options = {
         multiple=True,
         required=False,
         help="Attributes to ignore in the configuration.",
+    ),
+    "header_comment": click.option(
+        "--header-comment",
+        type=str,
+        default=None,
+        multiple=False,
+        required=False,
+        help="A comment to add to the header of the resource.",
     ),
     # "dynamic_block": click.option(
     #     "--dynamic-block",
@@ -201,17 +209,18 @@ def code_options(func):
     """
     func = options["required_attributes_only"](func)
     func = options["required_blocks_only"](func)
-    func = options["add_descriptions"](func)
-    func = options["sync_variables"](func)
-    func = options["include_variable"](func)
-    # func = options["add_documentation_url"](func)
+    func = options["add_inline_descriptions"](func)
+    # func = options["sync_variables"](func)
+    # func = options["include_variable"](func)
+    func = options["add_terraform_docs_url"](func)
     func = options["ignore_block"](func)
     # func = options["dynamic_block"](func)
     func = options["ignore_attribute"](func)
     func = options["attribute_default"](func)
     # func = options["attribute_value_prefix"](func)
     func = options["terraform_filename"](func)
-    func = options["variables_filename"](func)
+    # func = options["variables_filename"](func)
+    func = options["header_comment"](func)
 
     return func
 

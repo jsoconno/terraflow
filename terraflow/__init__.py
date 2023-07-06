@@ -6,7 +6,8 @@ from dataclasses import asdict
 from terraflow.libraries.helpers import *
 from terraflow.libraries.constants import *
 from terraflow.libraries.schema import *
-from terraflow.libraries.sandbox import *
+from terraflow.libraries.terraform import *
+from terraflow.libraries.configuration import *
 from terraflow.version import __version__
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="terraflow")
@@ -130,60 +131,76 @@ def resource_create(
     name,
     required_attributes_only,
     required_blocks_only,
-    add_descriptions,
-    sync_variables,
-    # add_documentation_url,
+    add_inline_descriptions,
+    # sync_variables,
+    add_terraform_docs_url,
     ignore_block,
     # dynamic_block,
     ignore_attribute,
     attribute_default,
     # attribute_value_prefix,
     terraform_filename,
-    include_variable,
-    variables_filename
+    header_comment,
+    # include_variable,
+    # variables_filename
 ):
     """
     Create a Terraform resource.
     """
     attribute_defaults = convert_strings_to_dict(attribute_default)
 
-    config = ResourceConfiguration(
-        add_descriptions=add_descriptions,
+    configuration = ResourceConfiguration(
+        add_inline_descriptions=add_inline_descriptions,
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         exclude_attributes=ignore_attribute,
-        exclude_blocks=ignore_block
+        exclude_blocks=ignore_block,
+        attribute_defaults=attribute_default,
+        header_comment=header_comment
     )
 
     this = Resource(
         namespace=namespace,
         provider=provider,
-        resource=resource,
-        name=name
+        kind=resource,
+        name=name,
+        configuration=configuration
     )
 
-    code = this.get_code(config=asdict(config))
-
     write_terraform_to_file(
-        new_code=code,
+        new_code=this.code,
         filename=terraform_filename
     )
 
-    # Remove hard coding and add flag later
+    # this = Resource(
+    #     namespace=namespace,
+    #     provider=provider,
+    #     resource=resource,
+    #     name=name
+    # )
 
-    if sync_variables:
-        variable_config = ResourceConfiguration(
-            add_descriptions=True
-        )
+    # code = this.get_code(config=asdict(config))
 
-        variables_code = this.get_variables(config=asdict(variable_config))
+    # write_terraform_to_file(
+    #     new_code=code,
+    #     filename=terraform_filename
+    # )
 
-        write_terraform_to_file(
-            new_code=variables_code,
-            filename=variables_filename
-        )
+    # # Remove hard coding and add flag later
 
-        remove_unused_variables()
+    # if sync_variables:
+    #     variable_config = ResourceConfiguration(
+    #         add_descriptions=True
+    #     )
+
+    #     variables_code = this.get_variables(config=asdict(variable_config))
+
+    #     write_terraform_to_file(
+    #         new_code=variables_code,
+    #         filename=variables_filename
+    #     )
+
+    #     remove_unused_variables()
 
     run_terraform_fmt()
 

@@ -874,11 +874,11 @@ def get_terraform_version():
 def filter_attributes(attributes: dict, configuration: object) -> dict:
     # Exclude specified attributes if any
     if configuration.exclude_attributes:
-        attributes = {k: v for k, v in attributes.items() if k not in configuration.exclude_attributes}
+        attributes = {k: v for k, v in attributes.items() if k not in configuration.exclude_attributes or v.get('required', False)}
 
     # Exclude computed attributes if configuration flag is set
     if configuration.exclude_computed_attributes:
-        attributes = {k: v for k, v in attributes.items() if not v.get('computed', False)}
+        attributes = {k: v for k, v in attributes.items() if not v.get('computed', False) or v.get('required', False)}
 
     # Include only required attributes if specified
     if configuration.required_attributes_only:
@@ -889,11 +889,11 @@ def filter_attributes(attributes: dict, configuration: object) -> dict:
 def filter_blocks(blocks: dict, configuration: object) -> dict:
     # Exclude specified blocks if any
     if configuration.exclude_blocks:
-        blocks = {k: v for k, v in blocks.items() if k not in configuration.exclude_blocks}
+        blocks = {k: v for k, v in blocks.items() if k not in configuration.exclude_blocks or v.get('required', False)}
 
     # Exclude computed blocks if configuration flag is set
     if configuration.exclude_computed_blocks:
-        blocks = {k: v for k, v in blocks.items() if not v.get('computed', False)}
+        blocks = {k: v for k, v in blocks.items() if not v.get('computed', False) or v.get('required', False)}
 
     # Include only required blocks if specified
     if configuration.required_blocks_only:
