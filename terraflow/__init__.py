@@ -151,6 +151,7 @@ def resource_create(
 
     configuration = ResourceConfiguration(
         add_inline_descriptions=add_inline_descriptions,
+        add_header_terraform_docs_url=add_terraform_docs_url,
         required_attributes_only=required_attributes_only,
         required_blocks_only=required_blocks_only,
         exclude_attributes=ignore_attribute,
