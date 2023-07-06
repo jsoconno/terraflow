@@ -874,12 +874,20 @@ def filter_attributes(attributes: dict, configuration: dict) -> dict:
     # Exclude specified attributes if any
     if configuration.exclude_attributes:
         attributes = {k: v for k, v in attributes.items() if k not in configuration.exclude_attributes}
-        
+
+    # Include only required attributes if specified
+    if configuration.required_attributes_only:
+        attributes = {k: v for k, v in attributes.items() if v.get('required', False)}
+    
     return attributes
 
 def filter_blocks(blocks: dict, configuration: dict) -> dict:
     # Exclude specified blocks if any
     if configuration.exclude_blocks:
         blocks = {k: v for k, v in blocks.items() if k not in configuration.exclude_blocks}
+
+    # Include only required blocks if specified
+    if configuration.required_blocks_only:
+        blocks = {k: v for k, v in blocks.items() if v.get('required', False)}
 
     return blocks

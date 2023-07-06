@@ -193,7 +193,7 @@ config = ResourceConfiguration(
 x = Resource(
     namespace='hashicorp',
     provider='azurerm',
-    kind='resource_group',
+    kind='key_vault',
     name='main',
     configuration=config
 )
