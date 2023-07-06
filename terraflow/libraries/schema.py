@@ -109,7 +109,7 @@ def get_resource_schema(schema: dict, namespace: str, provider: str, resource: s
 
     return schema["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["resource_schemas"][resource]
 
-def get_data_source_schema(schema: dict, namespace: str, provider: str, data_source: str) -> dict:
+def get_data_schema(schema: dict, namespace: str, provider: str, data_source: str) -> dict:
     """
     Get the schema for a given provider data source.
 

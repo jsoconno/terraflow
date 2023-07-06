@@ -1,7 +1,8 @@
 from dataclasses import asdict
 
-from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_source_schema, get_attribute_schema
-from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, format_attribute_type, handle_attribute, format_terraform_code, wrap_text
+from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema, get_attribute_schema
+from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, handle_attribute
+from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_attribute_type, format_terraform_code, format_comments, wrap_text
 from terraflow.libraries.configuration import ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 
 class Terraform:
@@ -19,7 +20,7 @@ class Block(Terraform):
         super().__init__(provider, namespace)
         self.variables = {}
         self.outputs = {}
-        self.code = ""
+        # self.code = ""
         self.variables_text = ""
         self.outputs_text = ""
 
@@ -184,12 +185,13 @@ class Block(Terraform):
             self.write_code(block_schema, block_hierarchy + [block])
             self.write_line(block_footer)
 
-    def get_code(self, config={}):
-        self.config = config
-        schema = self.get_schema()
-        self.code = self.write_code(schema)
+    # def get_code(self, config={}):
+    #     # self.config = config
+    #     # schema = self.get_schema()
+    #     # self.code = self.write_code(schema)
 
-        return self.code
+    #     # return self.code
+    #     return self.content
 
     def get_variables(self, config={}):
         self.config = config
@@ -278,7 +280,7 @@ class DataSource(Block):
 
     def get_schema(self):
         schema = get_schema()
-        data_source_schema = get_data_source_schema(schema=schema, namespace=self.namespace, provider=self.provider, data_source=self.data_source)
+        data_source_schema = get_data_schema(schema=schema, namespace=self.namespace, provider=self.provider, data_source=self.data_source)
 
         return data_source_schema
 
@@ -299,9 +301,7 @@ class DataSource(Block):
 # Set configurations
 # config = ProviderConfiguration(
 #     add_descriptions=True,
-#     exclude_blocks=["timeouts"],
-    # required_blocks_only=True,
-    # required_attributes_only=True
+#     exclude_blocks=["timeouts"]
 # )
 # variable_config = VariableConfiguration(add_descriptions=True)
 # output_config = OutputConfiguration(add_descriptions=True, include_outputs=['name'])
@@ -309,6 +309,7 @@ class DataSource(Block):
 # Create Provider code
 # provider = Provider(provider="azurerm")
 # print(provider.get_code(config=asdict(config)))
+# print(provider.content)
 # print(provider.get_variables(config=asdict(variable_config)))
 # print(provider.get_outputs(config=asdict(output_config)))
 

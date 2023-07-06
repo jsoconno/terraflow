@@ -64,56 +64,6 @@ def write_json_file(filename: str, data: dict) -> None:
 
 # Formatting functions.
 
-def format_list(items: list, title: str = None, top: int = None, prefix: str = " - ") -> str:
-    """
-    Format a list for output in the terminal.
-
-    Args:
-        items: The list of items to format.
-        title: The optional title for the formatted list.
-        top: The optional maximum number of items to include.
-        prefix: The prefix string to prepend to each item.
-
-    Returns:
-        The formatted list as a string.
-    """
-    formatted_list = "\n"
-
-    if title:
-        formatted_list += f"{title}\n\n"
-
-    if top:
-        items = items[:top]
-
-    for option in items:
-        formatted_list += f"{prefix}{option}\n"
-
-    return formatted_list
-
-def colors(color: str = "END") -> str:
-    """
-    Returns ANSI color codes for printing to the command line.
-
-    Args:
-        color: The color name to retrieve the code for.
-
-    Returns:
-        The ANSI color code as a string.
-    """
-    colors = {
-        "HEADER": "\033[95m",
-        "OK_BLUE": "\033[94m",
-        "OK_CYAN": "\033[96m",
-        "OK_GREEN": "\033[92m",
-        "WARNING": "\033[93m",
-        "FAIL": "\033[91m",
-        "END": "\033[0m",
-        "BOLD": "\033[1m",
-        "UNDERLINE": "\033[4m",
-    }
-
-    return colors[color]
-
 def format_terminal_text():
     """
     Formats text for terminal output.
@@ -221,26 +171,6 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
         return texts
     else:
         return '\n'.join(texts)
-
-def format_attribute_type(attribute_type):
-    """
-    Formats the attribute type from the provider schema for use in variables.
-    """
-    if isinstance(attribute_type, str):
-        return attribute_type
-    elif isinstance(attribute_type, list):
-        element_type = format_attribute_type(attribute_type[-1])
-        for i in range(len(attribute_type) - 2, -1, -1):
-            element_type = f"{attribute_type[i]}({element_type})"
-        return element_type
-    elif isinstance(attribute_type, dict):
-        object_type = "{\n"
-        for key, value in attribute_type.items():
-            object_type += f"{key} = {format_attribute_type(value)}\n"
-        object_type += "}"
-        return object_type
-    else:
-        raise ValueError(f"Invalid Terraform data type: {attribute_type}")
 
 # File and folder manipulation functions.
 
@@ -446,67 +376,6 @@ def format_terminal_text():
     """
     pass
 
-def format_comments(comments):
-    if comments:
-        formatted_comments = "\n".join([f"# {comment}" for comment in comments])
-        return f"{formatted_comments}\n"
-    else:
-        return ""
-
-def wrap_text(text, line_length=80):
-    words = text.split()
-    lines = []
-    current_line = ""
-
-    for word in words:
-        if len(current_line + word) + 1 <= line_length:
-            if current_line:
-                current_line += " "
-            current_line += word
-        else:
-            lines.append(current_line)
-            current_line = word
-
-    if current_line:
-        lines.append(current_line)
-
-    return lines
-
-def format_terraform_code(code: str, indentation='  '):
-    """
-    Indent Terraform code so that it is formatted correctly.
-
-    Args:
-        code (str): The Terraform code to format.
-        indentation (str): The string used for each level of indentation. Defaults to two spaces.
-    """
-
-    # Split the code into lines
-    lines = code.split('\n')
-
-    # Initialize a counter for the current level of indentation
-    indent_level = 0
-
-    # Process each line
-    for i, line in enumerate(lines):
-        # Increase the indent level if the line opens a block
-        if '{' in line and '}' not in line:
-            lines[i] = indent_level * indentation + line.lstrip()
-            indent_level += 1
-        # Decrease the indent level if the line closes a block
-        elif '}' in line and '{' not in line:
-            indent_level -= 1
-            lines[i] = indent_level * indentation + line.lstrip()
-        # No change in indent level if the line both opens and closes a block
-        elif '{' in line and '}' in line:
-            lines[i] = indent_level * indentation + line.lstrip()
-        # Otherwise, just add the current level of indentation
-        else:
-            lines[i] = indent_level * indentation + line.lstrip()
-
-    # Join the lines back together and return the result
-    return '\n'.join(lines)
-
 # Helper functions
 
 def calculate_levenshtein_distance(s: str, t: str) -> float:
@@ -625,7 +494,7 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
 
 # Documentation functions.
 
-def get_terraform_documentation_url(namespace: str, provider: str, resource: str = None, version: str = 'main') -> str:
+def get_terraform_documentation_url(type: str, namespace: str, provider: str, resource: str = None, version: str = 'main') -> str:
     """
     Get the documentation URL for a provider resource or data source.
 
@@ -639,28 +508,20 @@ def get_terraform_documentation_url(namespace: str, provider: str, resource: str
     Returns:
         The documentation URL as a string.
     """
-    # TODO: Clean this up if it ends up not being needed as it reduces a dependency on an api call
-    # url = f"https://registry.terraform.io/v1/providers/{namespace}/{provider}"
-    # response = json.loads(requests.get(url).text)
-
-    # docs_path = None
-
-    # for doc in response["docs"]:
-    #     if (
-    #         doc["title"] == resource
-    #         or doc["title"] == resource.replace(f"{provider}_", "")
-    #     ) and doc["category"] == f"{scope.replace('_', '-')}s":
-    #         docs_path = doc["path"]
 
     # if docs_path:
-    if resource:
-        url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{version}/website/docs/r/{resource}.html.markdown"
+    if type == 'provider':
+        url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{'' if version == 'main' else 'v'}{version}/website/docs/index.html.markdown"
+    elif type == 'resource':
+        url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{'' if version == 'main' else 'v'}{version}/website/docs/r/{resource}.html.markdown"
+    elif type == 'data':
+        url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{'' if version == 'main' else 'v'}{version}/website/docs/d/{resource}.html.markdown"
     else:
-        url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{version}/website/docs/index.html.markdown"
-
+        print('Type must be one of provider, resource, or data')
+        
     return url
 
-def get_terraform_documentation(namespace: str, provider: str, scope: str, resource: str = None, version: str = 'main', cache: bool = True) -> str:
+def get_terraform_documentation(namespace: str, provider: str, scope: str, resource: str = None, version: str = 'main', cache: bool = True, refresh: bool = False) -> str:
     """
     Get the documentation for a provider resource or data source and cache it.
 
@@ -671,41 +532,52 @@ def get_terraform_documentation(namespace: str, provider: str, scope: str, resou
         resource: The resource or data source name.
         version: The version of the provider (default: 'main').
         cache: Whether to cache the documentation (default: True).
+        refresh: Whether to ignore the cache and collect the documentation fresh (default: False).
 
     Returns:
         The documentation content as a string.
     """
-    # Determine the filename for the cached documentation
-    # TODO: Add function to get the version based off of the configuration and remove variable.
-    if resource:
-        filename = f"{namespace}.{provider}.{version}.{scope}.{resource}.txt"
+    # Determine the folder path for the cached documentation
+    documentation_dir = os.path.join(DOCUMENTATION_DIR, namespace, provider, version)
+    if not os.path.exists(documentation_dir):
+        os.makedirs(documentation_dir)
+
+    # Determine the file path for the cached documentation
+    if scope == 'provider':
+        filepath = os.path.join(documentation_dir, "provider.txt")
     else:
-        filename = f"{namespace}.{provider}.{version}.txt"
-    path = os.path.join(DOCUMENTATION_DIR, filename)
+        resource_dir = os.path.join(documentation_dir, resource)
+        if not os.path.exists(resource_dir):
+            os.makedirs(resource_dir)
+        filepath = os.path.join(resource_dir, f"{scope}.txt")
 
-    # If the file exists, read the cached documentation
-    if os.path.exists(path):
-        print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache for the {namespace} {provider} ({version}) {resource} {scope}.\n')
-        return read_text_file(path)
+    # If the file exists and refresh is False, read the cached documentation
+    if not refresh and os.path.exists(filepath):
+        if scope == 'provider':
+            print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache for the {namespace} {provider} (version {version}) {scope}.\n')
+        else:
+            print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache for the {namespace} {provider} (version {version}) {resource} {scope}.\n')
+        return read_text_file(filepath)
 
-    # If the file does not exist, get the documentation URL and the documentation
+    # If the file does not exist or refresh is True, get the documentation URL and the documentation
     # TODO: Consider adding support for collection feature block definitions - https://github.com/hashicorp/terraform-provider-azurerm/blob/main/website/docs/guides/features-block.html.markdown
-    documentation_url = get_terraform_documentation_url(namespace, provider, resource, version)
+    documentation_url = get_terraform_documentation_url(scope, namespace, provider, resource, version)
     documentation = scrape_website(documentation_url, tag="article")
 
     # If caching is enabled, cache the documentation
     if cache:
-        try:
-            if not os.path.exists(DOCUMENTATION_DIR):
-                os.makedirs(DOCUMENTATION_DIR)
+        if documentation is not None:
+            try:
+                write_text_file(filepath, documentation)
 
-            write_text_file(path, documentation)
-
-            print(f'\n{colors("OK_GREEN")}Success:{colors()} Documentation read and cached successfully for the {namespace} {provider} ({version}) {version} {resource} {scope}.\n')
-        except Exception:
-            print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the documentation.\n')
+                print(f'\n{colors("OK_GREEN")}Success:{colors()} Documentation read and cached successfully for the {namespace} {provider} ({version}) {resource} {scope} from {documentation_url}.\n')
+            except Exception:
+                print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the documentation.\n')
+        else:
+            print(f'\n{colors("WARNING")}Warning:{colors()} Documentation was not found at {documentation_url}.\n')
 
     return documentation
+
 
 def get_resource_attribute_description(
     documentation_text, attribute, block_hierarchy=None
@@ -849,7 +721,7 @@ def handle_attribute(attribute, attribute_schema, block_hierarchy, config, docum
 
     # Get attribute description from the pre-loaded documentation
     description = ""
-    if documentation_text and config.get('add_descriptions', False):
+    if documentation_text and config.get('options', False):
         description = get_resource_attribute_description(documentation_text, attribute, block_hierarchy)
 
     # Construct the attribute name
@@ -944,3 +816,70 @@ def delete_data_source_code(provider, resource, name, filename="main.tf"):
 
 def run_terraform_fmt():
     subprocess.run(["terraform", "fmt"], stdout=subprocess.DEVNULL)
+
+def get_provider_version(provider: str, namespace: str = "hashicorp") -> str:
+    # Run the `terraform providers` command
+    result = subprocess.run(["terraform", "providers"], capture_output=True, text=True)
+
+    # Check the return code
+    if result.returncode != 0:
+        print("Error running `terraform providers` command.")
+        return None
+
+    # Parse the command output
+    pattern = fr"provider\[registry\.terraform\.io/{namespace}/{provider}\] (\S+)"
+    match = re.search(pattern, result.stdout)
+    if match:
+        return match.group(1)  # Return the version number
+
+    print(f"No match found for provider {namespace}/{provider} in `terraform providers` output.")
+    return None
+
+def get_terraform_versions() -> list:
+    """
+    Gets a list of Terraform versions.
+
+    Returns:
+        A list of valid Terraform versions.
+    """
+    response = requests.get("https://releases.hashicorp.com/terraform")
+    
+    pattern = r'terraform_((\d+)\.*(\d+)*\.*(\d+)*-?([\S]*))</a>'
+    versions = re.findall(pattern, response.text)
+
+    versions = [version[0] for version in versions]
+
+    return versions
+
+# print(get_terraform_versions())
+
+def get_terraform_version():
+    """
+    Get the current Terraform version from the terraform block.
+    """
+    try:
+        result = subprocess.run(['terraform', 'version'], capture_output=True, text=True)
+        output = result.stdout.strip()
+        # Extracting the version information from the output
+        version = output.split('\n')[0].split(' ')[-1].replace('v', '')
+        return version
+    except FileNotFoundError:
+        # Handle the case where Terraform is not installed or not in the system's PATH
+        return "Terraform command not found"
+    except Exception as e:
+        # Handle any other exceptions that might occur during the execution
+        return f"Error occurred: {str(e)}"
+
+def filter_attributes(attributes: dict, configuration: dict) -> dict:
+    # Exclude specified attributes if any
+    if configuration.exclude_attributes:
+        attributes = {k: v for k, v in attributes.items() if k not in configuration.exclude_attributes}
+        
+    return attributes
+
+def filter_blocks(blocks: dict, configuration: dict) -> dict:
+    # Exclude specified blocks if any
+    if configuration.exclude_blocks:
+        blocks = {k: v for k, v in blocks.items() if k not in configuration.exclude_blocks}
+
+    return blocks
