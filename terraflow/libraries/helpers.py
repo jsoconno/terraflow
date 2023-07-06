@@ -870,7 +870,7 @@ def get_terraform_version():
         # Handle any other exceptions that might occur during the execution
         return f"Error occurred: {str(e)}"
 
-def filter_attributes(attributes: dict, configuration: dict) -> dict:
+def filter_attributes(attributes: dict, configuration: object) -> dict:
     # Exclude specified attributes if any
     if configuration.exclude_attributes:
         attributes = {k: v for k, v in attributes.items() if k not in configuration.exclude_attributes}
@@ -885,7 +885,7 @@ def filter_attributes(attributes: dict, configuration: dict) -> dict:
     
     return attributes
 
-def filter_blocks(blocks: dict, configuration: dict) -> dict:
+def filter_blocks(blocks: dict, configuration: object) -> dict:
     # Exclude specified blocks if any
     if configuration.exclude_blocks:
         blocks = {k: v for k, v in blocks.items() if k not in configuration.exclude_blocks}

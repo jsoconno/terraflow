@@ -3,7 +3,7 @@ from dataclasses import asdict
 from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema, get_attribute_schema
 from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, handle_attribute, get_provider_version, get_terraform_version, filter_attributes, filter_blocks
 from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_attribute_type, format_terraform_code, format_comments, wrap_text
-from terraflow.libraries.configuration import ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
+from terraflow.libraries.configuration import Configuration, ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 
 class Terraform():
     """
@@ -15,7 +15,7 @@ class Terraform():
         self.provider = provider
         self.kind = None
         self.type = 'terraform'
-        self.configuration = {}
+        self.configuration = Configuration()
         self.code = ''
         self.schema = get_schema()
         self.attributes = {}
@@ -134,7 +134,7 @@ class Provider(Terraform):
             namespace=namespace,
             provider=name
         )
-        self.configuration = configuration if configuration is not None else {}
+        self.configuration = configuration if configuration is not None else ProviderConfiguration()
         self._write_code(
             type=self.type,
             schema=self.schema
@@ -156,7 +156,7 @@ class Resource(Terraform):
             provider=provider,
             resource=kind
         )
-        self.configuration = configuration if configuration is not None else {}
+        self.configuration = configuration if configuration is not None else ResourceConfiguration()
         self._write_code(
             type=self.type,
             schema=self.schema
@@ -178,7 +178,7 @@ class DataSource(Terraform):
             provider=provider,
             data_source=kind
         )
-        self.configuration = configuration if configuration is not None else {}
+        self.configuration = configuration if configuration is not None else DataSourceConfiguration()
         self._write_code(
             type=self.type,
             schema=self.schema
@@ -189,12 +189,12 @@ config = ResourceConfiguration(
     exclude_blocks=['timeouts']
 )
 
-x = Resource(
+x = Provider(
     namespace='hashicorp',
-    provider='azurerm',
-    kind='key_vault',
-    name='main',
-    configuration=config
+    name='azurerm',
+    # kind='key_vault',
+    # name='main',
+    # configuration=config
 )
 
 print(x.code)

@@ -14,18 +14,31 @@ def _write_code()
 
 # Class Provider
 
+self.kind
+self.type
+self.name
+self.schema
+
 # Class Resource
 
 self.kind
+self.type
 self.name
+self.schema
 
 # Class DataSource
 
 self.kind
+self.type
 self.name
+self.schema
 
-# Move Out
+# Class Configuration
 
-def format_block_header()
-def format_resource_header()
-def format_attribute()
+self.add_descriptions
+self.exclude_attributes
+self.exclude_blocks
+self.required_attributes_only
+self.required_blocks_only
+self.exclude_computed_attributes
+self.exclude_computed_blocks
