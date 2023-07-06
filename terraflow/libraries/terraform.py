@@ -195,21 +195,21 @@ class DataSource(Terraform):
             schema=self.schema
         )
 
-config = ResourceConfiguration(
-    add_inline_descriptions=False,
-    exclude_blocks=['timeouts'],
-    add_header_terraform_docs_url=True,
-    attribute_value_prefix="test",
-    attribute_defaults={'location': 'eastus'},
-    header_comment='This key vault is used for storing keys, secrets, and certificates for the application.'
-)
+# config = ResourceConfiguration(
+#     add_inline_descriptions=False,
+#     exclude_blocks=['timeouts'],
+#     add_header_terraform_docs_url=True,
+#     attribute_value_prefix="test",
+#     attribute_defaults={'location': 'eastus'},
+#     header_comment='This key vault is used for storing keys, secrets, and certificates for the application.'
+# )
 
-x = Resource(
-    namespace='hashicorp',
-    provider='azurerm',
-    kind='key_vault',
-    name='test',
-    configuration=config
-)
+# x = Resource(
+#     namespace='hashicorp',
+#     provider='azurerm',
+#     kind='key_vault',
+#     name='test',
+#     configuration=config
+# )
 
-print(x.code)
+# print(x.code)
