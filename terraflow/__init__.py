@@ -168,6 +168,8 @@ def resource_create(
         configuration=configuration
     )
 
+    print(this.code)
+
     write_terraform_to_file(
         new_code=this.code,
         filename=terraform_filename
