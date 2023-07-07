@@ -83,12 +83,12 @@ class Terraform():
 
         return self.code
     
-    def _write_code(self, type: str, schema: dict):
+    def _write_code(self, schema: dict):
         """
         Generates the terraform code for a specific type.
         """
         header, footer = format_resource_header(
-            type=type,
+            type=self.type,
             name=self.name,
             kind=self.kind,
             documentation_url=(self.docs_url if self.configuration.add_header_terraform_docs_url else None),
@@ -102,6 +102,24 @@ class Terraform():
 
         # Format code
         self.code = format_terraform_code(self.code)
+
+    # @classmethod
+    # def from_existing(cls, provider: str, name: str = 'main', namespace: str = 'hashicorp', kind: str = None, file_extensions: list = ['.tf']):
+    #     # Initialize with no configuration
+    #     instance = cls(provider, namespace)
+    #     instance.name = name
+    #     instance.kind = kind
+    #     # Read existing code from files
+    #     content = read_files(file_extensions)
+    #     # Extract the desired resource using regex
+    #     pattern = rf'((?:#.*\n)*?(^({instance.type})\s+(?:"({instance.kind if instance.kind else cls.__name__.lower()})"\s+)?\s?"({instance.name})"\s+{)[\s\S]*?^}$)'
+    #     match = re.search(pattern, content, re.MULTILINE)
+    #     if match:
+    #         # Load the existing code into instance
+    #         instance.code = match.group(0)
+    #     else:
+    #         raise ValueError(f'No {instance.type} named {instance.name} of kind {instance.kind} found in files.')
+    #     return instance
 
     @property
     def docs_url(self):
@@ -147,7 +165,6 @@ class Provider(Terraform):
         )
         self.configuration = configuration if configuration is not None else ProviderConfiguration()
         self._write_code(
-            type=self.type,
             schema=self.schema
         )
 
@@ -169,7 +186,6 @@ class Resource(Terraform):
         )
         self.configuration = configuration if configuration is not None else ResourceConfiguration()
         self._write_code(
-            type=self.type,
             schema=self.schema
         )
 
@@ -191,7 +207,6 @@ class DataSource(Terraform):
         )
         self.configuration = configuration if configuration is not None else DataSourceConfiguration()
         self._write_code(
-            type=self.type,
             schema=self.schema
         )
 
