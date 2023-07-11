@@ -1,7 +1,14 @@
-# Terraform docs: https://github.com/hashicorp/terraform-provider-azurerm/blob/v3.45.0/website/docs/r/resource_group.html.markdown
-# This resource creates an Azure Resource Group.
 resource "resource_group" "main" {
   location = var.location
   name     = var.name
   tags     = var.tags
+
+  # This block is optional
+  timeouts {
+    create = var.timeouts_create
+    delete = var.timeouts_delete
+    read   = var.timeouts_read
+    update = var.timeouts_update
+
+  }
 }

@@ -2,7 +2,7 @@ from dataclasses import asdict
 import re
 
 from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema, get_attribute_schema
-from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, handle_attribute, get_provider_version, get_terraform_version, filter_attributes, filter_blocks, read_files
+from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, handle_attribute, get_provider_version, get_terraform_version, filter_attributes, filter_blocks, read_files, load_terraform_code
 from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_attribute_type, format_terraform_code
 from terraflow.libraries.configuration import Configuration, ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 
@@ -11,7 +11,7 @@ class Terraform():
     Base class representing a Terraform entity.
     This class provides methods to generate Terraform code.
     """
-    def __init__(self, provider: str, namespace: str = "hashicorp", load_code: bool = False):
+    def __init__(self, provider: str, namespace: str = "hashicorp"):#, load_code: bool = False):
         self.namespace = namespace
         self.provider = provider
         self.kind = None
@@ -110,17 +110,17 @@ class Terraform():
 
         return code
 
-    def _load_code(self):
-        """
-        Loop through all Terraform files in the current directory and load code of the current Terraform object.
-        """
-        pattern = rf'((?:#.*\n)*?(^({self.type})\s+(?:"({self.kind})"\s+)?\s?"({self.name})"\s+{{)[\s\S]*?^}}$)'
-        code = read_files()
-        matches = re.findall(pattern, code, re.MULTILINE)
-        for match in matches:
-            code += match[0] + '\n'
-
-        return code
+    # def _load_code(self):
+    #     """
+    #     Loop through all Terraform files in the current directory and load code of the current Terraform object.
+    #     """
+    #     terraform_code = read_files()
+    #     load_terraform_code(
+    #         type=self.type,
+    #         kind=self.kind,
+    #         name=self.name,
+    #         code=terraform_code
+    #     )
 
     @property
     def docs_url(self):
@@ -154,8 +154,8 @@ class Provider(Terraform):
     """
     Class representing a Terraform provider.
     """
-    def __init__(self, name: str, namespace: str = 'hashicorp', configuration: ProviderConfiguration = None, load_code: bool = False):
-        super().__init__(name, namespace, load_code)
+    def __init__(self, name: str, namespace: str = 'hashicorp', configuration: ProviderConfiguration = None):#, load_code: bool = False):
+        super().__init__(name, namespace)#, load_code)
         # Set initial variables
         self.name = name
         self.type = 'provider'
@@ -165,17 +165,18 @@ class Provider(Terraform):
             provider=name
         )
         self.configuration = configuration if configuration is not None else ProviderConfiguration()
-        if load_code:
-            self.code = self._load_code()
-        else:
-            self.code = self._write_code(self.schema)
+        self.code = self._write_code(self.schema)
+        # if load_code:
+        #     self.code = self._load_code()
+        # else:
+        #     self.code = self._write_code(self.schema)
 
 class Resource(Terraform):
     """
     Class representing a Terraform resource.
     """
-    def __init__(self, kind: str, provider: str, name: str = 'main', namespace: str = 'hashicorp', configuration: ResourceConfiguration = None, load_code: bool = False):
-        super().__init__(provider, namespace, load_code)
+    def __init__(self, kind: str, provider: str, name: str = 'main', namespace: str = 'hashicorp', configuration: ResourceConfiguration = None):#, load_code: bool = False):
+        super().__init__(provider, namespace)#, load_code)
         # Set initial variables
         self.name = name
         self.type = 'resource'
@@ -187,17 +188,18 @@ class Resource(Terraform):
             resource=kind
         )
         self.configuration = configuration if configuration is not None else ResourceConfiguration()
-        if load_code:
-            self.code = self._load_code()
-        else:
-            self.code = self._write_code(self.schema)
+        self.code = self._write_code(self.schema)
+        # if load_code:
+        #     self.code = self._load_code()
+        # else:
+        #     self.code = self._write_code(self.schema)
 
 class DataSource(Terraform):
     """
     Class representing a Terraform data source.
     """
-    def __init__(self, kind: str, provider: str, name: str = 'main', namespace: str = 'hashicorp', configuration: DataSourceConfiguration = None, load_code: bool = False):
-        super().__init__(provider, namespace, load_code)
+    def __init__(self, kind: str, provider: str, name: str = 'main', namespace: str = 'hashicorp', configuration: DataSourceConfiguration = None):#, load_code: bool = False):
+        super().__init__(provider, namespace)#, load_code)
         # Set initial variables
         self.name = name
         self.type = 'data'
@@ -209,10 +211,11 @@ class DataSource(Terraform):
             data_source=kind
         )
         self.configuration = configuration if configuration is not None else DataSourceConfiguration()
-        if load_code:
-            self.code = self._load_code()
-        else:
-            self.code = self._write_code(self.schema)
+        self.code = self._write_code(self.schema)
+        # if load_code:
+        #     self.code = self._load_code()
+        # else:
+        #     self.code = self._write_code(self.schema)
 
 # config = ResourceConfiguration(
 #     add_inline_descriptions=False,

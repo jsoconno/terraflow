@@ -314,7 +314,23 @@ def remove_unused_variables():
             with open(file_name, 'w') as file:
                 file.write(file_content)
 
-remove_unused_variables()
+# remove_unused_variables()
+
+def load_terraform_code(type: str, name: str, code: str, kind: str = None):
+    """
+    Extracts code snippet of the relevant Terraform object from the code.
+    """
+    print(type, name, kind, code)
+    if kind is None:
+        pattern = rf'((?:#.*\n)*?(^({type})\s+\s?"({name})"\s+{{)[\s\S]*?^}}$)'
+    else:
+        pattern = rf'((?:#.*\n)*?(^({type})\s+(?:"({kind})"\s+)?\s?"({name})"\s+{{)[\s\S]*?^}}$)'
+    
+    matches = re.findall(pattern, code, re.MULTILINE)
+    if matches:
+        return matches[0][0] + '\n'
+    else:
+        message = f'\n{colors("OK_BLUE")}Info:{colors()} The {type} {name} was not found' if type == 'provider' else f'\n{colors("OK_BLUE")}Info:{colors()} The {type} {kind} with the name {name} was not found.'
 
 # Formatting functions.
 

@@ -165,7 +165,8 @@ def resource_create(
         provider=provider,
         kind=resource,
         name=name,
-        configuration=configuration
+        configuration=configuration,
+        # load_code=True
     )
 
     print(this.code)
