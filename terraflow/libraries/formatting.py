@@ -115,11 +115,16 @@ def format_attribute(attribute: str, attribute_schema: dict, attribute_descripti
 
     # If hierarchy_key exists in attribute_defaults dictionary, set attribute_value accordingly
     if hierarchy_key in configuration.attribute_defaults:
-        attribute_value = f'"{configuration.attribute_defaults[hierarchy_key]}"'
+        attribute_value = configuration.attribute_defaults[hierarchy_key]
     elif configuration.attribute_value_prefix:  # If attribute_value_prefix is given
         attribute_value = f'var.{configuration.attribute_value_prefix}_{hierarchy_key}'
     else:
         attribute_value = f'var.{hierarchy_key}'
+    
+    # Check if attribute value starts with the provided prefixes
+    prefixes = ("var.", "local.", "resource.", "data.")
+    if not attribute_value.startswith(prefixes):
+        attribute_value = f'"{attribute_value}"'
     
     # Construct the attribute line
     if configuration.add_inline_descriptions and attribute_description:
@@ -128,6 +133,7 @@ def format_attribute(attribute: str, attribute_schema: dict, attribute_descripti
         attribute_line = f'{attribute} = {attribute_value}'+ '\n'
     
     return attribute_line
+
 
 def format_attribute_type(attribute_type):
     """
