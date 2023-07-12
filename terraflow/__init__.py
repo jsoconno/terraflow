@@ -147,34 +147,35 @@ def resource_create(
     """
     Create a Terraform resource.
     """
-    attribute_defaults = convert_strings_to_dict(attribute_default)
 
-    configuration = ResourceConfiguration(
-        add_inline_descriptions=add_inline_descriptions,
-        add_header_terraform_docs_url=add_terraform_docs_url,
-        required_attributes_only=required_attributes_only,
-        required_blocks_only=required_blocks_only,
-        exclude_attributes=ignore_attribute,
-        exclude_blocks=ignore_block,
-        attribute_defaults=attribute_default,
-        header_comment=header_comment
-    )
+    # code = component["code"]
 
-    this = Resource(
-        namespace=namespace,
-        provider=provider,
-        kind=resource,
-        name=name,
-        configuration=configuration,
-        # load_code=True
-    )
+    # configuration = ResourceConfiguration(
+    #     add_inline_descriptions=add_inline_descriptions,
+    #     add_header_terraform_docs_url=add_terraform_docs_url,
+    #     required_attributes_only=required_attributes_only,
+    #     required_blocks_only=required_blocks_only,
+    #     exclude_attributes=ignore_attribute,
+    #     exclude_blocks=ignore_block,
+    #     attribute_defaults=attribute_default,
+    #     header_comment=header_comment
+    # )
 
-    print(this.code)
+    # this = ResourceComponent(
+    #     namespace=namespace,
+    #     provider=provider,
+    #     kind=resource,
+    #     name=name,
+    #     configuration=configuration,
+    #     # load_code=True
+    # )
 
-    write_terraform_to_file(
-        new_code=this.code,
-        filename=terraform_filename
-    )
+    # print(this.code)
+
+    # write_terraform_to_file(
+    #     new_code=this.code,
+    #     filename=terraform_filename
+    # )
 
     # this = Resource(
     #     namespace=namespace,
@@ -207,6 +208,30 @@ def resource_create(
     #     remove_unused_variables()
 
     run_terraform_fmt()
+
+# terraflow resource update
+@resource.command("update", context_settings=CONTEXT_SETTINGS)
+@provider_options
+@resource_options
+def resource_create(
+    namespace,
+    provider,
+    resource,
+    name,
+    #rename,
+    #set_attribute,
+    #make_block_dynamic,
+
+):
+    """
+    Update a Terraform resource.
+    """
+
+    loader = CodeLoader()
+    code = loader.get_component_code_by_id(
+        id=f"resource.{provider}_{resource}.{name}"
+    )
+    print(code)
 
 # terraflow resource delete
 @resource.command("delete", context_settings=CONTEXT_SETTINGS)

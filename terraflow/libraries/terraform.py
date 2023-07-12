@@ -13,38 +13,41 @@ class CodeLoader():
     """
     def __init__(self, file_extensions: list = ['.tf']):
         self.file_extensions = file_extensions
-        self.code = self._read_files()
+        self.code = ""
         self.components = self._extract_components()
 
-    def _read_files(self) -> str:
+    def _read_file(self, file_name: str) -> str:
         """
-        Loop through all files with the provided extensions in the current directory 
-        and return a single string with all code.
+        Read a file and return its content as a string.
         """
-        content = ""
-        for file_name in os.listdir(os.getcwd()):
-            if any(file_name.endswith(extension) for extension in self.file_extensions):
-                with open(file_name, 'r') as file:
-                    content += file.read() + '\n'
+        with open(file_name, 'r') as file:
+            content = file.read() + '\n'
+        self.code += content
         return content
 
     def _extract_components(self):
-        # Extract all Terraform components
-        pattern = rf'((?:#.*\n)*?^(.*?)\s+(?:"(.*?)"\s+)?\s?"(.*?)"\s+{{[\s\S]*?^}}$)'
-        matches = re.findall(pattern, self.code, re.MULTILINE)
-
         # Store each component and its corresponding details
         components = []
 
-        for match in matches:
-            component = {
-                'id': f'{match[1]}.{match[2] + "." if match[2] else ""}{match[3]}',
-                'code': match[0],
-                'type': match[1],
-                'kind': match[2] if match[2] else None,
-                'name': match[3]
-            }
-            components.append(component)
+        # Loop through all files with the provided extensions in the current directory 
+        for file_name in os.listdir(os.getcwd()):
+            if any(file_name.endswith(extension) for extension in self.file_extensions):
+                content = self._read_file(file_name)
+
+                # Extract all Terraform components
+                pattern = rf'((?:#.*\n)*?^(.*?)\s+(?:"(.*?)"\s+)?\s?"(.*?)"\s+{{[\s\S]*?^}}$)'
+                matches = re.findall(pattern, content, re.MULTILINE)
+
+                for match in matches:
+                    component = {
+                        'id': f'{match[1]}.{match[2] + "." if match[2] else ""}{match[3]}',
+                        'code': match[0],
+                        'type': match[1],
+                        'kind': match[2] if match[2] else None,
+                        'name': match[3],
+                        'filename': file_name
+                    }
+                    components.append(component)
 
         return components
     
@@ -73,7 +76,7 @@ class CodeLoader():
 
         return filtered_components
     
-    def get_component_list(self):
+    def get_component_id_list(self):
         """
         Return a list of component ids.
 
@@ -82,12 +85,28 @@ class CodeLoader():
         """
         return [component['id'] for component in self.components]
     
+    def get_component_code_by_id(self, id):
+        """
+        Return a specific component by its id.
+
+        Args:
+            id (str): The id of the component.
+
+        Returns:
+            Dict: The component that matches the provided id or None if no match is found.
+        """
+        for component in self.components:
+            if component['id'] == id:
+                return component['code']
+
+        return None
+    
 # code = CodeLoader()
-# print(code.get_component_list())
+# print(code.get_components())
 
 class CodeGenerator():
     """
-    Base class representing a Terraform entity.
+    Base class representing a Terraform component.
     This class provides methods to generate Terraform code.
     """
     def __init__(self, provider: str, namespace: str = "hashicorp"):#, load_code: bool = False):
