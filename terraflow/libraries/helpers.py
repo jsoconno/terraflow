@@ -9,6 +9,7 @@ from typing import List, Tuple, Optional
 import difflib
 
 from terraflow.libraries.constants import *
+from terraflow.libraries.formatting import *
 
 # File and folder manipulation functions.
 
