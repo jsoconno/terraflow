@@ -31,6 +31,22 @@ def terraflow():
     """
     pass
 
+# terraflow schema
+@terraflow.group("schema")
+def schema():
+    """
+    Manage the schema file.
+    """
+    pass
+
+# terraflow schema refresh
+@schema.command("refresh", context_settings=CONTEXT_SETTINGS)
+def schema_refresh():
+    """
+    Refresh the schema file.
+    """
+    schema = get_schema(refresh=True)
+
 # terraflow provider
 @terraflow.group("provider")
 def provider():
@@ -100,7 +116,7 @@ def resource_list(namespace, provider, keyword):
 
 # terraflow resource create
 @resource.command("create", context_settings=CONTEXT_SETTINGS)
-@schema_file_options
+@schema_options
 @terraform_file_options
 @provider_options
 @resource_options
@@ -108,7 +124,7 @@ def resource_list(namespace, provider, keyword):
 def resource_create(
     namespace,
     provider,
-    resource,
+    kind,
     refresh,
     name,
     required_attributes_only,
@@ -146,7 +162,7 @@ def resource_create(
     resource = ResourceComponent(
         namespace=namespace,
         provider=provider,
-        kind=resource,
+        kind=kind,
         name=name,
         configuration=configuration
     )
@@ -181,7 +197,7 @@ def resource_create(
 def resource_create(
     namespace,
     provider,
-    resource,
+    kind,
     name,
     #rename,
     #set_attribute,
@@ -203,12 +219,12 @@ def resource_create(
 @terraform_file_options
 @provider_options
 @resource_options
-def resource_delete(namespace, provider, resource, name, terraform_filename):
+def resource_delete(namespace, provider, kind, name, terraform_filename):
     """
     Delete a resource from the configuration.
     """
     delete_resource_code(
-        provider=provider, resource=resource, name=name, filename=terraform_filename
+        provider=provider, kind=kind, name=name, filename=terraform_filename
     )
 
     remove_unused_variables()

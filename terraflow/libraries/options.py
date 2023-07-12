@@ -5,12 +5,32 @@ from enum import Enum
 import os
 import click
 
-from terraflow.libraries.helpers import read_yaml_file
+from terraflow.libraries.helpers import read_yaml_file, get_terraform_providers, get_namespaces_and_providers
+
+def namespace_option_default():
+    config = read_yaml_file(filename='.terraflow.yaml')
+    namespaces, providers = get_namespaces_and_providers()
+
+    if config and 'namespace' in config and config['namespace'] in namespaces:
+        return config['namespace']
+    elif len(namespaces) == 1:
+        return namespaces[0]
+    else:
+        return None
 
 def provider_option_default():
     config = read_yaml_file(filename='.terraflow.yaml')
-    print(config)
-    return config['provider'] if config and 'provider' in config else None
+    namespaces, providers = get_namespaces_and_providers()
+
+    if config and 'provider' in config and config['provider'] in providers:
+        return config['provider']
+    elif len(providers) == 1:
+        return providers[0]
+    else:
+        return None
+    
+namespace_default = namespace_option_default()
+provider_default = provider_option_default()
 
 # Dictionary of different CLI options
 options = {
@@ -26,21 +46,21 @@ options = {
     "namespace": click.option(
         "--namespace",
         type=str,
-        default="hashicorp",
+        default=namespace_default if namespace_default else 'hashicorp',
         multiple=False,
-        required=True,
+        required=False if namespace_default else True,
         help="The namespace of the Terraform provider.",
     ),
     "provider": click.option(
         "--provider",
         type=str,
-        default=provider_option_default(),
+        default=provider_default,
         multiple=False,
-        required=False if provider_option_default() else True,
+        required=False if provider_default else True,
         help="The name of the Terraform provider.",
     ),
-    "resource": click.option(
-        "--resource",
+    "kind": click.option(
+        "--kind",
         type=str,
         default=None,
         multiple=False,
@@ -198,7 +218,7 @@ def resource_options(func):
     """
     Description
     """
-    func = options["resource"](func)
+    func = options["kind"](func)
     func = options["name"](func)
 
     return func
@@ -226,7 +246,7 @@ def code_options(func):
     return func
 
 
-def schema_file_options(func):
+def schema_options(func):
     """
     Description
     """

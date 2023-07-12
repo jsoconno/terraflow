@@ -829,10 +829,10 @@ def delete_provider_code(provider, filename="providers.tf"):
     with open(filename, "w") as f:
         f.write(result)
 
-def delete_resource_code(provider, resource, name, filename="main.tf"):
-    resource = "_".join([provider, resource]) if not provider in resource else resource
+def delete_resource_code(provider, kind, name, filename="main.tf"):
+    kind = "_".join([provider, kind]) if not provider in kind else kind
     regex_pattern = (
-        rf'(?:#.*\n)*?^resource\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+        rf'(?:#.*\n)*?^resource\s+"{kind}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
     )
 
     with open(filename, "r") as f:
@@ -843,9 +843,9 @@ def delete_resource_code(provider, resource, name, filename="main.tf"):
     with open(filename, "w") as f:
         f.write(result)
 
-def delete_data_source_code(provider, resource, name, filename="main.tf"):
-    resource = "_".join([provider, resource]) if not provider in resource else resource
-    regex_pattern = rf'(?:#.*\n)*?^data\s+"{resource}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+def delete_data_source_code(provider, kind, name, filename="main.tf"):
+    kind = "_".join([provider, kind]) if not provider in kind else kind
+    regex_pattern = rf'(?:#.*\n)*?^data\s+"{kind}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
 
     with open(filename, "r") as f:
         string = f.read()
@@ -857,6 +857,25 @@ def delete_data_source_code(provider, resource, name, filename="main.tf"):
 
 def run_terraform_fmt():
     subprocess.run(["terraform", "fmt"], stdout=subprocess.DEVNULL)
+
+def get_namespaces_and_providers():
+    # Run the `terraform providers` command
+    result = subprocess.run(["terraform", "providers"], capture_output=True, text=True)
+
+    # Check the return code
+    if result.returncode != 0:
+        print("Error running `terraform providers` command.")
+        return None
+
+    # Parse the command output
+    pattern = fr"provider\[registry\.terraform\.io/(.*?)/(.*?)\] (\S+)"
+    match = re.findall(pattern, result.stdout, re.MULTILINE)
+    if match:
+        # Separate namespaces and providers and convert to sets to get unique values
+        namespaces = list(set(namespace for namespace, provider, version in match))
+        providers = list(set(provider for namespace, provider, version in match))
+
+        return namespaces, providers
 
 def get_provider_version(provider: str, namespace: str = "hashicorp") -> str:
     # Run the `terraform providers` command
