@@ -930,10 +930,13 @@ def get_terraform_version():
         # Handle any other exceptions that might occur during the execution
         return f"Error occurred: {str(e)}"
 
-def filter_attributes(attributes: dict, configuration: object) -> dict:
+def filter_attributes(attributes: dict, configuration: object, block_hierarchy: list = None) -> dict:
+    if block_hierarchy is None:
+        block_hierarchy = []
+
     # Exclude specified attributes if any
     if configuration.exclude_attributes:
-        attributes = {k: v for k, v in attributes.items() if k not in configuration.exclude_attributes or v.get('required', False)}
+        attributes = {k: v for k, v in attributes.items() if '.'.join(block_hierarchy + [k]) not in configuration.exclude_attributes or v.get('required', False)}
 
     # Exclude computed attributes if configuration flag is set
     if configuration.exclude_computed_attributes:
@@ -942,13 +945,16 @@ def filter_attributes(attributes: dict, configuration: object) -> dict:
     # Include only required attributes if specified
     if configuration.required_attributes_only:
         attributes = {k: v for k, v in attributes.items() if v.get('required', False)}
-    
+
     return attributes
 
-def filter_blocks(blocks: dict, configuration: object) -> dict:
+def filter_blocks(blocks: dict, configuration: object, block_hierarchy: list = None) -> dict:
+    if block_hierarchy is None:
+        block_hierarchy = []
+
     # Exclude specified blocks if any
     if configuration.exclude_blocks:
-        blocks = {k: v for k, v in blocks.items() if k not in configuration.exclude_blocks or v.get("min_items", 0) > 0}
+        blocks = {k: v for k, v in blocks.items() if '.'.join(block_hierarchy + [k]) not in configuration.exclude_blocks or v.get("min_items", 0) > 0}
 
     # Exclude computed blocks if configuration flag is set
     if configuration.exclude_computed_blocks:

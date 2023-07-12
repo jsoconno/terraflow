@@ -139,8 +139,8 @@ class CodeGenerator():
         blocks = schema.get("block", {}).get("block_types", {})
 
         # Apply filtering based on configuration
-        attributes = filter_attributes(attributes=attributes, configuration=self.configuration)
-        blocks = filter_blocks(blocks=blocks, configuration=self.configuration)
+        attributes = filter_attributes(attributes=attributes, configuration=self.configuration, block_hierarchy=block_hierarchy)
+        blocks = filter_blocks(blocks=blocks, configuration=self.configuration, block_hierarchy=block_hierarchy)
 
         # Get the documentation once and use it throughout the method
         if docs is None:
@@ -179,7 +179,7 @@ class CodeGenerator():
                 schema=block_schema,
                 docs=docs,
                 block_hierarchy=block_hierarchy + [block]
-            ) + '\n'
+            )
             code += footer
 
         return code
