@@ -138,7 +138,7 @@ def resource_create(
     # dynamic_block,
     ignore_attribute,
     attribute_default,
-    # attribute_value_prefix,
+    attribute_value_prefix,
     terraform_filename,
     header_comment,
     # include_variable,
@@ -147,51 +147,34 @@ def resource_create(
     """
     Create a Terraform resource.
     """
+    attribute_defaults = convert_strings_to_dict(attribute_default)
 
-    # code = component["code"]
+    configuration = ResourceConfiguration(
+        add_inline_descriptions=add_inline_descriptions,
+        add_header_terraform_docs_url=add_terraform_docs_url,
+        required_attributes_only=required_attributes_only,
+        required_blocks_only=required_blocks_only,
+        exclude_attributes=ignore_attribute,
+        exclude_blocks=ignore_block,
+        attribute_defaults=attribute_defaults,
+        header_comment=header_comment,
+        attribute_value_prefix=attribute_value_prefix,
+    )
 
-    # configuration = ResourceConfiguration(
-    #     add_inline_descriptions=add_inline_descriptions,
-    #     add_header_terraform_docs_url=add_terraform_docs_url,
-    #     required_attributes_only=required_attributes_only,
-    #     required_blocks_only=required_blocks_only,
-    #     exclude_attributes=ignore_attribute,
-    #     exclude_blocks=ignore_block,
-    #     attribute_defaults=attribute_default,
-    #     header_comment=header_comment
-    # )
+    resource = ResourceComponent(
+        namespace=namespace,
+        provider=provider,
+        kind=resource,
+        name=name,
+        configuration=configuration
+    )
 
-    # this = ResourceComponent(
-    #     namespace=namespace,
-    #     provider=provider,
-    #     kind=resource,
-    #     name=name,
-    #     configuration=configuration,
-    #     # load_code=True
-    # )
+    write_terraform_to_file(
+        new_code=resource.code,
+        filename=terraform_filename
+    )
 
-    # print(this.code)
-
-    # write_terraform_to_file(
-    #     new_code=this.code,
-    #     filename=terraform_filename
-    # )
-
-    # this = Resource(
-    #     namespace=namespace,
-    #     provider=provider,
-    #     resource=resource,
-    #     name=name
-    # )
-
-    # code = this.get_code(config=asdict(config))
-
-    # write_terraform_to_file(
-    #     new_code=code,
-    #     filename=terraform_filename
-    # )
-
-    # # Remove hard coding and add flag later
+    # Remove hard coding and add flag later
 
     # if sync_variables:
     #     variable_config = ResourceConfiguration(
@@ -468,7 +451,7 @@ def variable_create(
         include_variables=list(include_variable)
     )
 
-    this = Resource(
+    this = ResourceComponent(
         namespace=namespace,
         provider=provider,
         resource=resource,

@@ -139,14 +139,14 @@ options = {
         required=False,
         help="Default values for a given attributes in the format 'attribute=value'.",
     ),
-    # "attribute_value_prefix": click.option(
-    #     "--attribute-value-prefix",
-    #     type=str,
-    #     default=None,
-    #     multiple=False,
-    #     required=False,
-    #     help="A prefix to give to all variables in the resource configuration.  Useful for module development.",
-    # ),
+    "attribute_value_prefix": click.option(
+        "--attribute-value-prefix",
+        type=str,
+        default=None,
+        multiple=False,
+        required=False,
+        help="A prefix to give to all variables in the resource configuration.  Useful for module development.",
+    ),
     "terraform_filename": click.option(
         "--terraform-filename",
         type=str,
@@ -217,7 +217,7 @@ def code_options(func):
     # func = options["dynamic_block"](func)
     func = options["ignore_attribute"](func)
     func = options["attribute_default"](func)
-    # func = options["attribute_value_prefix"](func)
+    func = options["attribute_value_prefix"](func)
     func = options["terraform_filename"](func)
     # func = options["variables_filename"](func)
     func = options["header_comment"](func)
