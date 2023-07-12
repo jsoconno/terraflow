@@ -122,7 +122,7 @@ def format_attribute(attribute: str, attribute_schema: dict, attribute_descripti
         attribute_value = f'var.{hierarchy_key}'
     
     # Check if attribute value starts with the provided prefixes
-    prefixes = ("var.", "local.", "resource.", "data.")
+    prefixes = ("var.", "local.", "resource.", "data.", "module.", "{", "[")
     if not attribute_value.startswith(prefixes):
         attribute_value = f'"{attribute_value}"'
     

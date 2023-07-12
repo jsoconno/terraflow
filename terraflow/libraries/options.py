@@ -120,21 +120,21 @@ options = {
         required=False,
         help="Add a link to the documentation above the resource.",
     ),
-    "ignore_block": click.option(
-        "--ignore-block",
+    "exclude_block": click.option(
+        "--exclude-block",
         type=str,
         default=None,
         multiple=True,
         required=False,
-        help="Blocks to ignore in the configuration.",
+        help="Blocks to exclude in the configuration.",
     ),
-    "ignore_attribute": click.option(
-        "--ignore-attribute",
+    "exclude_attribute": click.option(
+        "--exclude-attribute",
         type=str,
         default=None,
         multiple=True,
         required=False,
-        help="Attributes to ignore in the configuration.",
+        help="Attributes to exclude in the configuration.",
     ),
     "header_comment": click.option(
         "--header-comment",
@@ -234,9 +234,9 @@ def code_options(func):
     # func = options["sync_variables"](func)
     # func = options["include_variable"](func)
     func = options["add_terraform_docs_url"](func)
-    func = options["ignore_block"](func)
+    func = options["exclude_block"](func)
     # func = options["dynamic_block"](func)
-    func = options["ignore_attribute"](func)
+    func = options["exclude_attribute"](func)
     func = options["attribute_default"](func)
     func = options["attribute_value_prefix"](func)
     func = options["terraform_filename"](func)
