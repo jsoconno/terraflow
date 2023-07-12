@@ -1,12 +1,91 @@
 from dataclasses import asdict
 import re
+import os
 
 from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema, get_attribute_schema
 from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, handle_attribute, get_provider_version, get_terraform_version, filter_attributes, filter_blocks, read_files, load_terraform_code
 from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_attribute_type, format_terraform_code
 from terraflow.libraries.configuration import Configuration, ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 
-class Terraform():
+class CodeLoader():
+    """
+    Class responsible for loading and parsing Terraform code files.
+    """
+    def __init__(self, file_extensions: list = ['.tf']):
+        self.file_extensions = file_extensions
+        self.code = self._read_files()
+        self.components = self._extract_components()
+
+    def _read_files(self) -> str:
+        """
+        Loop through all files with the provided extensions in the current directory 
+        and return a single string with all code.
+        """
+        content = ""
+        for file_name in os.listdir(os.getcwd()):
+            if any(file_name.endswith(extension) for extension in self.file_extensions):
+                with open(file_name, 'r') as file:
+                    content += file.read() + '\n'
+        return content
+
+    def _extract_components(self):
+        # Extract all Terraform components
+        pattern = rf'((?:#.*\n)*?^(.*?)\s+(?:"(.*?)"\s+)?\s?"(.*?)"\s+{{[\s\S]*?^}}$)'
+        matches = re.findall(pattern, self.code, re.MULTILINE)
+
+        # Store each component and its corresponding details
+        components = []
+
+        for match in matches:
+            component = {
+                'id': f'{match[1]}.{match[2] + "." if match[2] else ""}{match[3]}',
+                'code': match[0],
+                'type': match[1],
+                'kind': match[2] if match[2] else None,
+                'name': match[3]
+            }
+            components.append(component)
+
+        return components
+    
+    def get_components(self, type: str = None, kind: str = None, name: str = None):
+        """
+        Return a list of components that match the provided type, kind, and/or name.
+
+        Args:
+            type (str, optional): The type of the component (e.g., 'resource', 'variable'). Defaults to None.
+            kind (str, optional): The kind of the component (e.g., 'azurerm_resource_group'). Defaults to None.
+            name (str, optional): The name of the component. Defaults to None.
+
+        Returns:
+            List[Dict]: A list of components matching the provided criteria.
+        """
+        filtered_components = self.components
+
+        if type is not None:
+            filtered_components = [comp for comp in filtered_components if comp['type'] == type]
+
+        if kind is not None:
+            filtered_components = [comp for comp in filtered_components if comp['kind'] == kind]
+
+        if name is not None:
+            filtered_components = [comp for comp in filtered_components if comp['name'] == name]
+
+        return filtered_components
+    
+    def get_component_list(self):
+        """
+        Return a list of component ids.
+
+        Returns:
+            List[str]: A list of component ids.
+        """
+        return [component['id'] for component in self.components]
+    
+# code = CodeLoader()
+# print(code.get_component_list())
+
+class CodeGenerator():
     """
     Base class representing a Terraform entity.
     This class provides methods to generate Terraform code.
@@ -150,7 +229,7 @@ class Terraform():
     def terraform_version(self):
         return get_terraform_version()
 
-class Provider(Terraform):
+class ProviderComponent(CodeGenerator):
     """
     Class representing a Terraform provider.
     """
@@ -171,7 +250,7 @@ class Provider(Terraform):
         # else:
         #     self.code = self._write_code(self.schema)
 
-class Resource(Terraform):
+class ResourceComponent(CodeGenerator):
     """
     Class representing a Terraform resource.
     """
@@ -194,7 +273,7 @@ class Resource(Terraform):
         # else:
         #     self.code = self._write_code(self.schema)
 
-class DataSource(Terraform):
+class DataSourceComponent(CodeGenerator):
     """
     Class representing a Terraform data source.
     """
