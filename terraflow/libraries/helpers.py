@@ -757,8 +757,8 @@ def handle_attribute(attribute, attribute_schema, block_hierarchy, config, docum
 
     return attribute_name, description, optional, formatted_type
 
-def get_terraform_providers(namespace):
-    url = f"https://registry.terraform.io/v1/providers?namespace={namespace}"
+def get_terraform_providers(namespace, limit=100, tier="official"):
+    url = f"https://registry.terraform.io/v1/providers?namespace={namespace}&limit={limit}"
 
     # Send a GET request to the API
     response = requests.get(url)
