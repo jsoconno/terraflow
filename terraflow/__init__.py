@@ -8,6 +8,7 @@ from terraflow.libraries.constants import *
 from terraflow.libraries.schema import *
 from terraflow.libraries.terraform import *
 from terraflow.libraries.configuration import *
+from terraflow.libraries.options import *
 from terraflow.version import __version__
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="terraflow")
@@ -29,6 +30,42 @@ def terraflow():
     the amount of manual work required to create new Terraform resources.
     """
     pass
+
+# terraflow provider
+@terraflow.group("provider")
+def provider():
+    """
+    Manage Terraform providers.
+    """
+    pass
+
+
+# terraflow provider list
+@provider.command("list", context_settings=CONTEXT_SETTINGS)
+@provider_options
+def provider_list(namespace, provider):
+    """
+    List available providers.
+    """
+    items = get_terraform_providers(
+        namespace=namespace
+    )
+
+    print(format_list(title=f"Available providers for namespace {namespace}:", items=items))
+
+
+# terraflow provider get
+@provider.command("get", context_settings=CONTEXT_SETTINGS)
+@filter_options
+def provider_get(keyword):
+    """
+    Get providers in the Terraform configuration.
+    """
+    schema = get_schema()
+
+    items = list_items(schema=schema, scope="provider", keywords=keyword)
+
+    print(format_list(title="Providers in this configuration:", items=items))
 
 
 # terraflow resource
@@ -176,9 +213,9 @@ def resource_delete(namespace, provider, resource, name, terraform_filename):
 
     remove_unused_variables()
 
-# terraflow data-source
-@terraflow.group("data-source")
-def data_source():
+# terraflow data
+@terraflow.group("data")
+def data():
     """
     Manage Terraform data sources.
     """
@@ -186,10 +223,10 @@ def data_source():
 
 
 # terraflow data source list
-@data_source.command("list", context_settings=CONTEXT_SETTINGS)
+@data.command("list", context_settings=CONTEXT_SETTINGS)
 @provider_options
 @filter_options
-def data_source_list(namespace, provider, keyword):
+def data_list(namespace, provider, keyword):
     """
     List available data sources for a provider.
     """
@@ -204,43 +241,6 @@ def data_source_list(namespace, provider, keyword):
     )
 
     print(format_list(items=items, title=f"Data sources for {namespace} {provider}:"))
-
-
-
-# terraflow provider
-@terraflow.group("provider")
-def provider():
-    """
-    Manage Terraform providers.
-    """
-    pass
-
-# terraflow provider list
-@provider.command("list", context_settings=CONTEXT_SETTINGS)
-@provider_options
-def provider_list(namespace, provider):
-    """
-    List available providers.
-    """
-    items = get_terraform_providers(
-        namespace=namespace
-    )
-
-    print(format_list(title=f"Available providers for namespace {namespace}:", items=items))
-
-
-# terraflow provider get
-@provider.command("get", context_settings=CONTEXT_SETTINGS)
-@filter_options
-def provider_get(keyword):
-    """
-    Get providers in the Terraform configuration.
-    """
-    schema = get_schema()
-
-    items = list_items(schema=schema, scope="provider", keywords=keyword)
-
-    print(format_list(title="Providers in this configuration:", items=items))
 
 
 # terraflow variable

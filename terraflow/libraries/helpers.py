@@ -7,6 +7,7 @@ from requests.exceptions import RequestException
 from bs4 import BeautifulSoup
 from typing import List, Tuple, Optional
 import difflib
+import yaml
 
 from terraflow.libraries.constants import *
 from terraflow.libraries.formatting import *
@@ -61,7 +62,14 @@ def write_json_file(filename: str, data: dict) -> None:
     with open(filename, "w") as f:
         json.dump(data, f)
 
-
+def read_yaml_file(filename='terraflow.yaml'):
+    try:
+        with open(filename, 'r') as file:
+            config = yaml.safe_load(file)
+            return config
+    except Exception as e:
+        print(f'Error reading config file: {str(e)}')
+        return None
 
 # Formatting functions.
 

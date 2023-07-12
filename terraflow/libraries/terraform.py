@@ -193,6 +193,7 @@ class CodeGenerator():
         header, footer = format_resource_header(
             type=self.type,
             name=self.name,
+            provider=self.provider,
             kind=self.kind,
             documentation_url=(self.docs_url if self.configuration.add_header_terraform_docs_url else None),
             comment=(self.configuration.header_comment)
@@ -287,6 +288,7 @@ class ResourceComponent(CodeGenerator):
         )
         self.configuration = configuration if configuration is not None else ResourceConfiguration()
         self.code = self._write_code(self.schema)
+
         # if load_code:
         #     self.code = self._load_code()
         # else:

@@ -77,7 +77,7 @@ def colors(color: str = "END") -> str:
 
     return colors[color]
 
-def format_resource_header(type, name, kind=None, documentation_url=None, comment=None):
+def format_resource_header(type, name, provider=None, kind=None, documentation_url=None, comment=None):
     header_content = ""
 
     if documentation_url:
@@ -90,7 +90,7 @@ def format_resource_header(type, name, kind=None, documentation_url=None, commen
     if type == 'provider':
         header = f'{type} "{name}" {{'
     else:
-        header = f'{type} "{kind}" "{name}" {{'
+        header = f'{type} "{provider}_{kind}" "{name}" {{'
     header_content += f"{header}\n"
     footer = "}\n"
 
