@@ -171,6 +171,8 @@ def resource_create(
         new_code=resource.code,
         filename=terraform_filename
     )
+    
+    # TODO: This is not always adding a new resource so the message or logic should be adjusted.
     print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The resource "{provider}_{kind}" "{name}" was added to the Terraform configuration.\n')
 
     # Remove hard coding and add flag later
