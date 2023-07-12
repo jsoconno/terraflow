@@ -757,6 +757,21 @@ def handle_attribute(attribute, attribute_schema, block_hierarchy, config, docum
 
     return attribute_name, description, optional, formatted_type
 
+def get_terraform_providers(namespace):
+    url = f"https://registry.terraform.io/v1/providers?namespace={namespace}"
+
+    # Send a GET request to the API
+    response = requests.get(url)
+
+    # Raise an exception if the request was unsuccessful
+    response.raise_for_status()
+
+    # Get the data from the response
+    data = response.json()
+    providers = data["providers"]
+
+    return [providers["name"] for providers in providers]
+
 def list_items(schema, namespace="hashicorp", provider=None, scope="resource", keywords=None):
     """
     Get a list of providers for a namespace or resources or data sources for a provider.
