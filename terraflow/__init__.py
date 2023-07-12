@@ -171,6 +171,7 @@ def resource_create(
         new_code=resource.code,
         filename=terraform_filename
     )
+    print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The resource "{provider}_{kind}" "{name}" was added to the Terraform configuration.\n')
 
     # Remove hard coding and add flag later
 
@@ -216,16 +217,24 @@ def resource_create(
 
 # terraflow resource delete
 @resource.command("delete", context_settings=CONTEXT_SETTINGS)
-@terraform_file_options
 @provider_options
 @resource_options
-def resource_delete(namespace, provider, kind, name, terraform_filename):
+def resource_delete(namespace, provider, kind, name):
     """
     Delete a resource from the configuration.
     """
-    delete_resource_code(
-        provider=provider, kind=kind, name=name, filename=terraform_filename
+    loader = CodeLoader()
+    component = loader.get_component_by_id(
+        id=f"resource.{provider}_{kind}.{name}"
     )
+
+    if component:
+        delete_resource_code(
+            provider=provider, kind=component["kind"], name=component["name"], filename=component["filename"]
+        )
+        print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The resource "{provider}_{kind}" "{name}" was deleted from the Terraform configuration.\n')
+    else:
+        print(f'\n{colors(color="FAIL")}Error:{colors()} The resource "{provider}_{kind}" "{name}" does not exist in the Terraform configuration.\n')
 
     remove_unused_variables()
 
