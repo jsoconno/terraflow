@@ -85,6 +85,7 @@ class CodeLoader():
         """
         return [component['id'] for component in self.components]
     
+    # TODO: Determine if it makes more sense to get components by id or by type, kind, and name
     def get_component_by_id(self, id):
         """
         Return a specific component by its id.

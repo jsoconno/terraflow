@@ -604,6 +604,51 @@ def get_terraform_documentation(namespace: str, provider: str, scope: str, resou
 
     return documentation
 
+def get_component_arguments_list(documentation_text):
+    """
+    Returns a list of argument references for a given resource
+    """
+    pattern = r'^Argument(?:s)? Reference([\s\S]*?)^Attribute(?:s)? Reference'
+    matches = re.findall(pattern, documentation_text, re.MULTILINE)
+
+    if matches:
+        argument_section = matches[0].strip()
+        argument_pattern = r"([\w_]+) -"
+        argument_references = re.findall(argument_pattern, argument_section)
+        return argument_references
+
+    return []
+
+
+def get_component_attributes_list(documentation_text):
+    """
+    Returns a list of attribute references for a given resource
+    """
+    pattern = r'^Attribute(?:s)? Reference([\s\S]*?)^Import'
+    matches = re.findall(pattern, documentation_text, re.MULTILINE)
+
+    if matches:
+        attribute_section = matches[0].strip()
+        attribute_pattern = r"([\w_]+) -"
+        attribute_references = re.findall(attribute_pattern, attribute_section)
+        return attribute_references
+
+    return []
+
+# # TODO: Add a step to this function to check that the provided resource name is valid
+# text = get_terraform_documentation(
+#     namespace="hashicorp",
+#     provider="aws",
+#     scope="resource",
+#     resource="s3_bucket",
+#     version="5.8.0",
+# )
+
+# arguments = get_component_arguments_list(text)
+# attributes = get_component_attributes_list(text)
+
+# print(arguments)
+# print(attributes)
 
 def get_resource_attribute_description(
     documentation_text, attribute, block_hierarchy=None
@@ -936,14 +981,18 @@ def filter_attributes(attributes: dict, configuration: object, block_hierarchy: 
 
     # Exclude specified attributes if any
     if configuration.exclude_attributes:
+        print('a')
         attributes = {k: v for k, v in attributes.items() if '.'.join(block_hierarchy + [k]) not in configuration.exclude_attributes or v.get('required', False)}
 
-    # Exclude computed attributes if configuration flag is set
-    if configuration.exclude_computed_attributes:
-        attributes = {k: v for k, v in attributes.items() if not v.get('computed', False) or v.get('required', False)}
+    # # Exclude computed attributes if configuration flag is set
+    # if configuration.exclude_computed_attributes:
+    #     print('b')
+    #     print(attributes.items())
+    #     attributes = {k: v for k, v in attributes.items() if not v.get('computed', False) or v.get('required', False)}
 
     # Include only required attributes if specified
     if configuration.required_attributes_only:
+        print('c')
         attributes = {k: v for k, v in attributes.items() if v.get('required', False)}
 
     return attributes
@@ -956,9 +1005,9 @@ def filter_blocks(blocks: dict, configuration: object, block_hierarchy: list = N
     if configuration.exclude_blocks:
         blocks = {k: v for k, v in blocks.items() if '.'.join(block_hierarchy + [k]) not in configuration.exclude_blocks or v.get("min_items", 0) > 0}
 
-    # Exclude computed blocks if configuration flag is set
-    if configuration.exclude_computed_blocks:
-        blocks = {k: v for k, v in blocks.items() if not v.get('computed', False) or v.get("min_items", 0) > 0}
+    # # Exclude computed blocks if configuration flag is set
+    # if configuration.exclude_computed_blocks:
+    #     blocks = {k: v for k, v in blocks.items() if not v.get('computed', False) or v.get("min_items", 0) > 0}
 
     # Include only required blocks if specified
     if configuration.required_blocks_only:
