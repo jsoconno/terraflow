@@ -6,6 +6,12 @@ from terraflow.libraries.schema import get_schema, get_provider_schema, get_reso
 from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, handle_attribute, get_provider_version, get_terraform_version, filter_attributes, filter_blocks, read_files, load_terraform_code
 from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_attribute_type, format_terraform_code
 from terraflow.libraries.configuration import Configuration, ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
+from terraflow.libraries.docs import TerraformDocumentation
+
+# Example Usage Regex: r'^Example Usage([\s\S]*?)^Argument(?:s)? Reference'
+# Arguments Reference Regex: r'^Argument(?:s)? Reference([\s\S]*?)^Attribute(?:s)? Reference'
+# Attributes Reference Regex: r'^Attribute(?:s)? Reference([\s\S]*?)^Import'
+# Import Regex: r'^Import([\s\S]*?)Schema'
 
 class CodeLoader():
     """
@@ -145,22 +151,31 @@ class CodeGenerator():
 
         # Get the documentation once and use it throughout the method
         if docs is None:
-            docs = self.docs
+            docs = TerraformDocumentation(
+                namespace=self.namespace,
+                provider=self.provider,
+                version=self.provider_version,
+                kind=self.kind,
+                type=self.type,
+            ).metadata
 
         # Loop through attributes
         for attribute, attribute_schema in attributes.items():
-            # Get the description from the documentation
-            attribute_description = get_resource_attribute_description(docs, attribute, block_hierarchy)
+            # Create ID
+            id = '.'.join(block_hierarchy + [attribute])
 
-            # Update the attribute schema with the description
-            attribute_schema['description'] = attribute_description
-            self.attributes.update({'_'.join(block_hierarchy + [attribute]): attribute_schema})
+            # # Get the description from the documentation
+            # attribute_description = get_resource_attribute_description(docs, attribute, block_hierarchy)
+
+            # # Update the attribute schema with the description
+            # attribute_schema['description'] = attribute_description
+            # self.attributes.update({'_'.join(block_hierarchy + [attribute]): attribute_schema})
 
             # Write line
             code += format_attribute(
                 attribute=attribute,
                 attribute_schema=attribute_schema,
-                attribute_description=attribute_description,
+                attribute_description=docs.get(id, {}).get('description', None),
                 block_hierarchy=block_hierarchy,
                 configuration=self.configuration
             )
@@ -179,7 +194,7 @@ class CodeGenerator():
             code += self._write_body_code(
                 schema=block_schema,
                 docs=docs,
-                block_hierarchy=block_hierarchy + [block]
+                block_hierarchy=updated_block_hierarchy
             )
             code += footer
 
@@ -318,21 +333,32 @@ class DataSourceComponent(CodeGenerator):
         # else:
         #     self.code = self._write_code(self.schema)
 
-# config = ResourceConfiguration(
-#     add_inline_descriptions=False,
-#     exclude_blocks=['timeouts'],
-#     add_header_terraform_docs_url=True,
-#     attribute_value_prefix="test",
-#     attribute_defaults={'location': 'eastus'},
-#     header_comment='This key vault is used for storing keys, secrets, and certificates for the application.'
+config = ResourceConfiguration(
+    add_inline_descriptions=True,
+    exclude_blocks=['timeouts'],
+    add_header_terraform_docs_url=True,
+    attribute_value_prefix="test",
+    attribute_defaults={'location': 'eastus'},
+    header_comment='This key vault is used for storing keys, secrets, and certificates for the application.'
+)
+
+x = ResourceComponent(
+    namespace='hashicorp',
+    provider='azurerm',
+    kind='key_vault',
+    name='test',
+    configuration=config
+)
+
+print(x.code)
+
+# configuration = ProviderConfiguration(
+#     add_inline_descriptions=True
 # )
 
-# x = Resource(
-#     namespace='hashicorp',
-#     provider='azurerm',
-#     kind='key_vault',
-#     name='test',
-#     configuration=config
+# provider = ProviderComponent(
+#     name='azurerm',
+#     configuration=configuration
 # )
 
-# print(x.code)
+# print(provider.code)
