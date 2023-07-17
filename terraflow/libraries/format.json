@@ -1,26 +1,7 @@
 {
-    "namespace": "",
-    "provider": "",
-    "version": "",
-    "kind": "",
-    "name": "",
-    "documentation": {
-        "url": "http://example.com",
-        "text": "plain text documentation",
-        "arguments": [
-            {
-                "name": "attribute name",
-                "description": "attribute description",
-                "required": true,
-                "computed": false,
-                "default": "default value"
-            }
-        ],
-        "attributes": [
-            {
-                "name": "attribute name",
-                "description": "attribute description"
-            }
-        ]
+    "id": {
+        "name": "some_name",
+        "description": "Some description",
+        "required": true,
     }
 }
