@@ -172,7 +172,7 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
     else:
         return '\n'.join(line.strip() for line in soup.text.split('\n') if line.strip())
 
-    texts = ['\n'.join(line.strip() for line in elem.get_text().split('\n') if line.strip()) for elem in elements]
+    texts = ['\n'.join(line.replace('\\n', '\n').strip() for line in elem.get_text().split('\n') if line.strip()) for elem in elements]
 
     if list_output:
         return texts
@@ -476,44 +476,6 @@ def is_valid_version(version: str, valid_versions: list) -> bool:
         True if the version is valid, False otherwise.
     """
     return version in valid_versions
-
-def scrape_website(url: str, tag: str = None, selector: str = None, list_output: bool = False) -> str:
-    """
-    Scrape content from a URL. If a tag or selector is specified, only content within that tag or selector is scraped.
-
-    Args:
-        url: The URL to scrape.
-        tag: Optional; an HTML tag name to scrape (e.g. "p" for paragraph tags, "div" for div tags, etc.).
-        selector: Optional; a CSS selector to scrape.
-        list_output: Optional; whether to return the output as a list (default is False).
-
-    Returns:
-        The scraped content as a string or a list of strings.
-    """
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
-
-    try:
-        response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
-        response.raise_for_status()  # If the response contains an HTTP error status code, raise an exception
-    except RequestException as e:
-        print(f"Failed to get the webpage. Error: {e}")
-        return None
-
-    soup = BeautifulSoup(response.content, "html.parser")
-
-    if tag:
-        elements = soup.find_all(tag)
-    elif selector:
-        elements = soup.select(selector)
-    else:
-        return '\n'.join(line.strip() for line in soup.text.split('\n') if line.strip())
-
-    texts = ['\n'.join(line.strip() for line in elem.get_text().split('\n') if line.strip()) for elem in elements]
-
-    if list_output:
-        return texts
-    else:
-        return '\n'.join(texts)
 
 # Documentation functions.
 
