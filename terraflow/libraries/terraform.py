@@ -141,14 +141,6 @@ class CodeGenerator():
         if block_hierarchy is None:
             block_hierarchy = []
 
-        # Collect attributes and blocks in the current block
-        attributes = schema.get("block", {}).get("attributes", {})
-        blocks = schema.get("block", {}).get("block_types", {})
-
-        # Apply filtering based on configuration
-        attributes = filter_attributes(attributes=attributes, configuration=self.configuration, block_hierarchy=block_hierarchy)
-        blocks = filter_blocks(blocks=blocks, configuration=self.configuration, block_hierarchy=block_hierarchy)
-
         # Get the documentation once and use it throughout the method
         if docs is None:
             docs = TerraformDocumentation(
@@ -159,17 +151,18 @@ class CodeGenerator():
                 type=self.type,
             ).metadata
 
+        # Collect attributes and blocks in the current block
+        attributes = schema.get("block", {}).get("attributes", {})
+        blocks = schema.get("block", {}).get("block_types", {})
+
+        # Apply filtering based on configuration
+        attributes = filter_attributes(attributes=attributes, attribute_docs=docs, configuration=self.configuration, block_hierarchy=block_hierarchy)
+        blocks = filter_blocks(blocks=blocks, configuration=self.configuration, block_hierarchy=block_hierarchy)
+
         # Loop through attributes
         for attribute, attribute_schema in attributes.items():
             # Create ID
             id = '.'.join(block_hierarchy + [attribute])
-
-            # # Get the description from the documentation
-            # attribute_description = get_resource_attribute_description(docs, attribute, block_hierarchy)
-
-            # # Update the attribute schema with the description
-            # attribute_schema['description'] = attribute_description
-            # self.attributes.update({'_'.join(block_hierarchy + [attribute]): attribute_schema})
 
             # Write line
             code += format_attribute(
@@ -333,24 +326,24 @@ class DataSourceComponent(CodeGenerator):
         # else:
         #     self.code = self._write_code(self.schema)
 
-config = ResourceConfiguration(
-    add_inline_descriptions=True,
-    exclude_blocks=['timeouts'],
-    add_header_terraform_docs_url=True,
-    attribute_value_prefix="test",
-    attribute_defaults={'location': 'eastus'},
-    header_comment='This key vault is used for storing keys, secrets, and certificates for the application.'
-)
+# config = ResourceConfiguration(
+#     add_inline_descriptions=True,
+#     exclude_blocks=['timeouts'],
+#     add_header_terraform_docs_url=True,
+#     attribute_value_prefix="test",
+#     attribute_defaults={'location': 'eastus'},
+#     header_comment='This key vault is used for storing keys, secrets, and certificates for the application.'
+# )
 
-x = ResourceComponent(
-    namespace='hashicorp',
-    provider='azurerm',
-    kind='key_vault',
-    name='test',
-    configuration=config
-)
+# x = ResourceComponent(
+#     namespace='hashicorp',
+#     provider='azurerm',
+#     kind='key_vault',
+#     name='test',
+#     configuration=config
+# )
 
-print(x.code)
+# print(x.code)
 
 # configuration = ProviderConfiguration(
 #     add_inline_descriptions=True
