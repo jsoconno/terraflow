@@ -2,16 +2,11 @@ from dataclasses import asdict
 import re
 import os
 
-from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema, get_attribute_schema
-from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_resource_attribute_description, handle_attribute, get_provider_version, get_terraform_version, filter_attributes, filter_blocks, read_files, load_terraform_code
-from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_attribute_type, format_terraform_code
+from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema
+from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_provider_version, get_terraform_version, filter_attributes, filter_blocks
+from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_terraform_code
 from terraflow.libraries.configuration import Configuration, ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 from terraflow.libraries.docs import TerraformDocumentation
-
-# Example Usage Regex: r'^Example Usage([\s\S]*?)^Argument(?:s)? Reference'
-# Arguments Reference Regex: r'^Argument(?:s)? Reference([\s\S]*?)^Attribute(?:s)? Reference'
-# Attributes Reference Regex: r'^Attribute(?:s)? Reference([\s\S]*?)^Import'
-# Import Regex: r'^Import([\s\S]*?)Schema'
 
 class CodeLoader():
     """
@@ -218,18 +213,6 @@ class CodeGenerator():
 
         return code
 
-    # def _load_code(self):
-    #     """
-    #     Loop through all Terraform files in the current directory and load code of the current Terraform object.
-    #     """
-    #     terraform_code = read_files()
-    #     load_terraform_code(
-    #         type=self.type,
-    #         kind=self.kind,
-    #         name=self.name,
-    #         code=terraform_code
-    #     )
-
     @property
     def docs_url(self):
         return get_terraform_documentation_url(
@@ -262,7 +245,7 @@ class ProviderComponent(CodeGenerator):
     """
     Class representing a Terraform provider.
     """
-    def __init__(self, name: str, namespace: str = 'hashicorp', configuration: ProviderConfiguration = None):#, load_code: bool = False):
+    def __init__(self, name: str, namespace: str = 'hashicorp', configuration: ProviderConfiguration = None):
         super().__init__(name, namespace)#, load_code)
         # Set initial variables
         self.name = name
@@ -274,16 +257,12 @@ class ProviderComponent(CodeGenerator):
         )
         self.configuration = configuration if configuration is not None else ProviderConfiguration()
         self.code = self._write_code(self.schema)
-        # if load_code:
-        #     self.code = self._load_code()
-        # else:
-        #     self.code = self._write_code(self.schema)
 
 class ResourceComponent(CodeGenerator):
     """
     Class representing a Terraform resource.
     """
-    def __init__(self, kind: str, provider: str, name: str = 'main', namespace: str = 'hashicorp', configuration: ResourceConfiguration = None):#, load_code: bool = False):
+    def __init__(self, kind: str, provider: str, name: str = 'main', namespace: str = 'hashicorp', configuration: ResourceConfiguration = None):
         super().__init__(provider, namespace)#, load_code)
         # Set initial variables
         self.name = name
@@ -298,16 +277,11 @@ class ResourceComponent(CodeGenerator):
         self.configuration = configuration if configuration is not None else ResourceConfiguration()
         self.code = self._write_code(self.schema)
 
-        # if load_code:
-        #     self.code = self._load_code()
-        # else:
-        #     self.code = self._write_code(self.schema)
-
 class DataSourceComponent(CodeGenerator):
     """
     Class representing a Terraform data source.
     """
-    def __init__(self, kind: str, provider: str, name: str = 'main', namespace: str = 'hashicorp', configuration: DataSourceConfiguration = None):#, load_code: bool = False):
+    def __init__(self, kind: str, provider: str, name: str = 'main', namespace: str = 'hashicorp', configuration: DataSourceConfiguration = None):
         super().__init__(provider, namespace)#, load_code)
         # Set initial variables
         self.name = name
@@ -321,10 +295,6 @@ class DataSourceComponent(CodeGenerator):
         )
         self.configuration = configuration if configuration is not None else DataSourceConfiguration()
         self.code = self._write_code(self.schema)
-        # if load_code:
-        #     self.code = self._load_code()
-        # else:
-        #     self.code = self._write_code(self.schema)
 
 # config = ResourceConfiguration(
 #     add_inline_descriptions=True,
@@ -343,7 +313,7 @@ class DataSourceComponent(CodeGenerator):
 #     configuration=config
 # )
 
-# print(x.code)
+# x._write_variables_code()
 
 # configuration = ProviderConfiguration(
 #     add_inline_descriptions=True
