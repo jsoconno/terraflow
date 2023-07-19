@@ -64,23 +64,23 @@ class TerraformDocumentation:
                 os.makedirs(filepath)
 
             # If the file exists
-            if os.path.exists(filepath + f'/{self.type}.txt'):
+            if os.path.exists(filepath + f'/{self.type}.md'):
                 # If refresh is True
                 if self.refresh:
                     # Srape the documentation and write it to file
                     text = scrape_website(self.url, tag='article')
-                    with open(filepath + f'/{self.type}.txt', 'w') as f:
+                    with open(filepath + f'/{self.type}.md', 'w') as f:
                         f.write(text)
                         return text
                 else:
                     # Read the existing documentation from file
-                    with open(filepath + f'/{self.type}.txt', 'r') as f:
+                    with open(filepath + f'/{self.type}.md', 'r') as f:
                         text = f.read()
                         return text
             else:
                 # Srape the documentation and write it to file
                 text = scrape_website(self.url, tag='article')
-                with open(filepath + f'/{self.type}.txt', 'w') as f:
+                with open(filepath + f'/{self.type}.md', 'w') as f:
                     f.write(text)
                     return text
 

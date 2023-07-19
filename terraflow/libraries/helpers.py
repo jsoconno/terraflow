@@ -179,6 +179,15 @@ def convert_strings_to_dict(text: str, delimiter: str = "=") -> dict:
 #     else:
 #         return '\n'.join(texts)
 
+def replace_with_headers(element):
+    """
+    Replace header tags with corresponding markdown.
+    """
+    if element.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+        header_level = int(element.name[1])
+        header_text = f'{"#" * header_level} {element.text}'
+        element.replace_with(NavigableString(header_text))
+
 def replace_with_backticks(element):
     """
     Replace <code> and certain <div> elements with backticks (`) text.
@@ -204,6 +213,10 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
 
     soup = BeautifulSoup(response.content, "html.parser")
 
+    # Remove all <table> tags
+    for table in soup.find_all('table'):
+        table.decompose()
+
     # Find all <code> elements and replace them with single backticks
     for code in soup.find_all('code'):
         replace_with_backticks(code)
@@ -211,6 +224,10 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
     # Find all <pre> elements and replace them with triple backticks
     for pre in soup.find_all('pre'):
         replace_with_backticks(pre)
+    
+    # Find all header elements and replace them with markdown
+    for header in soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+        replace_with_headers(header)
 
     if tag:
         elements = soup.find_all(tag)
@@ -221,10 +238,15 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
 
     texts = ['\n'.join(line.replace('\\n', '\n').strip() for line in elem.get_text().split('\n') if line.strip()) for elem in elements]
 
+    text_output = '\n'.join(texts)
+
+    # Post-processing to remove extra whitespace
+    text_output = re.sub(r'\n{3,}', '\n\n', text_output)
+
     if list_output:
-        return texts
+        return text_output.split('\n\n')
     else:
-        return '\n'.join(texts)
+        return text_output
 
 # content = scrape_website_v2(
 #     url='https://github.com/hashicorp/terraform-provider-azurerm/blob/v2.45.0/website/docs/r/resource_group.html.markdown',

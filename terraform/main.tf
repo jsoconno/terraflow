@@ -1,33 +1,70 @@
-resource "aws_s3_bucket" "main" {
-  bucket = "this-bucket"
-}
-
-resource "azurerm_virtual_network" "main" {
-  address_space           = var.address_space
-  bgp_community           = var.bgp_community
-  dns_servers             = var.dns_servers
-  edge_zone               = var.edge_zone
-  flow_timeout_in_minutes = var.flow_timeout_in_minutes
-  id                      = var.id
-  location                = var.location
-  name                    = var.name
-  resource_group_name     = var.resource_group_name
-  subnet                  = var.subnet
-  tags                    = var.tags
+resource "azurerm_windows_function_app" "main" {
 
   # This block is optional allowing for 0 to 1 item(s)
-  ddos_protection_plan {
-    enable = var.ddos_protection_plan_enable
-    id     = var.ddos_protection_plan_id
+  auth_settings {
+
+    # This block is optional allowing for 0 to 1 item(s)
+    active_directory {
+    }
+
+    # This block is optional allowing for 0 to 1 item(s)
+    facebook {
+    }
+
+    # This block is optional allowing for 0 to 1 item(s)
+    github {
+    }
+
+    # This block is optional allowing for 0 to 1 item(s)
+    google {
+    }
+
+    # This block is optional allowing for 0 to 1 item(s)
+    microsoft {
+    }
+
+    # This block is optional allowing for 0 to 1 item(s)
+    twitter {
+    }
+  }
+
+  # This block is optional allowing for 0 to 1 item(s)
+  backup {
+
+    # This block is required allowing for 1 item(s)
+    schedule {
+    }
   }
 
   # This block is optional allowing for 0 to N item(s)
-  timeouts {
+  connection_string {
   }
-}
 
-resource "azurerm_resource_group" "main" {
-  location = var.location
-  name     = var.name
-  tags     = var.tags
+  # This block is optional allowing for 0 to 1 item(s)
+  identity {
+  }
+
+  # This block is required allowing for 1 item(s)
+  site_config {
+
+    # This block is optional allowing for 0 to 1 item(s)
+    app_service_logs {
+    }
+
+    # This block is optional allowing for 0 to 1 item(s)
+    application_stack {
+    }
+
+    # This block is optional allowing for 0 to 1 item(s)
+    cors {
+    }
+  }
+
+  # This block is optional allowing for 0 to 1 item(s)
+  sticky_settings {
+  }
+
+  # This block is optional allowing for 0 to N item(s)
+  storage_account {
+  }
 }
