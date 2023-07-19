@@ -2,7 +2,7 @@ import os
 import re
 
 from terraflow.libraries.constants import DOCUMENTATION_DIR, GITHUB_BASE
-from terraflow.libraries.helpers import scrape_website, get_resource_attribute_description
+from terraflow.libraries.helpers import scrape_website, get_resource_attribute_description, parse_variables
 from terraflow.libraries.schema import get_schema, get_resource_schema, get_data_schema, get_provider_schema
 from terraflow.libraries.formatting import format_attribute_type
 
@@ -18,8 +18,17 @@ class TerraformDocumentation:
 
         self.url = self._get_docs_url()
         self.text = self._get_docs_text()
-        self.inputs = self._get_inputs(self.text)
-        self.outputs = self._get_outputs(self.text)
+        self.inputs = self._get_attributes(
+            self.text,
+            patterns=[
+                r'^Argument(?:s)? Reference([\s\S]*?)^Attribute(?:s)? Reference',
+                r'^Timeout(?:s)?([\s\S]*?)^Import'
+            ]
+        )
+        self.outputs = self._get_attributes(
+            self.text,
+            patterns=[r'^Attribute(?:s)? Reference([\s\S]*?)^(?:Import|Timeouts)']
+        )
         if self.type == 'provider':
             schema = get_provider_schema(get_schema(), self.namespace, self.provider)
         if self.type == 'resource':
@@ -80,35 +89,22 @@ class TerraformDocumentation:
             text = scrape_website(self.url, tag='article')
             return text
         
-    def _get_inputs(self, documentation):
-        pattern = r'^Argument(?:s)? Reference([\s\S]*?)^Attribute(?:s)? Reference'
-        matches = re.findall(pattern, documentation, re.MULTILINE)
+    def _get_attributes(self, documentation, patterns):
+        sections = []
+        for pattern in patterns:
+            matches = re.findall(pattern, documentation, re.MULTILINE)
+            if matches:
+                sections.extend(matches)
 
-        if matches:
-            input_section = matches[0].strip()
-            input_pattern = r"([\w_]+) -"
-            input_references = re.findall(input_pattern, input_section)
-            inputs = []
-            for input_name in input_references:
-                inputs.append(input_name)
+        if sections:
+            attributes = []
+            attribute_pattern = r"`([\w_]+)` -"
+            for section in sections:
+                attribute_references = re.findall(attribute_pattern, section)
+                for attribute_name in attribute_references:
+                    attributes.append(attribute_name)
             
-            return list(set(inputs))
-
-        return []
-
-    def _get_outputs(self, documentation):
-        pattern = r'^Attribute(?:s)? Reference([\s\S]*?)^Import'
-        matches = re.findall(pattern, documentation, re.MULTILINE)
-
-        if matches:
-            output_section = matches[0].strip()
-            output_pattern = r"([\w_]+) -"
-            output_references = re.findall(output_pattern, output_section)
-            outputs = []
-            for output_name in output_references:
-                outputs.append(output_name)
-
-            return list(set(outputs))
+            return list(set(attributes))
 
         return []
     
@@ -138,8 +134,10 @@ class TerraformDocumentation:
             attribute_metadata[id] = {
                 'name': attribute,
                 'block_hierarchy': block_hierarchy,
-                'input': False if attribute in self.outputs else True,
+                'input': True if attribute in self.inputs else False,
+                'output': True if attribute in self.outputs else False,
                 'required': attribute_schema.get('required', False),
+                'optional': attribute_schema.get('optional', False),
                 'type': format_attribute_type(attribute_schema.get('type')),
                 'description': attribute_description,
                 'metadata': attribute_schema
@@ -157,5 +155,5 @@ class TerraformDocumentation:
 
         return attribute_metadata
     
-# docs = TerraformDocumentation('hashicorp', 'azurerm', version='2.45.0', kind='windows_virtual_machine', type='resource', use_cache=True, refresh=True)
-# print(docs.metadata)
+# docs = TerraformDocumentation('hashicorp', 'azurerm', version='3.45.0', kind='resource_group', type='resource', use_cache=True, refresh=True)
+# print(docs.outputs)
