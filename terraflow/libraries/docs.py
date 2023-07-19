@@ -18,17 +18,7 @@ class TerraformDocumentation:
 
         self.url = self._get_docs_url()
         self.text = self._get_docs_text()
-        self.inputs = self._get_attributes(
-            self.text,
-            patterns=[
-                r'^## Argument(?:s)? Reference([\s\S]*?)^## Attribute(?:s)? Reference',
-                r'^## Timeout(?:s)?([\s\S]*?)^## Import'
-            ]
-        )
-        self.outputs = self._get_attributes(
-            self.text,
-            patterns=[r'^## Attribute(?:s)? Reference([\s\S]*?)^(?:## Import|## Timeouts)']
-        )
+        # print(self.inputs)
         if self.type == 'provider':
             schema = get_provider_schema(get_schema(), self.namespace, self.provider)
         if self.type == 'resource':
@@ -89,25 +79,16 @@ class TerraformDocumentation:
             text = scrape_website(self.url, tag='article')
             return text
         
-    def _get_attributes(self, documentation, patterns):
-        sections = []
-        for pattern in patterns:
-            matches = re.findall(pattern, documentation, re.MULTILINE)
-            if matches:
-                sections.extend(matches)
+    @property
+    def inputs(self):
+        # return {k: v for k, v in self.metadata.items() if v['input']}
+        return [k for k, v in self.metadata.items() if v['input']]
 
-        if sections:
-            attributes = []
-            attribute_pattern = r"`([\w_]+)` -"
-            for section in sections:
-                attribute_references = re.findall(attribute_pattern, section)
-                for attribute_name in attribute_references:
-                    attributes.append(attribute_name)
-            
-            return list(set(attributes))
+    @property
+    def outputs(self):
+        # return {k: v for k, v in self.metadata.items() if v['output']}
+        return [k for k, v in self.metadata.items() if v['output']]
 
-        return []
-    
     def _get_attribute_metadata(self, schema: dict, attribute_metadata: dict = None, block_hierarchy: list = None):
         """
         Writes the main body of the Terraform code using provided schema.
@@ -130,15 +111,25 @@ class TerraformDocumentation:
             # Get the description from the documentation
             attribute_description = get_resource_attribute_description(self.text, attribute, block_hierarchy)
 
+            # Set variables
+            is_required = attribute_schema.get('required', False)
+            is_optional = attribute_schema.get('optional', False)
+            is_output = True if (not is_required and not is_optional) or id == 'id' else False
+            is_input = not is_output
+            formatted_type = format_attribute_type(attribute_schema.get('type'))
+
+            #TODO: Remove this commented print statement
+            # print(f'id: {id}, is_required: {is_required}, is_optional: {is_optional}, is_output: {is_output}, is_input: {is_input}')
+
             # Write docs
             attribute_metadata[id] = {
                 'name': attribute,
                 'block_hierarchy': block_hierarchy,
-                'input': True if attribute in self.inputs else False,
-                'output': True if attribute in self.outputs else False,
-                'required': attribute_schema.get('required', False),
-                'optional': attribute_schema.get('optional', False),
-                'type': format_attribute_type(attribute_schema.get('type')),
+                'input': is_input,
+                'output': is_output,
+                'required': is_required,
+                'optional': is_optional,
+                'type': formatted_type,
                 'description': attribute_description,
                 'metadata': attribute_schema
             }
@@ -155,5 +146,5 @@ class TerraformDocumentation:
 
         return attribute_metadata
     
-# docs = TerraformDocumentation('hashicorp', 'azurerm', version='3.45.0', kind='resource_group', type='resource', use_cache=True, refresh=True)
+# docs = TerraformDocumentation('hashicorp', 'azurerm', version='3.45.0', kind='windows_virtual_machine', type='resource', use_cache=True, refresh=True)
 # print(docs.outputs)

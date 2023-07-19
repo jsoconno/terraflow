@@ -274,6 +274,7 @@ class ResourceComponent(CodeGenerator):
             provider=provider,
             resource=kind
         )
+
         self.configuration = configuration if configuration is not None else ResourceConfiguration()
         self.code = self._write_code(self.schema)
 

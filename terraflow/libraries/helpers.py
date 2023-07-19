@@ -1020,7 +1020,6 @@ def filter_attributes(attributes: dict, attribute_docs: dict, configuration: obj
 
     # Exclude specified attributes if any
     if configuration.exclude_attributes:
-        print('a')
         attributes = {k: v for k, v in attributes.items() if '.'.join(block_hierarchy + [k]) not in configuration.exclude_attributes or v.get('required', False)}
 
     # # Exclude attributes that are flagged as 'input': False
@@ -1028,7 +1027,6 @@ def filter_attributes(attributes: dict, attribute_docs: dict, configuration: obj
 
     # Include only required attributes if specified
     if configuration.required_attributes_only:
-        print('c')
         attributes = {k: v for k, v in attributes.items() if v.get('required', False)}
 
     return attributes
@@ -1041,10 +1039,6 @@ def filter_blocks(blocks: dict, configuration: object, exclude_blocks: list = []
     # Exclude specified blocks if any
     if configuration.exclude_blocks:
         blocks = {k: v for k, v in blocks.items() if '.'.join(block_hierarchy + [k]) not in configuration.exclude_blocks or v.get("min_items", 0) > 0}
-
-    # # Exclude computed blocks if configuration flag is set
-    # if configuration.exclude_computed_blocks:
-    #     blocks = {k: v for k, v in blocks.items() if not v.get('computed', False) or v.get("min_items", 0) > 0}
 
     # Include only required blocks if specified
     if configuration.required_blocks_only:
