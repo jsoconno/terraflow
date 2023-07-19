@@ -4,7 +4,7 @@ import json
 import requests
 import subprocess
 from requests.exceptions import RequestException
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 from typing import List, Tuple, Optional
 import difflib
 import yaml
@@ -143,17 +143,56 @@ def convert_strings_to_dict(text: str, delimiter: str = "=") -> dict:
 
     return dictionary
 
+# def scrape_website(url: str, tag: str = None, selector: str = None, list_output: bool = False) -> str:
+#     """
+#     Scrape content from a URL. If a tag or selector is specified, only content within that tag or selector is scraped.
+#     Args:
+#         url: The URL to scrape.
+#         tag: Optional; an HTML tag name to scrape (e.g. "p" for paragraph tags, "div" for div tags, etc.).
+#         selector: Optional; a CSS selector to scrape.
+#         list_output: Optional; whether to return the output as a list (default is False).
+#     Returns:
+#         The scraped content as a string or a list of strings.
+#     """
+#     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+
+#     try:
+#         response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
+#         response.raise_for_status()  # If the response contains an HTTP error status code, raise an exception
+#     except RequestException as e:
+#         print(f"Failed to get the webpage. Error: {e}")
+#         return None
+
+#     soup = BeautifulSoup(response.content, "html.parser")
+
+#     if tag:
+#         elements = soup.find_all(tag)
+#     elif selector:
+#         elements = soup.select(selector)
+#     else:
+#         return '\n'.join(line.strip() for line in soup.text.split('\n') if line.strip())
+
+#     texts = ['\n'.join(line.replace('\\n', '\n').strip() for line in elem.get_text().split('\n') if line.strip()) for elem in elements]
+
+#     if list_output:
+#         return texts
+#     else:
+#         return '\n'.join(texts)
+
+def replace_with_backticks(element):
+    """
+    Replace <code> and certain <div> elements with backticks (`) text.
+    """
+    if element.name == 'code':
+        backtick_text = f"`{element.text}`"
+    elif element.name == 'pre':
+        backtick_text = f"```\n{element.text}\n```"
+    else:
+        return
+
+    element.replace_with(NavigableString(backtick_text))
+
 def scrape_website(url: str, tag: str = None, selector: str = None, list_output: bool = False) -> str:
-    """
-    Scrape content from a URL. If a tag or selector is specified, only content within that tag or selector is scraped.
-    Args:
-        url: The URL to scrape.
-        tag: Optional; an HTML tag name to scrape (e.g. "p" for paragraph tags, "div" for div tags, etc.).
-        selector: Optional; a CSS selector to scrape.
-        list_output: Optional; whether to return the output as a list (default is False).
-    Returns:
-        The scraped content as a string or a list of strings.
-    """
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
 
     try:
@@ -164,6 +203,14 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
         return None
 
     soup = BeautifulSoup(response.content, "html.parser")
+
+    # Find all <code> elements and replace them with single backticks
+    for code in soup.find_all('code'):
+        replace_with_backticks(code)
+
+    # Find all <pre> elements and replace them with triple backticks
+    for pre in soup.find_all('pre'):
+        replace_with_backticks(pre)
 
     if tag:
         elements = soup.find_all(tag)
@@ -178,6 +225,13 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
         return texts
     else:
         return '\n'.join(texts)
+
+# content = scrape_website_v2(
+#     url='https://github.com/hashicorp/terraform-provider-azurerm/blob/v2.45.0/website/docs/r/resource_group.html.markdown',
+#     tag='article',
+# )
+
+# print(content)
 
 # File and folder manipulation functions.
 
@@ -616,11 +670,11 @@ def get_resource_attribute_description(
     documentation_text, attribute, block_hierarchy=None
 ):
     # Extract the attribute descriptions from the text
-    pattern = rf"(^{attribute})\s+-\s+(.*)"
+    pattern = rf"^`({attribute})`\s+-\s+(\(.*?\))?\s*(.*)"
     attribute_matches = re.findall(
         pattern=pattern, string=documentation_text, flags=re.MULTILINE
     )
-    attribute_matches = [str(x[1]) for x in attribute_matches]
+    attribute_matches = [str(x[2]) for x in attribute_matches]
 
     # if there is more than one match on an attribute name
     if len(attribute_matches) > 1:
@@ -946,7 +1000,7 @@ def filter_attributes(attributes: dict, attribute_docs: dict, configuration: obj
         print('a')
         attributes = {k: v for k, v in attributes.items() if '.'.join(block_hierarchy + [k]) not in configuration.exclude_attributes or v.get('required', False)}
 
-    # Exclude attributes that are flagged as 'input': False
+    # # Exclude attributes that are flagged as 'input': False
     attributes = {k: v for k, v in attributes.items() if '.'.join(block_hierarchy + [k]) in attribute_docs and attribute_docs['.'.join(block_hierarchy + [k])].get('input', True)}
 
     # Include only required attributes if specified
@@ -974,3 +1028,186 @@ def filter_blocks(blocks: dict, configuration: object, exclude_blocks: list = []
         blocks = {k: v for k, v in blocks.items() if v.get('min_items', 0) > 0}
 
     return blocks
+
+def parse_variables(data):
+    # Regular expression patterns
+    type_pattern = r'((?:#.*\n)*?(^(.*?)\s+(?:"(.*?)"\s+)?\s?"(.*?)"\s+{)[\s\S]*?^}$)'
+    block_pattern = r'(.*?)\s*{'
+    attribute_pattern = r'\s*(.*?)\s*=\s*var.(.*?)$'
+
+    # Initialize containers
+    resource_info = {}
+    block_stack = []
+    output = []
+
+    # Search for types
+    type_matches = re.finditer(type_pattern, data, re.MULTILINE | re.DOTALL)
+
+    for type_match in type_matches:
+        type_content = type_match.group(0)
+
+        resource_info = {
+            "type": type_match.group(3).strip(),
+            "provider": type_match.group(5).strip(),
+            "kind": type_match.group(4) if type_match.group(4) else "",
+            "resource_id": f'{type_match.group(3).strip()}{"." + type_match.group(4) if type_match.group(4) else ""}.{type_match.group(5).strip()}'
+        }
+
+        # Split the content by lines
+        lines = type_content.split('\n')
+
+        # Process lines
+        for line in lines:
+            block_match = re.search(block_pattern, line)
+            attribute_match = re.search(attribute_pattern, line, re.MULTILINE)
+            if block_match:  # This is a block
+                block_stack.append(block_match.group(1).strip())
+            elif attribute_match:  # This is an attribute
+                attribute_dict = {
+                    "attribute_id": ".".join(block_stack.copy()[1:] + [attribute_match.group(1)]),
+                    "variable_id": ".".join(['variable', attribute_match.group(2)]),
+                    "block_hierarchy": block_stack.copy()[1:],
+                    "name": attribute_match.group(1),
+                    "value": attribute_match.group(2)
+                }
+                attribute_dict.update(resource_info)  # Add resource info to attribute dict
+                output.append(attribute_dict)
+            elif '}' in line and block_stack:  # The end of a block
+                block_stack.pop()
+
+    # Return output
+    return output
+
+# Usage example:
+
+# data = """
+# resource "azurerm_windows_virtual_machine" "main" {
+#   admin_password                = var.admin_password
+#   admin_username                = var.admin_username
+#   allow_extension_operations    = var.allow_extension_operations
+#   availability_set_id           = var.availability_set_id
+#   capacity_reservation_group_id = var.capacity_reservation_group_id
+#   computer_name                 = var.computer_name
+#   custom_data                   = var.custom_data
+#   dedicated_host_group_id       = var.dedicated_host_group_id
+#   dedicated_host_id             = var.dedicated_host_id
+#   edge_zone                     = var.edge_zone
+#   enable_automatic_updates      = var.enable_automatic_updates
+#   encryption_at_host_enabled    = var.encryption_at_host_enabled
+#   eviction_policy               = var.eviction_policy
+#   extensions_time_budget        = var.extensions_time_budget
+#   hotpatching_enabled           = var.hotpatching_enabled
+#   license_type                  = var.license_type
+#   location                      = var.location
+#   max_bid_price                 = var.max_bid_price
+#   name                          = var.name
+#   network_interface_ids         = var.network_interface_ids
+#   patch_assessment_mode         = var.patch_assessment_mode
+#   patch_mode                    = var.patch_mode
+#   platform_fault_domain         = var.platform_fault_domain
+#   priority                      = var.priority
+#   provision_vm_agent            = var.provision_vm_agent
+#   proximity_placement_group_id  = var.proximity_placement_group_id
+#   resource_group_name           = var.resource_group_name
+#   secure_boot_enabled           = var.secure_boot_enabled
+#   size                          = var.size
+#   source_image_id               = var.source_image_id
+#   tags                          = var.tags
+#   timezone                      = var.timezone
+#   user_data                     = var.user_data
+#   virtual_machine_scale_set_id  = var.virtual_machine_scale_set_id
+#   vtpm_enabled                  = var.vtpm_enabled
+#   zone                          = var.zone
+
+#   # This block is optional allowing for 0 to 1 item(s)
+#   additional_capabilities {
+#     ultra_ssd_enabled = var.additional_capabilities_ultra_ssd_enabled
+#   }
+
+#   # This block is optional allowing for 0 to N item(s)
+#   additional_unattend_content {
+#     content = var.additional_unattend_content_content
+#     setting = var.additional_unattend_content_setting
+#   }
+
+#   # This block is optional allowing for 0 to 1 item(s)
+#   boot_diagnostics {
+#     storage_account_uri = var.boot_diagnostics_storage_account_uri
+#   }
+
+#   # This block is optional allowing for 0 to 100 item(s)
+#   gallery_application {
+#     configuration_blob_uri = var.gallery_application_configuration_blob_uri
+#     order                  = var.gallery_application_order
+#     tag                    = var.gallery_application_tag
+#     version_id             = var.gallery_application_version_id
+#   }
+
+#   # This block is optional allowing for 0 to 1 item(s)
+#   identity {
+#     identity_ids = var.identity_identity_ids
+#     type         = var.identity_type
+#   }
+
+#   # This block is required allowing for 1 item(s)
+#   os_disk {
+#     caching                          = var.os_disk_caching
+#     disk_encryption_set_id           = var.os_disk_disk_encryption_set_id
+#     disk_size_gb                     = var.os_disk_disk_size_gb
+#     name                             = var.os_disk_name
+#     secure_vm_disk_encryption_set_id = var.os_disk_secure_vm_disk_encryption_set_id
+#     security_encryption_type         = var.os_disk_security_encryption_type
+#     storage_account_type             = var.os_disk_storage_account_type
+#     write_accelerator_enabled        = var.os_disk_write_accelerator_enabled
+
+#     # This block is optional allowing for 0 to 1 item(s)
+#     diff_disk_settings {
+#       option    = var.os_disk_diff_disk_settings_option
+#       placement = var.os_disk_diff_disk_settings_placement
+#     }
+#   }
+
+#   # This block is optional allowing for 0 to 1 item(s)
+#   plan {
+#     name      = var.plan_name
+#     product   = var.plan_product
+#     publisher = var.plan_publisher
+#   }
+
+#   # This block is optional allowing for 0 to N item(s)
+#   secret {
+#     key_vault_id = var.secret_key_vault_id
+
+#     # This block is required allowing for 1 to N item(s)
+#     certificate {
+#       store = var.secret_certificate_store
+#       url   = var.secret_certificate_url
+#     }
+#   }
+
+#   # This block is optional allowing for 0 to 1 item(s)
+#   source_image_reference {
+#     offer     = var.source_image_reference_offer
+#     publisher = var.source_image_reference_publisher
+#     sku       = var.source_image_reference_sku
+#     version   = var.source_image_reference_version
+#   }
+
+#   # This block is optional allowing for 0 to 1 item(s)
+#   termination_notification {
+#     enabled = var.termination_notification_enabled
+#     timeout = var.termination_notification_timeout
+#   }
+
+#   # This block is optional allowing for 0 to N item(s)
+#   winrm_listener {
+#     certificate_url = var.winrm_listener_certificate_url
+#     protocol        = var.winrm_listener_protocol
+#   }
+# }
+# """
+
+# result = parse_attributes(data)
+
+# for item in result:
+#     print(json.dumps(item, indent=2))
