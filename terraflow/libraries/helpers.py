@@ -646,7 +646,8 @@ def get_component_arguments_list(documentation_text):
     """
     Returns a list of argument references for a given resource
     """
-    pattern = r'^Argument(?:s)? Reference([\s\S]*?)^Attribute(?:s)? Reference'
+    # TODO: Modify these to make this dynamic.  Consider a single function similar to the TerraformDocumentation class.
+    pattern = r'^##\s+Argument(?:s)? Reference([\s\S]*?)^##\s+Attribute(?:s)? Reference'
     matches = re.findall(pattern, documentation_text, re.MULTILINE)
 
     if matches:
@@ -662,7 +663,7 @@ def get_component_attributes_list(documentation_text):
     """
     Returns a list of attribute references for a given resource
     """
-    pattern = r'^Attribute(?:s)? Reference([\s\S]*?)^Import'
+    pattern = r'^##\s+Attribute(?:s)? Reference([\s\S]*?)^##\s+Import'
     matches = re.findall(pattern, documentation_text, re.MULTILINE)
 
     if matches:

@@ -21,13 +21,13 @@ class TerraformDocumentation:
         self.inputs = self._get_attributes(
             self.text,
             patterns=[
-                r'^Argument(?:s)? Reference([\s\S]*?)^Attribute(?:s)? Reference',
-                r'^Timeout(?:s)?([\s\S]*?)^Import'
+                r'^## Argument(?:s)? Reference([\s\S]*?)^## Attribute(?:s)? Reference',
+                r'^## Timeout(?:s)?([\s\S]*?)^## Import'
             ]
         )
         self.outputs = self._get_attributes(
             self.text,
-            patterns=[r'^Attribute(?:s)? Reference([\s\S]*?)^(?:Import|Timeouts)']
+            patterns=[r'^## Attribute(?:s)? Reference([\s\S]*?)^(?:## Import|## Timeouts)']
         )
         if self.type == 'provider':
             schema = get_provider_schema(get_schema(), self.namespace, self.provider)
