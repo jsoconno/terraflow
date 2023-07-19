@@ -130,17 +130,13 @@ def resource_create(
     required_attributes_only,
     required_blocks_only,
     add_inline_descriptions,
-    # sync_variables,
     add_terraform_docs_url,
     exclude_block,
-    # dynamic_block,
     exclude_attribute,
     attribute_default,
     attribute_value_prefix,
     terraform_filename,
-    header_comment,
-    # include_variable,
-    # variables_filename
+    header_comment
 ):
     """
     Create a Terraform resource.
@@ -172,24 +168,7 @@ def resource_create(
         filename=terraform_filename
     )
 
-    # TODO: This is not always adding a new resource so the message or logic should be adjusted.
-    print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The resource "{provider}_{kind}" "{name}" was added to the Terraform configuration.\n')
-
-    # Remove hard coding and add flag later
-
-    # if sync_variables:
-    #     variable_config = ResourceConfiguration(
-    #         add_descriptions=True
-    #     )
-
-    #     variables_code = this.get_variables(config=asdict(variable_config))
-
-    #     write_terraform_to_file(
-    #         new_code=variables_code,
-    #         filename=variables_filename
-    #     )
-
-    #     remove_unused_variables()
+    print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The resource "{provider}_{kind}" "{name}" was created.\n')
 
     run_terraform_fmt()
 
