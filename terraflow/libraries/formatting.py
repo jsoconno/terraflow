@@ -98,12 +98,14 @@ def format_resource_header(type, name, provider=None, kind=None, documentation_u
 
 def format_block_header(schema, block, block_hierarchy):
     header = ""
-    if schema.get("min_items", 0) > 0:
+    min_items = schema.get("min_items", 0)
+    max_items = schema.get("max_items", "N")
+    if min_items > 0:
         required_blocks_message = "required"
     else:
         required_blocks_message = "optional"
 
-    header += f"\n# This block is {required_blocks_message}\n"
+    header += f"\n# This block is {required_blocks_message} allowing for {str(min_items) + ' to ' + str(max_items) if min_items != max_items else max_items} item(s)\n"
     header += f"{block} {{\n"
     footer = "}\n"
 
