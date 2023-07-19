@@ -2,7 +2,8 @@ from dataclasses import asdict
 import re
 import os
 
-from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema
+# from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema
+from terraflow.libraries.schema import Schema
 from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_provider_version, get_terraform_version, filter_attributes, filter_blocks
 from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_terraform_code
 from terraflow.libraries.configuration import Configuration, ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
@@ -111,14 +112,15 @@ class CodeGenerator():
     Base class representing a Terraform component.
     This class provides methods to generate Terraform code.
     """
-    def __init__(self, provider: str, namespace: str = "hashicorp"):#, load_code: bool = False):
+    def __init__(self, provider: str, schema: Schema, namespace: str = "hashicorp"):
         self.namespace = namespace
         self.provider = provider
         self.kind = None
         self.type = 'terraform'
         self.configuration = Configuration()
         self.code = ''
-        self.schema = get_schema()
+        self.schema = schema
+        self.schema_json = schema.schema
         self.attributes = {}
 
     def _write_code_line(self, line: str):
@@ -139,6 +141,7 @@ class CodeGenerator():
         # Get the documentation once and use it throughout the method
         if docs is None:
             docs = TerraformDocumentation(
+                schema=self.schema,
                 namespace=self.namespace,
                 provider=self.provider,
                 version=self.provider_version,
@@ -245,57 +248,55 @@ class ProviderComponent(CodeGenerator):
     """
     Class representing a Terraform provider.
     """
-    def __init__(self, name: str, namespace: str = 'hashicorp', configuration: ProviderConfiguration = None):
-        super().__init__(name, namespace)#, load_code)
-        # Set initial variables
+    def __init__(self, name: str, schema: Schema, namespace: str = 'hashicorp', configuration: ProviderConfiguration = None):
+        super().__init__(name, schema, namespace)
         self.name = name
         self.type = 'provider'
-        self.schema = get_provider_schema(
-            schema=self.schema,
+        self.schema_json = schema.get_provider_schema(
             namespace=namespace,
             provider=name
         )
         self.configuration = configuration if configuration is not None else ProviderConfiguration()
-        self.code = self._write_code(self.schema)
+        self.code = self._write_code(self.schema_json)
 
 class ResourceComponent(CodeGenerator):
     """
     Class representing a Terraform resource.
     """
-    def __init__(self, kind: str, provider: str, name: str = 'main', namespace: str = 'hashicorp', configuration: ResourceConfiguration = None):
-        super().__init__(provider, namespace)#, load_code)
+    def __init__(self, kind: str, provider: str, schema: Schema, name: str = 'main', namespace: str = 'hashicorp', configuration: ResourceConfiguration = None):
+        super().__init__(provider, schema, namespace)
         # Set initial variables
         self.name = name
         self.type = 'resource'
         self.kind = kind
-        self.schema = get_resource_schema(
-            schema=self.schema,
+        self.schema_json = schema.get_resource_schema(
             namespace=namespace,
             provider=provider,
             resource=kind
         )
 
         self.configuration = configuration if configuration is not None else ResourceConfiguration()
-        self.code = self._write_code(self.schema)
+        self.code = self._write_code(self.schema_json)
 
 class DataSourceComponent(CodeGenerator):
     """
     Class representing a Terraform data source.
     """
-    def __init__(self, kind: str, provider: str, name: str = 'main', namespace: str = 'hashicorp', configuration: DataSourceConfiguration = None):
-        super().__init__(provider, namespace)#, load_code)
+    def __init__(self, kind: str, provider: str, schema: Schema, name: str = 'main', namespace: str = 'hashicorp', configuration: DataSourceConfiguration = None):
+        super().__init__(provider, schema, namespace)
         # Set initial variables
         self.name = name
         self.type = 'data'
         self.kind = kind
-        self.schema = get_data_schema(
-            schema=self.schema,
+        self.schema_json = schema.get_data_schema(
             namespace=namespace,
             provider=provider,
             data_source=kind
         )
         self.configuration = configuration if configuration is not None else DataSourceConfiguration()
-        self.code = self._write_code(self.schema)
+        self.code = self._write_code(self.schema_json)
+
+# schema = Schema()
 
 # config = ResourceConfiguration(
 #     add_inline_descriptions=True,
@@ -309,10 +310,13 @@ class DataSourceComponent(CodeGenerator):
 # x = ResourceComponent(
 #     namespace='hashicorp',
 #     provider='azurerm',
+#     schema=schema,
 #     kind='key_vault',
 #     name='test',
 #     configuration=config
 # )
+
+# print(x.code)
 
 # x._write_variables_code()
 

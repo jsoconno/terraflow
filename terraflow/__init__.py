@@ -141,6 +141,7 @@ def resource_create(
     """
     Create a Terraform resource.
     """
+    schema = Schema()
     attribute_defaults = convert_strings_to_dict(attribute_default)
 
     configuration = ResourceConfiguration(
@@ -156,6 +157,7 @@ def resource_create(
     )
 
     resource = ResourceComponent(
+        schema=schema,
         namespace=namespace,
         provider=provider,
         kind=kind,

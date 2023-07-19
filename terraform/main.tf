@@ -8,6 +8,7 @@ resource "azurerm_windows_virtual_machine" "main" {
   custom_data                   = var.custom_data
   dedicated_host_group_id       = var.dedicated_host_group_id
   dedicated_host_id             = var.dedicated_host_id
+  edge_zone                     = var.edge_zone
   enable_automatic_updates      = var.enable_automatic_updates
   encryption_at_host_enabled    = var.encryption_at_host_enabled
   eviction_policy               = var.eviction_policy
@@ -59,12 +60,6 @@ resource "azurerm_windows_virtual_machine" "main" {
     version_id             = var.gallery_application_version_id
   }
 
-  # This block is optional allowing for 0 to 1 item(s)
-  identity {
-    identity_ids = var.identity_identity_ids
-    type         = var.identity_type
-  }
-
   # This block is required allowing for 1 item(s)
   os_disk {
     caching                          = var.os_disk_caching
@@ -75,6 +70,12 @@ resource "azurerm_windows_virtual_machine" "main" {
     security_encryption_type         = var.os_disk_security_encryption_type
     storage_account_type             = var.os_disk_storage_account_type
     write_accelerator_enabled        = var.os_disk_write_accelerator_enabled
+
+    # This block is optional allowing for 0 to 1 item(s)
+    diff_disk_settings {
+      option    = var.os_disk_diff_disk_settings_option
+      placement = var.os_disk_diff_disk_settings_placement
+    }
   }
 
   # This block is optional allowing for 0 to 1 item(s)

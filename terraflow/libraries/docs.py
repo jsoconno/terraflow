@@ -2,12 +2,13 @@ import os
 import re
 
 from terraflow.libraries.constants import DOCUMENTATION_DIR, GITHUB_BASE
-from terraflow.libraries.helpers import scrape_website, get_resource_attribute_description, parse_variables
-from terraflow.libraries.schema import get_schema, get_resource_schema, get_data_schema, get_provider_schema
+from terraflow.libraries.helpers import scrape_website, get_resource_attribute_description
+from terraflow.libraries.schema import Schema
 from terraflow.libraries.formatting import format_attribute_type
 
 class TerraformDocumentation:
-    def __init__(self, namespace, provider, version='main', kind=None, type=None, use_cache=True, refresh=False):
+    def __init__(self, schema, namespace, provider, version='main', kind=None, type=None, use_cache=True, refresh=False):
+        self.schema = schema
         self.namespace = namespace
         self.provider = provider
         self.version = version
@@ -18,14 +19,19 @@ class TerraformDocumentation:
 
         self.url = self._get_docs_url()
         self.text = self._get_docs_text()
-        # print(self.inputs)
+
+        schema_data = self._get_schema_data()
+        self.metadata = self._get_attribute_metadata(schema_data)
+
+    def _get_schema_data(self):
         if self.type == 'provider':
-            schema = get_provider_schema(get_schema(), self.namespace, self.provider)
-        if self.type == 'resource':
-            schema = get_resource_schema(get_schema(), self.namespace, self.provider, self.kind)
+            return self.schema.get_provider_schema(self.namespace, self.provider)
+        elif self.type == 'resource':
+            return self.schema.get_resource_schema(self.namespace, self.provider, self.kind)
         elif self.type == 'data':
-            schema = get_data_schema(get_schema(), self.namespace, self.provider, self.kind)
-        self.metadata = self._get_attribute_metadata(schema)
+            return self.schema.get_data_schema(self.namespace, self.provider, self.kind)
+        else:
+            raise ValueError("Invalid type. Must be one of 'provider', 'resource', or 'data'.")
 
     def _get_docs_url(self):
         if self.type == 'provider':
@@ -145,6 +151,7 @@ class TerraformDocumentation:
             )
 
         return attribute_metadata
-    
-# docs = TerraformDocumentation('hashicorp', 'azurerm', version='3.45.0', kind='windows_virtual_machine', type='resource', use_cache=True, refresh=True)
-# print(docs.outputs)
+
+# schema = Schema()
+# docs = TerraformDocumentation(schema, 'hashicorp', 'azurerm', version='3.45.0', kind='windows_virtual_machine', type='resource', use_cache=True, refresh=True)
+# print(docs.text)
