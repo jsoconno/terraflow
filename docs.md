@@ -11,12 +11,9 @@ terraflow [OPTIONS] COMMAND [ARGS]...
 ```
 ## Commands
 ```
-  data-source  Manage Terraform data sources.
-  docs         Manage documentation.
-  provider     Manage Terraform providers.
-  resource     Manage Terraform resources.
-  schema       Work with schemas.
-  workspace    Manage workspaces.
+  data      Manage Terraform data sources.
+  provider  Manage Terraform providers.
+  resource  Manage Terraform resources.
 ```
 ## CLI Help
 ```
@@ -37,19 +34,16 @@ Options:
   --help     Show this message and exit.
 
 Commands:
-  data-source  Manage Terraform data sources.
-  docs         Manage documentation.
-  provider     Manage Terraform providers.
-  resource     Manage Terraform resources.
-  schema       Work with schemas.
-  workspace    Manage workspaces.
+  data      Manage Terraform data sources.
+  provider  Manage Terraform providers.
+  resource  Manage Terraform resources.
 ```
 
-# terraflow workspace
-Manage workspaces. 
+# terraflow provider
+Manage Terraform providers. 
 ## Usage
 ```
-terraflow workspace [OPTIONS] COMMAND [ARGS]...
+terraflow provider [OPTIONS] COMMAND [ARGS]...
 ```
 ## Options
 ```
@@ -57,38 +51,36 @@ terraflow workspace [OPTIONS] COMMAND [ARGS]...
 ```
 ## Commands
 ```
-  create  Create a workspace.
-  delete  Delete a workspace.
-  get     Get a workspace.
-  list    List workspaces.
-  set     Set a workspace.
+  create  Create a Terraform provider.
+  get     Get providers in the Terraform configuration.
+  list    List available providers.
 ```
 ## CLI Help
 ```
-Usage: terraflow workspace [OPTIONS] COMMAND [ARGS]...
+Usage: terraflow provider [OPTIONS] COMMAND [ARGS]...
 
-  Manage workspaces.
+  Manage Terraform providers.
 
 Options:
   --help  Show this message and exit.
 
 Commands:
-  create  Create a workspace.
-  delete  Delete a workspace.
-  get     Get a workspace.
-  list    List workspaces.
-  set     Set a workspace.
+  create  Create a Terraform provider.
+  get     Get providers in the Terraform configuration.
+  list    List available providers.
 ```
 
-# terraflow workspace set
-Set a workspace. 
+# terraflow provider list
+List available providers. 
 ## Usage
 ```
-terraflow workspace set [OPTIONS]
+terraflow provider list [OPTIONS]
 ```
 ## Options
 ```
-  --help  Show this message and exit.
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace of the Terraform provider.  [required]
+  --help            Show this message and exit.
 ```
 ## Commands
 ```
@@ -96,23 +88,26 @@ None
 ```
 ## CLI Help
 ```
-Usage: terraflow workspace set [OPTIONS]
+Usage: terraflow provider list [OPTIONS]
 
-  Set a workspace.
+  List available providers.
 
 Options:
-  --help  Show this message and exit.
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace of the Terraform provider.  [required]
+  --help            Show this message and exit.
 ```
 
-# terraflow workspace get
-Get a workspace. 
+# terraflow provider get
+Get providers in the Terraform configuration. 
 ## Usage
 ```
-terraflow workspace get [OPTIONS]
+terraflow provider get [OPTIONS]
 ```
 ## Options
 ```
-  --help  Show this message and exit.
+  --keyword TEXT  A keyword used to filter results.
+  --help          Show this message and exit.
 ```
 ## Commands
 ```
@@ -120,23 +115,50 @@ None
 ```
 ## CLI Help
 ```
-Usage: terraflow workspace get [OPTIONS]
+Usage: terraflow provider get [OPTIONS]
 
-  Get a workspace.
+  Get providers in the Terraform configuration.
 
 Options:
-  --help  Show this message and exit.
+  --keyword TEXT  A keyword used to filter results.
+  --help          Show this message and exit.
 ```
 
-# terraflow workspace list
-List workspaces. 
+# terraflow provider create
+Create a Terraform provider. 
 ## Usage
 ```
-terraflow workspace list [OPTIONS]
+terraflow provider create [OPTIONS]
 ```
 ## Options
 ```
-  --help  Show this message and exit.
+  --refresh                      Refresh the downloaded schema file.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
+  --provider TEXT                The name of the Terraform provider.
+                                 [required]
+  --namespace TEXT               The namespace of the Terraform provider.
+                                 [required]
+  --header-comment TEXT          A comment to add to the header of the
+                                 resource.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
+  --attribute-value-prefix TEXT  A prefix to give to all variables in the
+                                 resource configuration.  Useful for module
+                                 development.
+  --attribute-default TEXT       Default values for a given attributes in the
+                                 format 'attribute=value'.
+  --exclude-attribute TEXT       Attributes to exclude in the configuration.
+  --exclude-block TEXT           Blocks to exclude in the configuration.
+  --add-terraform-docs-url       Add a link to the documentation above the
+                                 resource.
+  --add-inline-descriptions      Add descriptions inline with the code for all
+                                 resource attributes.
+  --required-blocks-only         Only include required blocks in the resource
+                                 configuration.
+  --required-attributes-only     Only include required attributes in the
+                                 resource configuration.
+  --help                         Show this message and exit.
 ```
 ## Commands
 ```
@@ -144,115 +166,38 @@ None
 ```
 ## CLI Help
 ```
-Usage: terraflow workspace list [OPTIONS]
+Usage: terraflow provider create [OPTIONS]
 
-  List workspaces.
-
-Options:
-  --help  Show this message and exit.
-```
-
-# terraflow workspace create
-Create a workspace. 
-## Usage
-```
-terraflow workspace create [OPTIONS]
-```
-## Options
-```
-  --help  Show this message and exit.
-```
-## Commands
-```
-None
-```
-## CLI Help
-```
-Usage: terraflow workspace create [OPTIONS]
-
-  Create a workspace.
+  Create a Terraform provider.
 
 Options:
-  --help  Show this message and exit.
-```
-
-# terraflow workspace delete
-Delete a workspace. 
-## Usage
-```
-terraflow workspace delete [OPTIONS]
-```
-## Options
-```
-  --help  Show this message and exit.
-```
-## Commands
-```
-None
-```
-## CLI Help
-```
-Usage: terraflow workspace delete [OPTIONS]
-
-  Delete a workspace.
-
-Options:
-  --help  Show this message and exit.
-```
-
-# terraflow schema
-Work with schemas. 
-## Usage
-```
-terraflow schema [OPTIONS] COMMAND [ARGS]...
-```
-## Options
-```
-  --help  Show this message and exit.
-```
-## Commands
-```
-  download  Download the schema for the Terraform configuration.
-```
-## CLI Help
-```
-Usage: terraflow schema [OPTIONS] COMMAND [ARGS]...
-
-  Work with schemas.
-
-Options:
-  --help  Show this message and exit.
-
-Commands:
-  download  Download the schema for the Terraform configuration.
-```
-
-# terraflow schema download
-Download the schema for the Terraform configuration. 
-## Usage
-```
-terraflow schema download [OPTIONS]
-```
-## Options
-```
-  --refresh               Refresh the downloaded schema file.
-  --schema-filename TEXT  The name of the Terraform schema to use locally.
-  --help                  Show this message and exit.
-```
-## Commands
-```
-None
-```
-## CLI Help
-```
-Usage: terraflow schema download [OPTIONS]
-
-  Download the schema for the Terraform configuration.
-
-Options:
-  --refresh               Refresh the downloaded schema file.
-  --schema-filename TEXT  The name of the Terraform schema to use locally.
-  --help                  Show this message and exit.
+  --refresh                      Refresh the downloaded schema file.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
+  --provider TEXT                The name of the Terraform provider.
+                                 [required]
+  --namespace TEXT               The namespace of the Terraform provider.
+                                 [required]
+  --header-comment TEXT          A comment to add to the header of the
+                                 resource.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
+  --attribute-value-prefix TEXT  A prefix to give to all variables in the
+                                 resource configuration.  Useful for module
+                                 development.
+  --attribute-default TEXT       Default values for a given attributes in the
+                                 format 'attribute=value'.
+  --exclude-attribute TEXT       Attributes to exclude in the configuration.
+  --exclude-block TEXT           Blocks to exclude in the configuration.
+  --add-terraform-docs-url       Add a link to the documentation above the
+                                 resource.
+  --add-inline-descriptions      Add descriptions inline with the code for all
+                                 resource attributes.
+  --required-blocks-only         Only include required blocks in the resource
+                                 configuration.
+  --required-attributes-only     Only include required attributes in the
+                                 resource configuration.
+  --help                         Show this message and exit.
 ```
 
 # terraflow resource
@@ -325,9 +270,8 @@ terraflow resource create [OPTIONS]
 ## Options
 ```
   --refresh                      Refresh the downloaded schema file.
-  --schema-filename TEXT         The name of the Terraform schema to use
-                                 locally.
-  --terraform-filename TEXT      The name of the target Terraform file.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
   --provider TEXT                The name of the Terraform provider.
                                  [required]
   --namespace TEXT               The namespace of the Terraform provider.
@@ -335,20 +279,22 @@ terraflow resource create [OPTIONS]
   --name TEXT                    The name to give the Terraform resource in
                                  the configuration.  For example, 'main' or
                                  'this'.
-  --resource TEXT                The name of the terraform provider resource.
+  --kind TEXT                    The name of the terraform provider resource.
                                  [required]
-  --terraform-filename TEXT      The name of the target Terraform file.
+  --header-comment TEXT          A comment to add to the header of the
+                                 resource.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
   --attribute-value-prefix TEXT  A prefix to give to all variables in the
                                  resource configuration.  Useful for module
                                  development.
   --attribute-default TEXT       Default values for a given attributes in the
                                  format 'attribute=value'.
-  --ignore-attribute TEXT        Attributes to ignore in the configuration.
-  --dynamic-block TEXT           Blocks to make dynamic in the configuration.
-  --ignore-block TEXT            Blocks to ignore in the configuration.
-  --add-documentation-url        Add a link to the documentation above the
+  --exclude-attribute TEXT       Attributes to exclude in the configuration.
+  --exclude-block TEXT           Blocks to exclude in the configuration.
+  --add-terraform-docs-url       Add a link to the documentation above the
                                  resource.
-  --add-descriptions             Add descriptions inline with the code for all
+  --add-inline-descriptions      Add descriptions inline with the code for all
                                  resource attributes.
   --required-blocks-only         Only include required blocks in the resource
                                  configuration.
@@ -368,9 +314,8 @@ Usage: terraflow resource create [OPTIONS]
 
 Options:
   --refresh                      Refresh the downloaded schema file.
-  --schema-filename TEXT         The name of the Terraform schema to use
-                                 locally.
-  --terraform-filename TEXT      The name of the target Terraform file.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
   --provider TEXT                The name of the Terraform provider.
                                  [required]
   --namespace TEXT               The namespace of the Terraform provider.
@@ -378,20 +323,22 @@ Options:
   --name TEXT                    The name to give the Terraform resource in
                                  the configuration.  For example, 'main' or
                                  'this'.
-  --resource TEXT                The name of the terraform provider resource.
+  --kind TEXT                    The name of the terraform provider resource.
                                  [required]
-  --terraform-filename TEXT      The name of the target Terraform file.
+  --header-comment TEXT          A comment to add to the header of the
+                                 resource.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
   --attribute-value-prefix TEXT  A prefix to give to all variables in the
                                  resource configuration.  Useful for module
                                  development.
   --attribute-default TEXT       Default values for a given attributes in the
                                  format 'attribute=value'.
-  --ignore-attribute TEXT        Attributes to ignore in the configuration.
-  --dynamic-block TEXT           Blocks to make dynamic in the configuration.
-  --ignore-block TEXT            Blocks to ignore in the configuration.
-  --add-documentation-url        Add a link to the documentation above the
+  --exclude-attribute TEXT       Attributes to exclude in the configuration.
+  --exclude-block TEXT           Blocks to exclude in the configuration.
+  --add-terraform-docs-url       Add a link to the documentation above the
                                  resource.
-  --add-descriptions             Add descriptions inline with the code for all
+  --add-inline-descriptions      Add descriptions inline with the code for all
                                  resource attributes.
   --required-blocks-only         Only include required blocks in the resource
                                  configuration.
@@ -408,15 +355,12 @@ terraflow resource delete [OPTIONS]
 ```
 ## Options
 ```
-  --terraform-filename TEXT  The name of the target Terraform file.
-  --provider TEXT            The name of the Terraform provider.  [required]
-  --namespace TEXT           The namespace of the Terraform provider.
-                             [required]
-  --name TEXT                The name to give the Terraform resource in the
-                             configuration.  For example, 'main' or 'this'.
-  --resource TEXT            The name of the terraform provider resource.
-                             [required]
-  --help                     Show this message and exit.
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace of the Terraform provider.  [required]
+  --name TEXT       The name to give the Terraform resource in the
+                    configuration.  For example, 'main' or 'this'.
+  --kind TEXT       The name of the terraform provider resource.  [required]
+  --help            Show this message and exit.
 ```
 ## Commands
 ```
@@ -429,22 +373,19 @@ Usage: terraflow resource delete [OPTIONS]
   Delete a resource from the configuration.
 
 Options:
-  --terraform-filename TEXT  The name of the target Terraform file.
-  --provider TEXT            The name of the Terraform provider.  [required]
-  --namespace TEXT           The namespace of the Terraform provider.
-                             [required]
-  --name TEXT                The name to give the Terraform resource in the
-                             configuration.  For example, 'main' or 'this'.
-  --resource TEXT            The name of the terraform provider resource.
-                             [required]
-  --help                     Show this message and exit.
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace of the Terraform provider.  [required]
+  --name TEXT       The name to give the Terraform resource in the
+                    configuration.  For example, 'main' or 'this'.
+  --kind TEXT       The name of the terraform provider resource.  [required]
+  --help            Show this message and exit.
 ```
 
-# terraflow data-source
+# terraflow data
 Manage Terraform data sources. 
 ## Usage
 ```
-terraflow data-source [OPTIONS] COMMAND [ARGS]...
+terraflow data [OPTIONS] COMMAND [ARGS]...
 ```
 ## Options
 ```
@@ -452,13 +393,13 @@ terraflow data-source [OPTIONS] COMMAND [ARGS]...
 ```
 ## Commands
 ```
-  create  Create a data source.
+  create  Create a Terraform data source.
   delete  Delete a data source from the configuration.
   list    List available data sources for a provider.
 ```
 ## CLI Help
 ```
-Usage: terraflow data-source [OPTIONS] COMMAND [ARGS]...
+Usage: terraflow data [OPTIONS] COMMAND [ARGS]...
 
   Manage Terraform data sources.
 
@@ -466,16 +407,16 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  create  Create a data source.
+  create  Create a Terraform data source.
   delete  Delete a data source from the configuration.
   list    List available data sources for a provider.
 ```
 
-# terraflow data-source list
+# terraflow data list
 List available data sources for a provider. 
 ## Usage
 ```
-terraflow data-source list [OPTIONS]
+terraflow data list [OPTIONS]
 ```
 ## Options
 ```
@@ -490,7 +431,7 @@ None
 ```
 ## CLI Help
 ```
-Usage: terraflow data-source list [OPTIONS]
+Usage: terraflow data list [OPTIONS]
 
   List available data sources for a provider.
 
@@ -501,18 +442,17 @@ Options:
   --help            Show this message and exit.
 ```
 
-# terraflow data-source create
-Create a data source. 
+# terraflow data create
+Create a Terraform data source. 
 ## Usage
 ```
-terraflow data-source create [OPTIONS]
+terraflow data create [OPTIONS]
 ```
 ## Options
 ```
   --refresh                      Refresh the downloaded schema file.
-  --schema-filename TEXT         The name of the Terraform schema to use
-                                 locally.
-  --terraform-filename TEXT      The name of the target Terraform file.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
   --provider TEXT                The name of the Terraform provider.
                                  [required]
   --namespace TEXT               The namespace of the Terraform provider.
@@ -520,20 +460,22 @@ terraflow data-source create [OPTIONS]
   --name TEXT                    The name to give the Terraform resource in
                                  the configuration.  For example, 'main' or
                                  'this'.
-  --resource TEXT                The name of the terraform provider resource.
+  --kind TEXT                    The name of the terraform provider resource.
                                  [required]
-  --terraform-filename TEXT      The name of the target Terraform file.
+  --header-comment TEXT          A comment to add to the header of the
+                                 resource.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
   --attribute-value-prefix TEXT  A prefix to give to all variables in the
                                  resource configuration.  Useful for module
                                  development.
   --attribute-default TEXT       Default values for a given attributes in the
                                  format 'attribute=value'.
-  --ignore-attribute TEXT        Attributes to ignore in the configuration.
-  --dynamic-block TEXT           Blocks to make dynamic in the configuration.
-  --ignore-block TEXT            Blocks to ignore in the configuration.
-  --add-documentation-url        Add a link to the documentation above the
+  --exclude-attribute TEXT       Attributes to exclude in the configuration.
+  --exclude-block TEXT           Blocks to exclude in the configuration.
+  --add-terraform-docs-url       Add a link to the documentation above the
                                  resource.
-  --add-descriptions             Add descriptions inline with the code for all
+  --add-inline-descriptions      Add descriptions inline with the code for all
                                  resource attributes.
   --required-blocks-only         Only include required blocks in the resource
                                  configuration.
@@ -547,15 +489,14 @@ None
 ```
 ## CLI Help
 ```
-Usage: terraflow data-source create [OPTIONS]
+Usage: terraflow data create [OPTIONS]
 
-  Create a data source.
+  Create a Terraform data source.
 
 Options:
   --refresh                      Refresh the downloaded schema file.
-  --schema-filename TEXT         The name of the Terraform schema to use
-                                 locally.
-  --terraform-filename TEXT      The name of the target Terraform file.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
   --provider TEXT                The name of the Terraform provider.
                                  [required]
   --namespace TEXT               The namespace of the Terraform provider.
@@ -563,20 +504,22 @@ Options:
   --name TEXT                    The name to give the Terraform resource in
                                  the configuration.  For example, 'main' or
                                  'this'.
-  --resource TEXT                The name of the terraform provider resource.
+  --kind TEXT                    The name of the terraform provider resource.
                                  [required]
-  --terraform-filename TEXT      The name of the target Terraform file.
+  --header-comment TEXT          A comment to add to the header of the
+                                 resource.
+  --terraform-filename TEXT      The name of file to store Terraform resources
+                                 in.
   --attribute-value-prefix TEXT  A prefix to give to all variables in the
                                  resource configuration.  Useful for module
                                  development.
   --attribute-default TEXT       Default values for a given attributes in the
                                  format 'attribute=value'.
-  --ignore-attribute TEXT        Attributes to ignore in the configuration.
-  --dynamic-block TEXT           Blocks to make dynamic in the configuration.
-  --ignore-block TEXT            Blocks to ignore in the configuration.
-  --add-documentation-url        Add a link to the documentation above the
+  --exclude-attribute TEXT       Attributes to exclude in the configuration.
+  --exclude-block TEXT           Blocks to exclude in the configuration.
+  --add-terraform-docs-url       Add a link to the documentation above the
                                  resource.
-  --add-descriptions             Add descriptions inline with the code for all
+  --add-inline-descriptions      Add descriptions inline with the code for all
                                  resource attributes.
   --required-blocks-only         Only include required blocks in the resource
                                  configuration.
@@ -585,23 +528,20 @@ Options:
   --help                         Show this message and exit.
 ```
 
-# terraflow data-source delete
+# terraflow data delete
 Delete a data source from the configuration. 
 ## Usage
 ```
-terraflow data-source delete [OPTIONS]
+terraflow data delete [OPTIONS]
 ```
 ## Options
 ```
-  --terraform-filename TEXT  The name of the target Terraform file.
-  --provider TEXT            The name of the Terraform provider.  [required]
-  --namespace TEXT           The namespace of the Terraform provider.
-                             [required]
-  --name TEXT                The name to give the Terraform resource in the
-                             configuration.  For example, 'main' or 'this'.
-  --resource TEXT            The name of the terraform provider resource.
-                             [required]
-  --help                     Show this message and exit.
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace of the Terraform provider.  [required]
+  --name TEXT       The name to give the Terraform resource in the
+                    configuration.  For example, 'main' or 'this'.
+  --kind TEXT       The name of the terraform provider resource.  [required]
+  --help            Show this message and exit.
 ```
 ## Commands
 ```
@@ -609,240 +549,16 @@ None
 ```
 ## CLI Help
 ```
-Usage: terraflow data-source delete [OPTIONS]
+Usage: terraflow data delete [OPTIONS]
 
   Delete a data source from the configuration.
 
 Options:
-  --terraform-filename TEXT  The name of the target Terraform file.
-  --provider TEXT            The name of the Terraform provider.  [required]
-  --namespace TEXT           The namespace of the Terraform provider.
-                             [required]
-  --name TEXT                The name to give the Terraform resource in the
-                             configuration.  For example, 'main' or 'this'.
-  --resource TEXT            The name of the terraform provider resource.
-                             [required]
-  --help                     Show this message and exit.
-```
-
-# terraflow provider
-Manage Terraform providers. 
-## Usage
-```
-terraflow provider [OPTIONS] COMMAND [ARGS]...
-```
-## Options
-```
-  --help  Show this message and exit.
-```
-## Commands
-```
-  create  Create a provider.
-  delete  Delete a provider from the configuration.
-  list    List providers in the Terraform configuration.
-```
-## CLI Help
-```
-Usage: terraflow provider [OPTIONS] COMMAND [ARGS]...
-
-  Manage Terraform providers.
-
-Options:
-  --help  Show this message and exit.
-
-Commands:
-  create  Create a provider.
-  delete  Delete a provider from the configuration.
-  list    List providers in the Terraform configuration.
-```
-
-# terraflow provider list
-List providers in the Terraform configuration. 
-## Usage
-```
-terraflow provider list [OPTIONS]
-```
-## Options
-```
-  --keyword TEXT  A keyword used to filter results.
-  --help          Show this message and exit.
-```
-## Commands
-```
-None
-```
-## CLI Help
-```
-Usage: terraflow provider list [OPTIONS]
-
-  List providers in the Terraform configuration.
-
-Options:
-  --keyword TEXT  A keyword used to filter results.
-  --help          Show this message and exit.
-```
-
-# terraflow provider create
-Create a provider. 
-## Usage
-```
-terraflow provider create [OPTIONS]
-```
-## Options
-```
-  --refresh                      Refresh the downloaded schema file.
-  --schema-filename TEXT         The name of the Terraform schema to use
-                                 locally.
-  --terraform-filename TEXT      The name of the target Terraform file.
-  --provider TEXT                The name of the Terraform provider.
-                                 [required]
-  --namespace TEXT               The namespace of the Terraform provider.
-                                 [required]
-  --terraform-filename TEXT      The name of the target Terraform file.
-  --attribute-value-prefix TEXT  A prefix to give to all variables in the
-                                 resource configuration.  Useful for module
-                                 development.
-  --attribute-default TEXT       Default values for a given attributes in the
-                                 format 'attribute=value'.
-  --ignore-attribute TEXT        Attributes to ignore in the configuration.
-  --dynamic-block TEXT           Blocks to make dynamic in the configuration.
-  --ignore-block TEXT            Blocks to ignore in the configuration.
-  --add-documentation-url        Add a link to the documentation above the
-                                 resource.
-  --add-descriptions             Add descriptions inline with the code for all
-                                 resource attributes.
-  --required-blocks-only         Only include required blocks in the resource
-                                 configuration.
-  --required-attributes-only     Only include required attributes in the
-                                 resource configuration.
-  --help                         Show this message and exit.
-```
-## Commands
-```
-None
-```
-## CLI Help
-```
-Usage: terraflow provider create [OPTIONS]
-
-  Create a provider.
-
-Options:
-  --refresh                      Refresh the downloaded schema file.
-  --schema-filename TEXT         The name of the Terraform schema to use
-                                 locally.
-  --terraform-filename TEXT      The name of the target Terraform file.
-  --provider TEXT                The name of the Terraform provider.
-                                 [required]
-  --namespace TEXT               The namespace of the Terraform provider.
-                                 [required]
-  --terraform-filename TEXT      The name of the target Terraform file.
-  --attribute-value-prefix TEXT  A prefix to give to all variables in the
-                                 resource configuration.  Useful for module
-                                 development.
-  --attribute-default TEXT       Default values for a given attributes in the
-                                 format 'attribute=value'.
-  --ignore-attribute TEXT        Attributes to ignore in the configuration.
-  --dynamic-block TEXT           Blocks to make dynamic in the configuration.
-  --ignore-block TEXT            Blocks to ignore in the configuration.
-  --add-documentation-url        Add a link to the documentation above the
-                                 resource.
-  --add-descriptions             Add descriptions inline with the code for all
-                                 resource attributes.
-  --required-blocks-only         Only include required blocks in the resource
-                                 configuration.
-  --required-attributes-only     Only include required attributes in the
-                                 resource configuration.
-  --help                         Show this message and exit.
-```
-
-# terraflow provider delete
-Delete a provider from the configuration. 
-## Usage
-```
-terraflow provider delete [OPTIONS]
-```
-## Options
-```
-  --terraform-filename TEXT  The name of the target Terraform file.
-  --provider TEXT            The name of the Terraform provider.  [required]
-  --namespace TEXT           The namespace of the Terraform provider.
-                             [required]
-  --help                     Show this message and exit.
-```
-## Commands
-```
-None
-```
-## CLI Help
-```
-Usage: terraflow provider delete [OPTIONS]
-
-  Delete a provider from the configuration.
-
-Options:
-  --terraform-filename TEXT  The name of the target Terraform file.
-  --provider TEXT            The name of the Terraform provider.  [required]
-  --namespace TEXT           The namespace of the Terraform provider.
-                             [required]
-  --help                     Show this message and exit.
-```
-
-# terraflow docs
-Manage documentation. 
-## Usage
-```
-terraflow docs [OPTIONS] COMMAND [ARGS]...
-```
-## Options
-```
-  --help  Show this message and exit.
-```
-## Commands
-```
-  create  Generate Terraform documentation using terraform-docs.
-```
-## CLI Help
-```
-Usage: terraflow docs [OPTIONS] COMMAND [ARGS]...
-
-  Manage documentation.
-
-Options:
-  --help  Show this message and exit.
-
-Commands:
-  create  Generate Terraform documentation using terraform-docs.
-```
-
-# terraflow docs create
-Generate Terraform documentation using terraform-docs.    This command generates a markdown table of the Terraform module's   configuration and saves it to a README.md file in the module's directory. 
-## Usage
-```
-terraflow docs create [OPTIONS]
-```
-## Options
-```
-  --module-path TEXT      Path to the Terraform module  [required]
-  --config-filename TEXT  Filename for the terraform-docs configuration file
-  --help                  Show this message and exit.
-```
-## Commands
-```
-None
-```
-## CLI Help
-```
-Usage: terraflow docs create [OPTIONS]
-
-  Generate Terraform documentation using terraform-docs.
-
-  This command generates a markdown table of the Terraform module's
-  configuration and saves it to a README.md file in the module's directory.
-
-Options:
-  --module-path TEXT      Path to the Terraform module  [required]
-  --config-filename TEXT  Filename for the terraform-docs configuration file
-  --help                  Show this message and exit.
+  --provider TEXT   The name of the Terraform provider.  [required]
+  --namespace TEXT  The namespace of the Terraform provider.  [required]
+  --name TEXT       The name to give the Terraform resource in the
+                    configuration.  For example, 'main' or 'this'.
+  --kind TEXT       The name of the terraform provider resource.  [required]
+  --help            Show this message and exit.
 ```
 

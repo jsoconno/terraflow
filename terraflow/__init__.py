@@ -31,22 +31,6 @@ def terraflow():
     """
     pass
 
-# terraflow schema
-@terraflow.group("schema")
-def schema():
-    """
-    Manage the schema file.
-    """
-    pass
-
-# terraflow schema refresh
-@schema.command("refresh", context_settings=CONTEXT_SETTINGS)
-def schema_refresh():
-    """
-    Refresh the schema file.
-    """
-    schema = get_schema(refresh=True)
-
 # terraflow provider
 @terraflow.group("provider")
 def provider():
@@ -67,7 +51,8 @@ def provider_list(namespace, provider):
         namespace=namespace
     )
 
-    print(format_list(title=f"Available providers for namespace {namespace}:", items=items))
+    output = format_list(title=f"Available providers for namespace {namespace}:", items=items)
+    click.echo_via_pager(output)
 
 
 # terraflow provider get
@@ -77,11 +62,67 @@ def provider_get(keyword):
     """
     Get providers in the Terraform configuration.
     """
-    schema = get_schema()
+    schema = Schema().schema
 
     items = list_items(schema=schema, scope="provider", keywords=keyword)
 
-    print(format_list(title="Providers in this configuration:", items=items))
+    output = format_list(format_list(title="Providers in this configuration:", items=items))
+    click.echo_via_pager(output)
+
+# terraflow provider create
+@provider.command("create", context_settings=CONTEXT_SETTINGS)
+@schema_options
+@terraform_file_options
+@provider_options
+@code_options
+def resource_create(
+    namespace,
+    provider,
+    refresh,
+    required_attributes_only,
+    required_blocks_only,
+    add_inline_descriptions,
+    add_terraform_docs_url,
+    exclude_block,
+    exclude_attribute,
+    attribute_default,
+    attribute_value_prefix,
+    terraform_filename,
+    header_comment
+):
+    """
+    Create a Terraform provider.
+    """
+    schema = Schema(refresh=refresh)
+    attribute_defaults = convert_strings_to_dict(attribute_default)
+
+    configuration = ProviderConfiguration(
+        add_inline_descriptions=add_inline_descriptions,
+        add_header_terraform_docs_url=add_terraform_docs_url,
+        required_attributes_only=required_attributes_only,
+        required_blocks_only=required_blocks_only,
+        exclude_attributes=exclude_attribute,
+        exclude_blocks=exclude_block,
+        attribute_defaults=attribute_defaults,
+        header_comment=header_comment,
+        attribute_value_prefix=attribute_value_prefix,
+    )
+
+    component = ProviderComponent(
+        schema=schema,
+        namespace=namespace,
+        name=provider,
+        configuration=configuration
+    )
+
+    write_terraform_to_file(
+        new_code=component.code,
+        filename=terraform_filename if terraform_filename else 'providers.tf'
+    )
+
+    print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The provider "{provider}" was created.\n')
+
+    run_terraform_fmt()
 
 
 # terraflow resource
@@ -101,7 +142,7 @@ def resource_list(namespace, provider, keyword):
     """
     List available resources for a provider.
     """
-    schema = get_schema()
+    schema = Schema().schema
 
     items = list_items(
         schema=schema,
@@ -111,7 +152,8 @@ def resource_list(namespace, provider, keyword):
         keywords=keyword,
     )
 
-    print(format_list(items=items, title=f"Resources for {namespace} {provider}:"))
+    output = format_list(items=items, title=f"Resources for {namespace} {provider}:")
+    click.echo_via_pager(output)
 
 
 # terraflow resource create
@@ -141,7 +183,7 @@ def resource_create(
     """
     Create a Terraform resource.
     """
-    schema = Schema()
+    schema = Schema(refresh=refresh)
     attribute_defaults = convert_strings_to_dict(attribute_default)
 
     configuration = ResourceConfiguration(
@@ -167,38 +209,13 @@ def resource_create(
 
     write_terraform_to_file(
         new_code=resource.code,
-        filename=terraform_filename
+        filename=terraform_filename if terraform_filename else 'main.tf'
     )
 
     print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The resource "{provider}_{kind}" "{name}" was created.\n')
 
     run_terraform_fmt()
 
-# terraflow resource update
-@resource.command("update", context_settings=CONTEXT_SETTINGS)
-@provider_options
-@resource_options
-def resource_create(
-    namespace,
-    provider,
-    kind,
-    name,
-    #rename,
-    #set_attribute,
-    #make_block_dynamic,
-
-):
-    """
-    Update a Terraform resource.
-    """
-
-    # TODO: Need to think through how I want the update functionality to work.  For example
-
-    loader = CodeLoader()
-    code = loader.get_component_code_by_id(
-        id=f"resource.{provider}_{resource}.{name}"
-    )
-    print(code)
 
 # terraflow resource delete
 @resource.command("delete", context_settings=CONTEXT_SETTINGS)
@@ -240,7 +257,7 @@ def data_list(namespace, provider, keyword):
     """
     List available data sources for a provider.
     """
-    schema = get_schema()
+    schema = Schema().schema
 
     items = list_items(
         schema=schema,
@@ -250,13 +267,89 @@ def data_list(namespace, provider, keyword):
         keywords=keyword,
     )
 
-    print(format_list(items=items, title=f"Data sources for {namespace} {provider}:"))
+    output = format_list(items=items, title=f"Data sources for {namespace} {provider}:")
+    click.echo_via_pager(output)
 
 
-# terraflow variable
-@terraflow.group("variable")
-def variable():
+@data.command("create", context_settings=CONTEXT_SETTINGS)
+@schema_options
+@terraform_file_options
+@provider_options
+@resource_options
+@code_options
+def data_create(
+    namespace,
+    provider,
+    kind,
+    refresh,
+    name,
+    required_attributes_only,
+    required_blocks_only,
+    add_inline_descriptions,
+    add_terraform_docs_url,
+    exclude_block,
+    exclude_attribute,
+    attribute_default,
+    attribute_value_prefix,
+    terraform_filename,
+    header_comment
+):
     """
-    Manage Terraform variables.
+    Create a Terraform data source.
     """
-    pass
+    schema = Schema(refresh=refresh)
+    attribute_defaults = convert_strings_to_dict(attribute_default)
+
+    configuration = ResourceConfiguration(
+        add_inline_descriptions=add_inline_descriptions,
+        add_header_terraform_docs_url=add_terraform_docs_url,
+        required_attributes_only=required_attributes_only,
+        required_blocks_only=required_blocks_only,
+        exclude_attributes=exclude_attribute,
+        exclude_blocks=exclude_block,
+        attribute_defaults=attribute_defaults,
+        header_comment=header_comment,
+        attribute_value_prefix=attribute_value_prefix,
+    )
+
+    component = DataSourceComponent(
+        schema=schema,
+        namespace=namespace,
+        provider=provider,
+        kind=kind,
+        name=name,
+        configuration=configuration
+    )
+
+    write_terraform_to_file(
+        new_code=component.code,
+        filename=terraform_filename if terraform_filename else 'data.tf'
+    )
+
+    print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The data source "{provider}_{kind}" "{name}" was created.\n')
+
+    run_terraform_fmt()
+
+
+# terraflow data source delete
+@data.command("delete", context_settings=CONTEXT_SETTINGS)
+@provider_options
+@resource_options
+def resource_delete(namespace, provider, kind, name):
+    """
+    Delete a data source from the configuration.
+    """
+    loader = CodeLoader()
+    component = loader.get_component_by_id(
+        id=f"data.{provider}_{kind}.{name}"
+    )
+
+    if component:
+        delete_data_source_code(
+            provider=provider, kind=component["kind"], name=component["name"], filename=component["filename"]
+        )
+        print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The data source "{provider}_{kind}" "{name}" was deleted from the Terraform configuration.\n')
+    else:
+        print(f'\n{colors(color="FAIL")}Error:{colors()} The data source "{provider}_{kind}" "{name}" does not exist in the Terraform configuration.\n')
+
+    remove_unused_variables()

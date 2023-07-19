@@ -62,7 +62,7 @@ def write_json_file(filename: str, data: dict) -> None:
     with open(filename, "w") as f:
         json.dump(data, f)
 
-def read_yaml_file(filename='terraflow.yaml'):
+def read_yaml_file(filename='.terraflow.yaml'):
     try:
         with open(filename, 'r') as file:
             config = yaml.safe_load(file)
@@ -949,7 +949,7 @@ def get_namespaces_and_providers():
     # Check the return code
     if result.returncode != 0:
         print("Error running `terraform providers` command.")
-        return None
+        return None, None
 
     # Parse the command output
     pattern = fr"provider\[registry\.terraform\.io/(.*?)/(.*?)\] (\S+)"

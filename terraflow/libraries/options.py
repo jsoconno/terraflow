@@ -7,28 +7,39 @@ import click
 
 from terraflow.libraries.helpers import read_yaml_file, get_terraform_providers, get_namespaces_and_providers
 
+import os
+
+def get_config_file_path():
+    if os.getcwd().endswith('terraform'):
+        return '.terraflow.yaml'
+    else:
+        return 'terraform/.terraflow.yaml'
+
 def namespace_option_default():
-    config = read_yaml_file(filename='.terraflow.yaml')
+    config = read_yaml_file(filename=get_config_file_path())
     namespaces, providers = get_namespaces_and_providers()
 
-    if config and 'namespace' in config and config['namespace'] in namespaces:
-        return config['namespace']
-    elif len(namespaces) == 1:
-        return namespaces[0]
+    if namespaces:
+        if config and 'namespace' in config and config['namespace'] in namespaces:
+            return config['namespace']
+        elif len(namespaces) == 1:
+            return namespaces[0]
     else:
         return None
 
 def provider_option_default():
-    config = read_yaml_file(filename='.terraflow.yaml')
+    config = read_yaml_file(filename=get_config_file_path())
     namespaces, providers = get_namespaces_and_providers()
 
-    if config and 'provider' in config and config['provider'] in providers:
-        return config['provider']
-    elif len(providers) == 1:
-        return providers[0]
+    if providers:
+        if config and 'provider' in config and config['provider'] in providers:
+            return config['provider']
+        elif len(providers) == 1:
+            return providers[0]
     else:
         return None
-    
+
+
 namespace_default = namespace_option_default()
 provider_default = provider_option_default()
 
@@ -171,7 +182,7 @@ options = {
     "terraform_filename": click.option(
         "--terraform-filename",
         type=str,
-        default="main.tf",
+        default=None,
         multiple=False,
         required=False,
         help="The name of file to store Terraform resources in.",
