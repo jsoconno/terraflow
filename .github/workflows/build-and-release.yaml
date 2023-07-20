@@ -14,6 +14,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
+      - name: Update version
+        run: |
+          echo "__version__ = '${{ github.event.release.tag_name }}'" > ./terraflow/terraflow/version.py
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
