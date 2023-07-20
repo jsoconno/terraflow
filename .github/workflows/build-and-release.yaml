@@ -1,0 +1,76 @@
+name: Build and Release
+
+# on:
+#   release:
+#     types:
+#       - created
+
+on: [push, pull_request]
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build binary with PyInstaller
+        run: pyinstaller --onefile ./terraflow/terraflow.py
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/terraflow
+          asset_name: terraflow
+          asset_content_type: application/octet-stream
+
+      - name: Check out tap repository
+        uses: actions/checkout@v2
+        with:
+          repository: jsoconno/homebrew-terraflow
+          token: ${{ secrets.HOMEBREW }}
+          path: homebrew-tap
+
+      - name: Update formula
+        run: |
+          FORMULA_PATH="homebrew-tap/Formula/terraflow.rb"
+          VERSION="${{ github.ref }}"
+          URL="https://github.com/jsoconno/terraflow/releases/download/${VERSION}/terraflow"
+          SHA256="$(shasum -a 256 ./dist/terraflow | awk '{print $1}')"
+          sed -i "s|^  url .\+|  url \"$URL\"|g" $FORMULA_PATH
+          sed -i "s|^  sha256 .\+|  sha256 \"$SHA256\"|g" $FORMULA_PATH
+
+      - name: Commit and push changes
+        run: |
+          cd homebrew-tap
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add Formula/terraflow.rb
+          git commit -m "Update terraflow to ${{ github.ref }}"
+          git push
