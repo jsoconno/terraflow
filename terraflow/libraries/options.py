@@ -5,7 +5,7 @@ from enum import Enum
 import os
 import click
 
-from terraflow.libraries.helpers import read_yaml_file, get_terraform_providers, get_namespaces_and_providers
+from terraflow.terraflow.libraries.helpers import read_yaml_file, get_terraform_providers, get_namespaces_and_providers
 
 import os
 

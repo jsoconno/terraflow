@@ -3,11 +3,11 @@ import re
 import os
 
 # from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema
-from terraflow.libraries.schema import Schema
-from terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_provider_version, get_terraform_version, filter_attributes, filter_blocks
-from terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_terraform_code
-from terraflow.libraries.configuration import Configuration, ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
-from terraflow.libraries.docs import TerraformDocumentation
+from terraflow.terraflow.libraries.schema import Schema
+from terraflow.terraflow.libraries.helpers import get_terraform_documentation_url, get_terraform_documentation, get_provider_version, get_terraform_version, filter_attributes, filter_blocks
+from terraflow.terraflow.libraries.formatting import format_attribute, format_block_header, format_resource_header, format_terraform_code
+from terraflow.terraflow.libraries.configuration import Configuration, ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
+from terraflow.terraflow.libraries.docs import TerraformDocumentation
 
 class CodeLoader():
     """
