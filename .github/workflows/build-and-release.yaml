@@ -4,7 +4,6 @@ on:
   release:
     types:
       - created
-      - prereleased
 
 jobs:
   build_and_release:
