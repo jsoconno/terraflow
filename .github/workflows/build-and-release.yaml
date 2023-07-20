@@ -16,7 +16,7 @@ jobs:
 
       - name: Update version
         run: |
-          echo "__version__ = '${{ github.event.release.tag_name }}'" > ./terraflow/terraflow/version.py
+          echo "__version__ = '${{ github.event.release.tag_name }}'" > ./terraflow/version.py
 
       - name: Set up Python
         uses: actions/setup-python@v2
