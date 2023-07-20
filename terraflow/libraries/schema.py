@@ -3,8 +3,8 @@ import json
 import subprocess
 import traceback
 
-from terraflow.terraflow.libraries.constants import *
-from terraflow.terraflow.libraries.helpers import *
+from terraflow.libraries.constants import *
+from terraflow.libraries.helpers import *
 
 
 class Schema:

@@ -2,7 +2,7 @@ import os
 import subprocess
 import yaml
 
-from terraflow.terraflow.libraries.formatting import colors
+from terraflow.libraries.formatting import colors
 
 
 def is_terraform_docs_installed():
