@@ -31,7 +31,7 @@ jobs:
       - name: Build binary with PyInstaller
         run: |
           cd terraflow
-          pyinstaller --onefile ./terraflow/terraflow.py
+          pyinstaller --onefile ./terraflow.py
 
       - name: Upload Release Asset
         id: upload-release-asset 
