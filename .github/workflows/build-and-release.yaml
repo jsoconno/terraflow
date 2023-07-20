@@ -53,6 +53,7 @@ jobs:
           SHA256="$(shasum -a 256 ./dist/terraflow | awk '{print $1}')"
           sed -i "s|^  url .\+|  url \"$URL\"|g" $FORMULA_PATH
           sed -i "s|^  sha256 .\+|  sha256 \"$SHA256\"|g" $FORMULA_PATH
+          sed -i "s|^  version .\+|  version \"$VERSION\"|g" $FORMULA_PATH
 
       - name: Commit and push changes
         run: |
