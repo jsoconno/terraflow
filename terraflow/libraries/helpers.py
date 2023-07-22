@@ -9,8 +9,8 @@ from typing import List, Tuple, Optional
 import difflib
 import yaml
 
-from terraflow.libraries.constants import *
-from terraflow.libraries.formatting import *
+from .constants import *
+from .formatting import *
 
 # File and folder manipulation functions.
 

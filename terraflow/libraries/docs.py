@@ -1,9 +1,9 @@
 import os
 
-from terraflow.libraries.constants import DOCUMENTATION_DIR, GITHUB_BASE
-from terraflow.libraries.helpers import scrape_website, get_resource_attribute_description
-from terraflow.libraries.schema import Schema
-from terraflow.libraries.formatting import format_attribute_type
+from .constants import DOCUMENTATION_DIR, GITHUB_BASE
+from .helpers import scrape_website, get_resource_attribute_description
+from .schema import Schema
+from .formatting import format_attribute_type
 
 class TerraformDocumentation:
     def __init__(self, schema, namespace, provider, version='main', kind=None, type=None, use_cache=True, refresh=False):

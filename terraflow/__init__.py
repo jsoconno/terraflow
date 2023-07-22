@@ -3,13 +3,13 @@
 import click
 from dataclasses import asdict
 
-from terraflow.libraries.helpers import *
-from terraflow.libraries.constants import *
-from terraflow.libraries.schema import *
-from terraflow.libraries.terraform import *
-from terraflow.libraries.configuration import *
-from terraflow.libraries.options import *
-from terraflow.version import __version__
+from .libraries.helpers import *
+from .libraries.constants import *
+from .libraries.schema import *
+from .libraries.terraform import *
+from .libraries.configuration import *
+from .libraries.options import *
+from .version import __version__
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="terraflow")
 

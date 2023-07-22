@@ -30,7 +30,7 @@ jobs:
       - name: Build binary with PyInstaller
         run: |
           cd terraflow
-          pyinstaller --onefile ./terraflow.py
+          pyinstaller terraflow.spec
 
       - name: Calculate SHA
         id: sha
