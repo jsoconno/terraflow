@@ -57,14 +57,14 @@ jobs:
           URL="https://github.com/jsoconno/terraflow/releases/download/${VERSION}/terraflow"
           SHA256="$(shasum -a 256 ./dist/terraflow | awk '{print $1}')"
           python -c "
-        import re
-        with open('$FORMULA_PATH', 'r') as f:
-            contents = f.read()
-        contents = re.sub(r'(url \").+(\")', '\\1' + '$URL' + '\\2', contents)
-        contents = re.sub(r'(sha256 \").+(\")', '\\1' + '$SHA256' + '\\2', contents)
-        contents = re.sub(r'(version \").+(\")', '\\1' + '$VERSION' + '\\2', contents)
-        with open('$FORMULA_PATH', 'w') as f:
-            f.write(contents)"
+          import re
+          with open('$FORMULA_PATH', 'r') as f:
+              contents = f.read()
+          contents = re.sub(r'(url \").+(\")', '\\1' + '$URL' + '\\2', contents)
+          contents = re.sub(r'(sha256 \").+(\")', '\\1' + '$SHA256' + '\\2', contents)
+          contents = re.sub(r'(version \").+(\")', '\\1' + '$VERSION' + '\\2', contents)
+          with open('$FORMULA_PATH', 'w') as f:
+              f.write(contents)"
 
 
       - name: Commit and push changes
