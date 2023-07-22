@@ -37,7 +37,7 @@ jobs:
           pwd
           ls
           SHA256="$(shasum -a 256 ./dist/terraflow | awk '{print $1}')"
-          echo "SHA=$SHA256" >> $GITHUB_ENV
+          echo "sha=$SHA256" >> $GITHUB_OUTPUT
       
       - name: Upload Release Asset
         id: upload-release-asset
