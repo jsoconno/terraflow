@@ -7,7 +7,7 @@ on:
 
 jobs:
   build_and_release:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - name: Check out code
@@ -55,10 +55,10 @@ jobs:
           FORMULA_PATH="homebrew-tap/Formula/terraflow.rb"
           VERSION="${{ github.event.release.tag_name }}"
           URL="https://github.com/jsoconno/terraflow/releases/download/${VERSION}/terraflow"
-          SHA256="$(shasum -a 256 ./dist/terraflow | awk '{print $1}')"
-          sed -i "s|^  url .\+|  url \"$URL\"|g" $FORMULA_PATH
-          sed -i "s|^  sha256 .\+|  sha256 \"$SHA256\"|g" $FORMULA_PATH
-          sed -i "s|^  version .\+|  version \"$VERSION\"|g" $FORMULA_PATH
+          SHA256="$(shasum -a 256 ./terraflow/dist/terraflow | awk '{print $1}')"
+          sed -i '' "s|^  url .\+|  url \"$URL\"|g" $FORMULA_PATH
+          sed -i '' "s|^  sha256 .\+|  sha256 \"$SHA256\"|g" $FORMULA_PATH
+          sed -i '' "s|^  version .\+|  version \"$VERSION\"|g" $FORMULA_PATH
 
       - name: Commit and push changes
         run: |
