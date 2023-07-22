@@ -29,7 +29,10 @@ jobs:
 
       - name: Build binary with PyInstaller
         run: |
+          pwd
+          ls
           cd terraflow
+          ls
           pyinstaller terraflow.spec
 
       - name: Calculate SHA
