@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['terraflow.py'],
+    ['terraflow/terraflow.py'],
     pathex=[],
     binaries=[],
     datas=[],
