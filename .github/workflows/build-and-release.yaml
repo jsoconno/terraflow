@@ -29,12 +29,13 @@ jobs:
 
       - name: Build binary with PyInstaller
         run: |
+          cd terraflow
           pyinstaller --onefile ./terraflow.py
 
       - name: Calculate SHA
         id: sha
         run: |
-          SHA256="$(shasum -a 256 ./terraflow/terraflow/dist/terraflow | awk '{print $1}')"
+          SHA256="$(shasum -a 256 ./dist/terraflow | awk '{print $1}')"
           echo "SHA=$SHA256" >> $GITHUB_ENV
       
       - name: Upload Release Asset
@@ -44,7 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./terraflow/terraflow/dist/terraflow
+          asset_path: ./dist/terraflow
           asset_name: terraflow
           asset_content_type: application/octet-stream
 
