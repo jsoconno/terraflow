@@ -32,6 +32,12 @@ jobs:
           cd terraflow
           pyinstaller --onefile ./terraflow.py
 
+      - name: Calculate SHA
+        id: sha
+        run: |
+          SHA256="$(shasum -a 256 ./dist/terraflow | awk '{print $1}')"
+          echo "::set-output name=sha::$SHA256"
+      
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -55,7 +61,7 @@ jobs:
           FORMULA_PATH="homebrew-tap/Formula/terraflow.rb"
           VERSION="${{ github.event.release.tag_name }}"
           URL="https://github.com/jsoconno/terraflow/releases/download/${VERSION}/terraflow"
-          SHA256="$(shasum -a 256 ./dist/terraflow | awk '{print $1}')"
+          SHA256="${{ steps.sha.outputs.sha }}"
           ruby -i -pe "gsub(/(url \").+(\")/, '\\1' + '$URL' + '\\2')" $FORMULA_PATH
           ruby -i -pe "gsub(/(sha256 \").+(\")/, '\\1' + '$SHA256' + '\\2')" $FORMULA_PATH
           ruby -i -pe "gsub(/(version \").+(\")/, '\\1' + '$VERSION' + '\\2')" $FORMULA_PATH
