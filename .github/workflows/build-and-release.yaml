@@ -35,6 +35,8 @@ jobs:
       - name: Calculate SHA
         id: sha
         run: |
+          pwd
+          ls
           SHA256="$(shasum -a 256 ./dist/terraflow | awk '{print $1}')"
           echo "SHA=$SHA256" >> $GITHUB_ENV
       
