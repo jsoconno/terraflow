@@ -56,15 +56,9 @@ jobs:
           VERSION="${{ github.event.release.tag_name }}"
           URL="https://github.com/jsoconno/terraflow/releases/download/${VERSION}/terraflow"
           SHA256="$(shasum -a 256 ./dist/terraflow | awk '{print $1}')"
-          python -c "
-          import re
-          with open('$FORMULA_PATH', 'r') as f:
-              contents = f.read()
-          contents = re.sub(r'(url \").*(\")', '\\1' + '$URL' + '\\2', contents)
-          contents = re.sub(r'(sha256 \").*(\")', '\\1' + '$SHA256' + '\\2', contents)
-          contents = re.sub(r'(version \").*(\")', '\\1' + '$VERSION' + '\\2', contents)
-          with open('$FORMULA_PATH', 'w') as f:
-              f.write(contents)"
+          ruby -i -pe "gsub(/(url \").+(\")/, '\\1' + '$URL' + '\\2')" $FORMULA_PATH
+          ruby -i -pe "gsub(/(sha256 \").+(\")/, '\\1' + '$SHA256' + '\\2')" $FORMULA_PATH
+          ruby -i -pe "gsub(/(version \").+(\")/, '\\1' + '$VERSION' + '\\2')" $FORMULA_PATH
 
       - name: Commit and push changes
         run: |
