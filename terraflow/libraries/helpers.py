@@ -951,7 +951,7 @@ def get_namespaces_and_providers():
         return None, None
 
     # Parse the command output
-    pattern = fr"provider\[registry\.terraform\.io/(.*?)/(.*?)\] (\S+)"
+    pattern = fr"provider\[registry\.terraform\.io/(.*?)/(.*?)\]\s?(\S+)?"
     match = re.findall(pattern, result.stdout, re.MULTILINE)
     if match:
         # Separate namespaces and providers and convert to sets to get unique values
