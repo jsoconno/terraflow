@@ -5,43 +5,33 @@ from enum import Enum
 import os
 import click
 
-from .helpers import read_yaml_file, get_terraform_providers, get_namespaces_and_providers
+from .helpers import get_namespaces_and_providers
 
 import os
 
-# def get_config_file_path():
-#     if os.getcwd().endswith('terraform'):
-#         return '.terraflow.yaml'
-#     else:
-#         return 'terraform/.terraflow.yaml'
+#TODO: Add support for using configuration files for defaults
 
-# def namespace_option_default():
-#     config = read_yaml_file(filename=get_config_file_path())
-#     namespaces, providers = get_namespaces_and_providers()
+def namespace_option_default():
+    namespaces, providers = get_namespaces_and_providers()
 
-#     if namespaces:
-#         if config and 'namespace' in config and config['namespace'] in namespaces:
-#             return config['namespace']
-#         elif len(namespaces) == 1:
-#             return namespaces[0]
-#     else:
-#         return None
+    if namespaces:
+        if len(namespaces) == 1:
+            return namespaces[0]
+    
+    return None
 
-# def provider_option_default():
-#     config = read_yaml_file(filename=get_config_file_path())
-#     namespaces, providers = get_namespaces_and_providers()
+def provider_option_default():
+    namespaces, providers = get_namespaces_and_providers()
 
-#     if providers:
-#         if config and 'provider' in config and config['provider'] in providers:
-#             return config['provider']
-#         elif len(providers) == 1:
-#             return providers[0]
-#     else:
-#         return None
+    if providers:
+        if len(providers) == 1:
+            return providers[0]
+    else:
+        return None
 
 
-# namespace_default = namespace_option_default()
-# provider_default = provider_option_default()
+namespace_default = namespace_option_default()
+provider_default = provider_option_default()
 
 # Dictionary of different CLI options
 options = {
@@ -57,20 +47,17 @@ options = {
     "namespace": click.option(
         "--namespace",
         type=str,
-        # default=namespace_default if namespace_default else 'hashicorp',
-        default='hashicorp',
+        default=namespace_default if namespace_default else 'hashicorp',
         multiple=False,
-        # required=False if namespace_default else True,
-        required=True,
+        required=False if namespace_default else True,
         help="The namespace of the Terraform provider.",
     ),
     "provider": click.option(
         "--provider",
         type=str,
-        # default=provider_default,
+        default=provider_default,
         multiple=False,
-        # required=False if provider_default else True,
-        required=True,
+        required=False if provider_default else True,
         help="The name of the Terraform provider.",
     ),
     "kind": click.option(
