@@ -46,6 +46,10 @@ class TerraformDocumentation:
         # Check is the user wants to use cache documentation
         if self.use_cache:
             # Set the documentation directory
+            print(DOCUMENTATION_DIR)
+            print(self.namespace)
+            print(self.provider)
+            print(self.version)
             documentation_dir = os.path.join(DOCUMENTATION_DIR, self.namespace, self.provider, self.version)
 
             # Set the filepath

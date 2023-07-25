@@ -405,7 +405,6 @@ def load_terraform_code(type: str, name: str, code: str, kind: str = None):
     """
     Extracts code snippet of the relevant Terraform object from the code.
     """
-    print(type, name, kind, code)
     if kind is None:
         pattern = rf'((?:#.*\n)*?(^({type})\s+\s?"({name})"\s+{{)[\s\S]*?^}}$)'
     else:
@@ -960,6 +959,74 @@ def get_namespaces_and_providers():
         providers = list(set(provider for namespace, provider, version in match))
 
         return namespaces, providers
+    
+def get_provider_versions(namespace, provider):
+    """
+    Gets a list of versions for a given terraform provider such as aws, gcp, or azurerm.
+    """
+    response = requests.get(f"https://registry.terraform.io/v1/providers/{namespace}/{provider}/versions")
+    data = json.loads(response.text)
+    
+    return [x['version'] for x in data['versions']]
+
+def compare_versions(v1, v2):
+    """
+    Compare two version strings.
+
+    Returns:
+        int: -1 if v1 < v2, 0 if v1 == v2, 1 if v1 > v2.
+    """
+    v1_parts = [int(part) for part in v1.split('.')]
+    v2_parts = [int(part) for part in v2.split('.')]
+
+    # Pad the shorter version with zeros
+    max_len = max(len(v1_parts), len(v2_parts))
+    v1_parts.extend([0] * (max_len - len(v1_parts)))
+    v2_parts.extend([0] * (max_len - len(v2_parts)))
+
+    for part1, part2 in zip(v1_parts, v2_parts):
+        if part1 < part2:
+            return -1
+        elif part1 > part2:
+            return 1
+
+    return 0
+
+def sort_versions(versions, exclude_preleases=True):
+    """
+    Sorts a list of versions based on semantic versioning.
+
+    Parameters:
+        versions (list): A list of version strings.
+        exclude_preleases (bool, optional): Flag to exclude pre-releases from the sorting.
+
+    Returns:
+        list: A sorted list of version strings.
+    """
+    if exclude_preleases:
+        versions = [v for v in versions if "alpha" not in v and "beta" not in v]
+
+    return sorted(versions, key=lambda v: [int(part) for part in v.split('.')], reverse=True)
+
+def get_latest_version(versions, exclude_preleases=False):
+    """
+    Provides the latest version based on a list of provided versions.
+
+    Parameters:
+        versions (list): A list of version strings.
+        exclude_preleases (bool, optional): Flag to exclude pre-releases from consideration.
+
+    Returns:
+        str or None: The latest version string or None if the input list is empty.
+    """
+    if versions:
+        versions = sort_versions(versions, exclude_preleases)
+        latest_version = versions[0]
+    else:
+        latest_version = None
+
+    return latest_version
+
 
 def get_provider_version(provider: str, namespace: str = "hashicorp") -> str:
     # Run the `terraform providers` command
@@ -971,10 +1038,15 @@ def get_provider_version(provider: str, namespace: str = "hashicorp") -> str:
         return None
 
     # Parse the command output
-    pattern = fr"provider\[registry\.terraform\.io/{namespace}/{provider}\] (\S+)"
+    pattern = fr"provider\[registry\.terraform\.io/hashicorp/azurerm\]\s?(\S+)?"
     match = re.search(pattern, result.stdout)
+    version = match.group(1)
+
+    versions = get_provider_versions(namespace=namespace, provider=provider)
+    latest_version = get_latest_version(versions=versions)
+
     if match:
-        return match.group(1)  # Return the version number
+        return version if version else latest_version
 
     print(f"No match found for provider {namespace}/{provider} in `terraform providers` output.")
     return None
