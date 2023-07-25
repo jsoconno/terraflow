@@ -9,14 +9,9 @@ from .helpers import get_namespaces_and_providers
 
 import os
 
-# def get_config_file_path():
-#     if os.getcwd().endswith('terraform'):
-#         return '.terraflow.yaml'
-#     else:
-#         return 'terraform/.terraflow.yaml'
+#TODO: Add support for using configuration files for defaults
 
 def namespace_option_default():
-    # config = read_yaml_file(filename=get_config_file_path())
     namespaces, providers = get_namespaces_and_providers()
 
     if namespaces:
@@ -26,7 +21,6 @@ def namespace_option_default():
     return None
 
 def provider_option_default():
-    # config = read_yaml_file(filename=get_config_file_path())
     namespaces, providers = get_namespaces_and_providers()
 
     if providers:
@@ -54,10 +48,8 @@ options = {
         "--namespace",
         type=str,
         default=namespace_default if namespace_default else 'hashicorp',
-        # default='hashicorp',
         multiple=False,
         required=False if namespace_default else True,
-        # required=True,
         help="The namespace of the Terraform provider.",
     ),
     "provider": click.option(
@@ -66,7 +58,6 @@ options = {
         default=provider_default,
         multiple=False,
         required=False if provider_default else True,
-        # required=True,
         help="The name of the Terraform provider.",
     ),
     "kind": click.option(
