@@ -1,42 +1,50 @@
 import requests
 
-
 def generate_resource_blocks(requirements_file="requirements.txt"):
     pypi_base_url = "https://pypi.org/pypi"
 
-    with open(requirements_file, "r") as file:
-        lines = file.readlines()
-
     resource_blocks = ""
 
-    for line in lines:
-        if line.startswith("-e") or line.startswith("#"):
-            continue
+    with open(requirements_file, "r") as file:
+        for line in file:
+            line = line.strip()
 
-        pkg_name, version = line.strip().split("==")
-        pkg_info_url = f"{pypi_base_url}/{pkg_name}/{version}/json"
-        response = requests.get(pkg_info_url)
+            if line.startswith("-e") or line.startswith("#") or line == '':
+                continue
 
-        if response.status_code == 200:
+            try:
+                pkg_name, version = line.split("==")
+            except ValueError:
+                print(f"Skipping invalid line: {line}")
+                continue
+
+            pkg_info_url = f"{pypi_base_url}/{pkg_name}/{version}/json"
+            response = requests.get(pkg_info_url)
+
+            if response.status_code != 200:
+                print(f"Failed to fetch package info for {pkg_name}=={version}")
+                continue
+
             pkg_info = response.json()
-
             # Select the tar.gz distribution URL
-            selected_url = None
-            for url_info in pkg_info["urls"]:
-                if url_info["url"].endswith(".tar.gz"):
-                    selected_url = url_info
-                    break
+            selected_url = next((url_info for url_info in pkg_info["urls"]
+                                 if url_info["url"].endswith(".tar.gz")), None)
 
-            if selected_url:
-                download_url = selected_url["url"]
-                sha256 = selected_url["digests"]["sha256"]
+            if not selected_url:
+                print(f"No .tar.gz distribution found for {pkg_name}=={version}")
+                continue
 
-                resource_block = f'resource "{pkg_name}" do\n'
-                resource_block += f'  url "{download_url}"\n'
-                resource_block += f'  sha256 "{sha256}"\n'
-                resource_block += "end\n\n"
+            download_url = selected_url["url"]
+            sha256 = selected_url["digests"]["sha256"]
 
-                resource_blocks += resource_block
+            resource_block = (
+                f'resource "{pkg_name}" do\n'
+                f'  url "{download_url}"\n'
+                f'  sha256 "{sha256}"\n'
+                "end\n\n"
+            )
+
+            resource_blocks += resource_block
 
     return resource_blocks
 
