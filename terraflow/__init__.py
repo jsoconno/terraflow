@@ -9,6 +9,7 @@ from .libraries.schema import *
 from .libraries.terraform import *
 from .libraries.configuration import *
 from .libraries.options import *
+from .libraries.formatting import *
 from .version import __version__
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="terraflow")
@@ -66,7 +67,7 @@ def provider_get(keyword):
 
     items = list_items(schema=schema, scope="provider", keywords=keyword)
 
-    output = format_list(format_list(title="Providers in this configuration:", items=items))
+    output = format_list(title="Providers in this configuration:", items=items)
     click.echo_via_pager(output)
 
 # terraflow provider create

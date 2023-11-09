@@ -416,64 +416,6 @@ def load_terraform_code(type: str, name: str, code: str, kind: str = None):
     else:
         message = f'\n{colors("OK_BLUE")}Info:{colors()} The {type} {name} was not found' if type == 'provider' else f'\n{colors("OK_BLUE")}Info:{colors()} The {type} {kind} with the name {name} was not found.'
 
-# Formatting functions.
-
-def format_list(items: list, title: str = None, top: int = None, prefix: str = " - ") -> str:
-    """
-    Format a list for output in the terminal.
-
-    Args:
-        items: The list of items to format.
-        title: The optional title for the formatted list.
-        top: The optional maximum number of items to include.
-        prefix: The prefix string to prepend to each item.
-
-    Returns:
-        The formatted list as a string.
-    """
-    formatted_list = "\n"
-
-    if title:
-        formatted_list += f"{title}\n\n"
-
-    if top:
-        items = items[:top]
-
-    for option in items:
-        formatted_list += f"{prefix}{option}\n"
-
-    return formatted_list
-
-def colors(color: str = "END") -> str:
-    """
-    Returns ANSI color codes for printing to the command line.
-
-    Args:
-        color: The color name to retrieve the code for.
-
-    Returns:
-        The ANSI color code as a string.
-    """
-    colors = {
-        "HEADER": "\033[95m",
-        "OK_BLUE": "\033[94m",
-        "OK_CYAN": "\033[96m",
-        "OK_GREEN": "\033[92m",
-        "WARNING": "\033[93m",
-        "FAIL": "\033[91m",
-        "END": "\033[0m",
-        "BOLD": "\033[1m",
-        "UNDERLINE": "\033[4m",
-    }
-
-    return colors[color]
-
-def format_terminal_text():
-    """
-    Formats text for terminal output.
-    """
-    pass
-
 # Helper functions
 
 def calculate_levenshtein_distance(s: str, t: str) -> float:
@@ -942,6 +884,11 @@ def run_terraform_fmt():
     subprocess.run(["terraform", "fmt"], stdout=subprocess.DEVNULL)
 
 def get_namespaces_and_providers():
+    # Check if there are any Terraform files in the current directory
+    if not any(fname.endswith('.tf') for fname in os.listdir('.')):
+        print("It appears you are not in a Terraform directory.")
+        return None, None
+
     # Run the `terraform providers` command
     result = subprocess.run(["terraform", "providers"], capture_output=True, text=True)
 
