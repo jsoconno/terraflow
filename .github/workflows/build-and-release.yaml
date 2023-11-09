@@ -22,14 +22,20 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Set up Virtual Environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build binary with PyInstaller
+      - name: Build binary with PyInstaller from the virtual environment
         run: |
+          source venv/bin/activate
           pyinstaller --onefile --noconsole --strip --clean ./terraflow/terraflow.py
 
       - name: Calculate SHA
