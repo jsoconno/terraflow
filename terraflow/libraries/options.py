@@ -11,27 +11,23 @@ import os
 
 #TODO: Add support for using configuration files for defaults
 
-def namespace_option_default():
+def get_default_options():
     namespaces, providers = get_namespaces_and_providers()
+
+    namespace_default = None
+    provider_default = None
 
     if namespaces:
         if len(namespaces) == 1:
-            return namespaces[0]
+            namespace_default = namespaces[0]
     
-    return None
-
-def provider_option_default():
-    namespaces, providers = get_namespaces_and_providers()
-
     if providers:
         if len(providers) == 1:
-            return providers[0]
-    else:
-        return None
+            provider_default = providers[0]
 
+    return namespace_default, provider_default
 
-namespace_default = namespace_option_default()
-provider_default = provider_option_default()
+namespace_default, provider_default = get_default_options()
 
 # Dictionary of different CLI options
 options = {
