@@ -197,6 +197,31 @@ options = {
         required=False,
         help="A variable to target for updates.  If not provided, all variables are updated.",
     ),
+    "description": click.option(
+        "--description",
+        type=str,
+        default=None,
+        multiple=False,
+        required=False,
+        help="The description for the object.",
+    ),
+    "type": click.option(
+        "--type",
+        type=str,
+        default="string",
+        multiple=False,
+        required=False,
+        help="The type for the object.",
+        #TODO: Add validation for the accepted Terraform variable types
+    ),
+    "default": click.option(
+        "--default",
+        type=str,
+        default=None,
+        multiple=False,
+        required=False,
+        help="The default value for the object.",
+    )
 }
 
 
@@ -273,6 +298,10 @@ def variable_options(func):
     """
     Description
     """
-    func = options["variables_filename"](func)
+    # func = options["variables_filename"](func)
+    func = options["description"](func)
+    func = options["type"](func)
+    func = options["default"](func)
+    func = options["terraform_filename"](func)
 
     return func

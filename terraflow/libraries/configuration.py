@@ -27,9 +27,9 @@ class DataSourceConfiguration(Configuration):
     pass
 
 @dataclass
-class VariableConfiguration(Configuration):
-    include_variables: list = field(default_factory=list)
+class VariableConfiguration():
+    pass
 
 @dataclass
-class OutputConfiguration(Configuration):
-    include_outputs: list = field(default_factory=list)
+class OutputConfiguration():
+    pass

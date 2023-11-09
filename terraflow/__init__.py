@@ -354,3 +354,50 @@ def resource_delete(namespace, provider, kind, name):
         print(f'\n{colors(color="FAIL")}Error:{colors()} The data source "{provider}_{kind}" "{name}" does not exist in the Terraform configuration.\n')
 
     remove_unused_variables()
+    # TODO: Add remove_orphaned_outputs()
+
+# terraflow variable
+@terraflow.group("variable")
+def variable():
+    """
+    Manage Terraform variables.
+    """
+    pass
+
+# terraflow variable create
+@variable.command("create", context_settings=CONTEXT_SETTINGS)
+@provider_options
+@resource_options
+@variable_options
+def variable_create(
+    namespace,
+    provider,
+    kind,
+    name,
+    description,
+    default,
+    type,
+    terraform_filename,
+):
+    """
+    Create a Terraform variable.
+    """
+    schema = Schema()
+    configuration = VariableConfiguration()
+    component = VariableComponent(
+        schema=schema,
+        name=name,
+        namespace=namespace,
+        provider=provider,
+        kind=kind,
+        description=description,
+        variable_type=type,
+        default=default,
+        configuration=configuration,
+    )
+    
+    write_terraform_to_file(
+        new_code=component.code,
+        filename=terraform_filename if terraform_filename else 'variables.tf'
+    )
+    

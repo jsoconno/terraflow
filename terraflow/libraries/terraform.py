@@ -8,6 +8,7 @@ from .helpers import get_terraform_documentation_url, get_terraform_documentatio
 from .formatting import format_attribute, format_block_header, format_resource_header, format_terraform_code
 from .configuration import Configuration, ProviderConfiguration, ResourceConfiguration, DataSourceConfiguration, VariableConfiguration, OutputConfiguration
 from .docs import TerraformDocumentation
+from .constants import VALID_TYPES
 
 class CodeLoader():
     """
@@ -295,6 +296,65 @@ class DataSourceComponent(CodeGenerator):
         )
         self.configuration = configuration if configuration is not None else DataSourceConfiguration()
         self.code = self._write_code(self.schema_json)
+
+class VariableComponent():
+    """
+    Class representing a Terraform variable.
+    """
+    def _validate_type(self, variable_type: str):
+        # Normalize the type to ensure it matches the expected case
+        normalized_type = variable_type.lower()
+        # Check if the normalized type is in the set of valid types
+        if normalized_type not in VALID_TYPES:
+            print(f"The type '{variable_type}' is not a valid Terraform variable type.")
+        # For complex types, further validation logic can be added here
+        return normalized_type
+    
+    def __init__(self, name: str, kind: str, schema: Schema, provider: str, namespace: str = "hashicorp", default=None, description: str = None, variable_type: str = "string", configuration: VariableConfiguration = None):
+        self.name = name
+        self.default = default
+        self.description = description
+        self.variable_type = self._validate_type(variable_type)  # Ensure the variable type is in lowercase to match Terraform syntax
+        self.configuration = configuration if configuration is not None else VariableConfiguration()
+        self.kind = kind
+
+        # If a description is not provided, fetch it using the schema and provider information
+        if not description:
+            terraform_documentation = TerraformDocumentation(
+                schema=schema,
+                namespace=namespace,
+                provider=provider,
+                kind=self.kind,
+                type='resource' #TODO: Can I make this a variable?
+            )
+            description = terraform_documentation.metadata.get(name, {}).get('description', f'Default description for {name}')
+        
+        self.description = description
+        
+        self.code = self._write_code()
+
+    def _write_code(self):
+        """
+        Generates the Terraform code for a variable.
+        """
+        code = f'variable "{self.name}" {{\n'
+        if self.description:
+            code += f'  description = "{self.description}"\n'
+        if self.default is not None:
+            # Format the default value based on the type provided by the user
+            if self.variable_type == "string":
+                # Only add quotes for string types
+                code += f'  default = "{self.default}"\n'
+            else:
+                # For non-string types, output the default value as is
+                code += f'  default = {self.default.lower()}\n'
+        code += f'  type = {self.variable_type}\n'
+        code += '}\n'
+        return code
+
+# Usage example
+# variable = VariableComponent(name="instance_size", default="t2.micro", description="The size of the instance", variable_type="string")
+# print(variable.code)
 
 # schema = Schema()
 
