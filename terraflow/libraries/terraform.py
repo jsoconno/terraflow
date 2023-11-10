@@ -337,6 +337,10 @@ class VariableComponent():
         Generates the Terraform code for a variable.
         """
         code = f'variable "{self.name}" {{\n'
+        if self.variable_type == None:
+            code += f'  type = {self.docs[self.name].get("type")}\n'
+        else:
+            code += f'  type = {self.variable_type}\n'
         if self.description:
             code += f'  description = "{self.description}"\n'
         if self.default is not None:
@@ -347,10 +351,6 @@ class VariableComponent():
             else:
                 # For non-string types, output the default value as is
                 code += f'  default = {self.default.lower()}\n'
-        if self.variable_type == None:
-            code += f'  type = {self.docs[self.name].get("type")}\n'
-        else:
-            code += f'  type = {self.variable_type}\n'
         code += '}\n'
         return code
 
