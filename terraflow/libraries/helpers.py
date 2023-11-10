@@ -14,6 +14,7 @@ from .formatting import *
 
 # File and folder manipulation functions.
 
+
 def read_text_file(filename: str) -> str:
     """
     Read the contents of a text file.
@@ -27,6 +28,7 @@ def read_text_file(filename: str) -> str:
     with open(filename, "r") as file:
         return file.read()
 
+
 def write_text_file(filename: str, content: str) -> None:
     """
     Write content to a text file.
@@ -37,6 +39,7 @@ def write_text_file(filename: str, content: str) -> None:
     """
     with open(filename, "w") as file:
         file.write(content)
+
 
 def read_json_file(filename: str) -> dict:
     """
@@ -51,6 +54,7 @@ def read_json_file(filename: str) -> dict:
     with open(filename, "r") as json_file:
         return json.loads(json_file.read())
 
+
 def write_json_file(filename: str, data: dict) -> None:
     """
     Writes data as JSON to a file.
@@ -62,16 +66,19 @@ def write_json_file(filename: str, data: dict) -> None:
     with open(filename, "w") as f:
         json.dump(data, f)
 
-def read_yaml_file(filename='.terraflow.yaml'):
+
+def read_yaml_file(filename=".terraflow.yaml"):
     try:
-        with open(filename, 'r') as file:
+        with open(filename, "r") as file:
             config = yaml.safe_load(file)
             return config
     except Exception as e:
-        print(f'Error reading config file: {str(e)}')
+        print(f"Error reading config file: {str(e)}")
         return None
 
+
 # Formatting functions.
+
 
 def format_terminal_text():
     """
@@ -79,7 +86,9 @@ def format_terminal_text():
     """
     pass
 
+
 # Helper functions
+
 
 def calculate_levenshtein_distance(s: str, t: str) -> float:
     """
@@ -143,6 +152,7 @@ def convert_strings_to_dict(text: str, delimiter: str = "=") -> dict:
 
     return dictionary
 
+
 # def scrape_website(url: str, tag: str = None, selector: str = None, list_output: bool = False) -> str:
 #     """
 #     Scrape content from a URL. If a tag or selector is specified, only content within that tag or selector is scraped.
@@ -179,30 +189,37 @@ def convert_strings_to_dict(text: str, delimiter: str = "=") -> dict:
 #     else:
 #         return '\n'.join(texts)
 
+
 def replace_with_headers(element):
     """
     Replace header tags with corresponding markdown.
     """
-    if element.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+    if element.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
         header_level = int(element.name[1])
         header_text = f'{"#" * header_level} {element.text}'
         element.replace_with(NavigableString(header_text))
+
 
 def replace_with_backticks(element):
     """
     Replace <code> and certain <div> elements with backticks (`) text.
     """
-    if element.name == 'code':
+    if element.name == "code":
         backtick_text = f"`{element.text}`"
-    elif element.name == 'pre':
+    elif element.name == "pre":
         backtick_text = f"```\n{element.text}\n```"
     else:
         return
 
     element.replace_with(NavigableString(backtick_text))
 
-def scrape_website(url: str, tag: str = None, selector: str = None, list_output: bool = False) -> str:
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+
+def scrape_website(
+    url: str, tag: str = None, selector: str = None, list_output: bool = False
+) -> str:
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    }
 
     try:
         response = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
@@ -214,19 +231,19 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
     soup = BeautifulSoup(response.content, "html.parser")
 
     # Remove all <table> tags
-    for table in soup.find_all('table'):
+    for table in soup.find_all("table"):
         table.decompose()
 
     # Find all <code> elements and replace them with single backticks
-    for code in soup.find_all('code'):
+    for code in soup.find_all("code"):
         replace_with_backticks(code)
 
     # Find all <pre> elements and replace them with triple backticks
-    for pre in soup.find_all('pre'):
+    for pre in soup.find_all("pre"):
         replace_with_backticks(pre)
-    
+
     # Find all header elements and replace them with markdown
-    for header in soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+    for header in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
         replace_with_headers(header)
 
     if tag:
@@ -234,19 +251,27 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
     elif selector:
         elements = soup.select(selector)
     else:
-        return '\n'.join(line.strip() for line in soup.text.split('\n') if line.strip())
+        return "\n".join(line.strip() for line in soup.text.split("\n") if line.strip())
 
-    texts = ['\n'.join(line.replace('\\n', '\n').strip() for line in elem.get_text().split('\n') if line.strip()) for elem in elements]
+    texts = [
+        "\n".join(
+            line.replace("\\n", "\n").strip()
+            for line in elem.get_text().split("\n")
+            if line.strip()
+        )
+        for elem in elements
+    ]
 
-    text_output = '\n'.join(texts)
+    text_output = "\n".join(texts)
 
     # Post-processing to remove extra whitespace
-    text_output = re.sub(r'\n{3,}', '\n\n', text_output)
+    text_output = re.sub(r"\n{3,}", "\n\n", text_output)
 
     if list_output:
-        return text_output.split('\n\n')
+        return text_output.split("\n\n")
     else:
         return text_output
+
 
 # content = scrape_website_v2(
 #     url='https://github.com/hashicorp/terraform-provider-azurerm/blob/v2.45.0/website/docs/r/resource_group.html.markdown',
@@ -256,6 +281,7 @@ def scrape_website(url: str, tag: str = None, selector: str = None, list_output:
 # print(content)
 
 # File and folder manipulation functions.
+
 
 def read_text_file(filename: str) -> str:
     """
@@ -270,6 +296,7 @@ def read_text_file(filename: str) -> str:
     with open(filename, "r") as file:
         return file.read()
 
+
 def write_text_file(filename: str, content: str) -> None:
     """
     Write content to a text file.
@@ -280,6 +307,7 @@ def write_text_file(filename: str, content: str) -> None:
     """
     with open(filename, "w") as file:
         file.write(content)
+
 
 def read_json_file(filename: str) -> dict:
     """
@@ -294,6 +322,7 @@ def read_json_file(filename: str) -> dict:
     with open(filename, "r") as json_file:
         return json.loads(json_file.read())
 
+
 def write_json_file(filename: str, data: dict) -> None:
     """
     Writes data as JSON to a file.
@@ -305,7 +334,8 @@ def write_json_file(filename: str, data: dict) -> None:
     with open(filename, "w") as f:
         json.dump(data, f)
 
-def read_files(file_extensions: list = ['.tf']) -> str:
+
+def read_files(file_extensions: list = [".tf"]) -> str:
     """
     Loop through all files with the provided extensions in the current directory and return a single string with all code.
 
@@ -318,12 +348,15 @@ def read_files(file_extensions: list = ['.tf']) -> str:
     content = ""
     for file_name in os.listdir(os.getcwd()):
         if any(file_name.endswith(extension) for extension in file_extensions):
-            with open(file_name, 'r') as file:
-                content += file.read() + '\n'
+            with open(file_name, "r") as file:
+                content += file.read() + "\n"
 
     return content
 
-def write_terraform_to_file(filename: str, new_code: str):#, provider=None, resource=None):
+
+def write_terraform_to_file(
+    filename: str, new_code: str
+):  # , provider=None, resource=None):
     """
     Write a Terraform provider, resource, data source, variable, or output block to a file based on a regex pattern.
 
@@ -350,8 +383,14 @@ def write_terraform_to_file(filename: str, new_code: str):#, provider=None, reso
     new_code_blocks = re.findall(pattern, new_code, flags=re.MULTILINE)
 
     # Construct dictionaries for old and new blocks using block type and name as keys
-    old_blocks_dict = {block_id: code for code, block_id, block_type, resource_type, name in old_code_blocks}
-    new_blocks_dict = {block_id: code for code, block_id, block_type, resource_type, name in new_code_blocks}
+    old_blocks_dict = {
+        block_id: code
+        for code, block_id, block_type, resource_type, name in old_code_blocks
+    }
+    new_blocks_dict = {
+        block_id: code
+        for code, block_id, block_type, resource_type, name in new_code_blocks
+    }
 
     # Merge old and new blocks dictionaries
     merged_blocks_dict = {**old_blocks_dict, **new_blocks_dict}
@@ -365,6 +404,7 @@ def write_terraform_to_file(filename: str, new_code: str):#, provider=None, reso
 
     return merged_code
 
+
 def remove_unused_variables():
     """
     This function collects all code, collects all variables, determines which ones to delete, and deletes them.
@@ -374,21 +414,25 @@ def remove_unused_variables():
     code = read_files(file_extensions)
 
     # Collect all variables from the configuration
-    pattern = r'.*?\s+=\s+var.(.*?)(?:\s|#)'
+    pattern = r".*?\s+=\s+var.(.*?)(?:\s|#)"
     variables_list = re.findall(pattern, code, re.MULTILINE)
 
     # Establish a pattern for collecting all variable declarations
     pattern = r'((?:#.*\n)*?^variable\s+(?:".*?"\s+)?\s?"(.*?)"\s+{[\s\S]*?^}$)'
     variable_declarations = re.findall(pattern, code, re.MULTILINE)
-    variable_declarations_dict = {variable: code for code, variable in variable_declarations}
+    variable_declarations_dict = {
+        variable: code for code, variable in variable_declarations
+    }
 
     # Create a list of items that are in variable_declarations_dict that are not in variables_list
-    unused_variables = [var for var in variable_declarations_dict.keys() if var not in variables_list]
+    unused_variables = [
+        var for var in variable_declarations_dict.keys() if var not in variables_list
+    ]
 
     # Now we'll write the modified code back into the Terraform files
     for file_name in os.listdir(os.getcwd()):
         if any(file_name.endswith(extension) for extension in file_extensions):
-            with open(file_name, 'r') as file:
+            with open(file_name, "r") as file:
                 file_content = file.read()
             for var in unused_variables:
                 # replace the unused variables in each file's content
@@ -396,10 +440,12 @@ def remove_unused_variables():
             # Now remove all excessive newlines, but keep one newline between items
             file_content = re.sub("\n{2,}", "\n\n", file_content)
             # Now write the modified content back into the file
-            with open(file_name, 'w') as file:
+            with open(file_name, "w") as file:
                 file.write(file_content)
 
+
 # remove_unused_variables()
+
 
 def load_terraform_code(type: str, name: str, code: str, kind: str = None):
     """
@@ -409,14 +455,20 @@ def load_terraform_code(type: str, name: str, code: str, kind: str = None):
         pattern = rf'((?:#.*\n)*?(^({type})\s+\s?"({name})"\s+{{)[\s\S]*?^}}$)'
     else:
         pattern = rf'((?:#.*\n)*?(^({type})\s+(?:"({kind})"\s+)?\s?"({name})"\s+{{)[\s\S]*?^}}$)'
-    
+
     matches = re.findall(pattern, code, re.MULTILINE)
     if matches:
-        return matches[0][0] + '\n'
+        return matches[0][0] + "\n"
     else:
-        message = f'\n{colors("OK_BLUE")}Info:{colors()} The {type} {name} was not found' if type == 'provider' else f'\n{colors("OK_BLUE")}Info:{colors()} The {type} {kind} with the name {name} was not found.'
+        message = (
+            f'\n{colors("OK_BLUE")}Info:{colors()} The {type} {name} was not found'
+            if type == "provider"
+            else f'\n{colors("OK_BLUE")}Info:{colors()} The {type} {kind} with the name {name} was not found.'
+        )
+
 
 # Helper functions
+
 
 def calculate_levenshtein_distance(s: str, t: str) -> float:
     """
@@ -494,9 +546,17 @@ def is_valid_version(version: str, valid_versions: list) -> bool:
     """
     return version in valid_versions
 
+
 # Documentation functions.
 
-def get_terraform_documentation_url(type: str, namespace: str, provider: str, resource: str = None, version: str = 'main') -> str:
+
+def get_terraform_documentation_url(
+    type: str,
+    namespace: str,
+    provider: str,
+    resource: str = None,
+    version: str = "main",
+) -> str:
     """
     Get the documentation URL for a provider resource or data source.
 
@@ -512,18 +572,27 @@ def get_terraform_documentation_url(type: str, namespace: str, provider: str, re
     """
 
     # if docs_path:
-    if type == 'provider':
+    if type == "provider":
         url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{'' if version == 'main' else 'v'}{version}/website/docs/index.html.markdown"
-    elif type == 'resource':
+    elif type == "resource":
         url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{'' if version == 'main' else 'v'}{version}/website/docs/r/{resource}.html.markdown"
-    elif type == 'data':
+    elif type == "data":
         url = f"https://github.com/{namespace}/terraform-provider-{provider}/blob/{'' if version == 'main' else 'v'}{version}/website/docs/d/{resource}.html.markdown"
     else:
-        print('Type must be one of provider, resource, or data')
-        
+        print("Type must be one of provider, resource, or data")
+
     return url
 
-def get_terraform_documentation(namespace: str, provider: str, scope: str, resource: str = None, version: str = 'main', cache: bool = True, refresh: bool = False) -> str:
+
+def get_terraform_documentation(
+    namespace: str,
+    provider: str,
+    scope: str,
+    resource: str = None,
+    version: str = "main",
+    cache: bool = True,
+    refresh: bool = False,
+) -> str:
     """
     Get the documentation for a provider resource or data source and cache it.
 
@@ -545,7 +614,7 @@ def get_terraform_documentation(namespace: str, provider: str, scope: str, resou
         os.makedirs(documentation_dir)
 
     # Determine the file path for the cached documentation
-    if scope == 'provider':
+    if scope == "provider":
         filepath = os.path.join(documentation_dir, "provider.txt")
     else:
         resource_dir = os.path.join(documentation_dir, resource)
@@ -555,15 +624,21 @@ def get_terraform_documentation(namespace: str, provider: str, scope: str, resou
 
     # If the file exists and refresh is False, read the cached documentation
     if not refresh and os.path.exists(filepath):
-        if scope == 'provider':
-            print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache for the {namespace} {provider} (version {version}) {scope}.\n')
+        if scope == "provider":
+            print(
+                f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache for the {namespace} {provider} (version {version}) {scope}.\n'
+            )
         else:
-            print(f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache for the {namespace} {provider} (version {version}) {resource} {scope}.\n')
+            print(
+                f'\n{colors("OK_BLUE")}Info:{colors()} Reading documentation from cache for the {namespace} {provider} (version {version}) {resource} {scope}.\n'
+            )
         return read_text_file(filepath)
 
     # If the file does not exist or refresh is True, get the documentation URL and the documentation
     # TODO: Consider adding support for collection feature block definitions - https://github.com/hashicorp/terraform-provider-azurerm/blob/main/website/docs/guides/features-block.html.markdown
-    documentation_url = get_terraform_documentation_url(scope, namespace, provider, resource, version)
+    documentation_url = get_terraform_documentation_url(
+        scope, namespace, provider, resource, version
+    )
     documentation = scrape_website(documentation_url, tag="article")
 
     # Make sure newlines are translated from //n to /n for writing to file:
@@ -575,20 +650,27 @@ def get_terraform_documentation(namespace: str, provider: str, scope: str, resou
             try:
                 write_text_file(filepath, documentation)
 
-                print(f'\n{colors("OK_GREEN")}Success:{colors()} Documentation read and cached successfully for the {namespace} {provider} ({version}) {resource} {scope} from {documentation_url}.\n')
+                print(
+                    f'\n{colors("OK_GREEN")}Success:{colors()} Documentation read and cached successfully for the {namespace} {provider} ({version}) {resource} {scope} from {documentation_url}.\n'
+                )
             except Exception:
-                print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the documentation.\n')
+                print(
+                    f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the documentation.\n'
+                )
         else:
-            print(f'\n{colors("WARNING")}Warning:{colors()} Documentation was not found at {documentation_url}.\n')
+            print(
+                f'\n{colors("WARNING")}Warning:{colors()} Documentation was not found at {documentation_url}.\n'
+            )
 
     return documentation
+
 
 def get_component_arguments_list(documentation_text):
     """
     Returns a list of argument references for a given resource
     """
     # TODO: Modify these to make this dynamic.  Consider a single function similar to the TerraformDocumentation class.
-    pattern = r'^##\s+Argument(?:s)? Reference([\s\S]*?)^##\s+Attribute(?:s)? Reference'
+    pattern = r"^##\s+Argument(?:s)? Reference([\s\S]*?)^##\s+Attribute(?:s)? Reference"
     matches = re.findall(pattern, documentation_text, re.MULTILINE)
 
     if matches:
@@ -604,7 +686,7 @@ def get_component_attributes_list(documentation_text):
     """
     Returns a list of attribute references for a given resource
     """
-    pattern = r'^##\s+Attribute(?:s)? Reference([\s\S]*?)^##\s+Import'
+    pattern = r"^##\s+Attribute(?:s)? Reference([\s\S]*?)^##\s+Import"
     matches = re.findall(pattern, documentation_text, re.MULTILINE)
 
     if matches:
@@ -614,6 +696,7 @@ def get_component_attributes_list(documentation_text):
         return attribute_references
 
     return []
+
 
 # # TODO: Add a step to this function to check that the provided resource name is valid
 # text = get_terraform_documentation(
@@ -629,6 +712,7 @@ def get_component_attributes_list(documentation_text):
 
 # print(arguments)
 # print(attributes)
+
 
 def get_resource_attribute_description(
     documentation_text, attribute, block_hierarchy=None
@@ -649,7 +733,9 @@ def get_resource_attribute_description(
             for match in attribute_matches:
                 normalized_block_text = " ".join(block_hierarchy).replace("_", " ")
                 # Calculate the normalized distance
-                normalized_distance = calculate_levenshtein_distance(match, normalized_block_text)
+                normalized_distance = calculate_levenshtein_distance(
+                    match, normalized_block_text
+                )
                 current_block = block_hierarchy[-1]
                 # If the current block name is in the match
                 if current_block in match:
@@ -692,6 +778,7 @@ def get_resource_attribute_description(
 
     return description
 
+
 # namespace = "hashicorp"
 # provider = "azurerm"
 # resource = "key_vault"
@@ -700,6 +787,7 @@ def get_resource_attribute_description(
 # get_terraform_documentation(namespace, provider, scope, resource, cache=True)
 
 # Version functions.
+
 
 def get_semantic_version(version: str) -> Optional[Tuple[int, int, int, int]]:
     """
@@ -711,25 +799,33 @@ def get_semantic_version(version: str) -> Optional[Tuple[int, int, int, int]]:
     Returns:
         Optional[Tuple[int, int, int, int]]: A tuple containing the version components or None if the version is invalid.
     """
-    regex_pattern = r'(\d+)\.*(\d+)*\.*(\d+)*(?:-*(?:(?:[a-zA-Z]*(\d*)))?)'
+    regex_pattern = r"(\d+)\.*(\d+)*\.*(\d+)*(?:-*(?:(?:[a-zA-Z]*(\d*)))?)"
 
     try:
         match = re.match(regex_pattern, version)
         if match:
             version_components = match.groups()
-            version_components = tuple(int(component) if component is not None else 0 for component in version_components)
+            version_components = tuple(
+                int(component) if component is not None else 0
+                for component in version_components
+            )
             version_length = len(version_components)
             missing_version_components = 4 - version_length
 
             if missing_version_components > 0:
                 # Adding the version length at the end is used for pessimistic constraint operator logic.
-                version_components += (0,) * (missing_version_components - 1) + (1000000000000000,) + (version_length,)
+                version_components += (
+                    (0,) * (missing_version_components - 1)
+                    + (1000000000000000,)
+                    + (version_length,)
+                )
 
             return version_components
     except Exception:
         pass
 
     return None
+
 
 def sort_versions(versions: List[str], reverse: bool = True) -> List[str]:
     """
@@ -747,6 +843,7 @@ def sort_versions(versions: List[str], reverse: bool = True) -> List[str]:
     versions = [x for _, x in sorted(zip(tuple_versions, versions), reverse=reverse)]
     return versions
 
+
 def is_valid_version(version: str, valid_versions: list) -> bool:
     """
     Checks whether a provided version is valid based on a given list.
@@ -760,20 +857,28 @@ def is_valid_version(version: str, valid_versions: list) -> bool:
     """
     return version in valid_versions
 
+
 # versions = ["1.0.0", "1.1.0", "0.1.3", "0.1.1-alpha", "2.0.0"]
 # print(sort_versions(versions))
 
-def handle_attribute(attribute, attribute_schema, block_hierarchy, config, documentation_text):
+
+def handle_attribute(
+    attribute, attribute_schema, block_hierarchy, config, documentation_text
+):
     # Skip items that are in the exclude_attributes list or that are computed and not required
-    if not attribute_schema.get('required', False) and (
-            attribute_schema.get('computed', False) or "_".join(block_hierarchy + [attribute]) in config.get(
-            'exclude_attributes', [])):
+    if not attribute_schema.get("required", False) and (
+        attribute_schema.get("computed", False)
+        or "_".join(block_hierarchy + [attribute])
+        in config.get("exclude_attributes", [])
+    ):
         return None, None, None, None
 
     # Get attribute description from the pre-loaded documentation
     description = ""
-    if documentation_text and config.get('options', False):
-        description = get_resource_attribute_description(documentation_text, attribute, block_hierarchy)
+    if documentation_text and config.get("options", False):
+        description = get_resource_attribute_description(
+            documentation_text, attribute, block_hierarchy
+        )
 
     # Construct the attribute name
     if block_hierarchy:
@@ -782,13 +887,14 @@ def handle_attribute(attribute, attribute_schema, block_hierarchy, config, docum
         attribute_name = attribute
 
     # Check if the attribute is optional
-    optional = attribute_schema.get('optional', False)
-    
+    optional = attribute_schema.get("optional", False)
+
     # Get and format attribute type
-    attribute_type = attribute_schema.get('type')
+    attribute_type = attribute_schema.get("type")
     formatted_type = format_attribute_type(attribute_type)
 
     return attribute_name, description, optional, formatted_type
+
 
 def get_terraform_providers(namespace, limit=100, tier="official"):
     url = f"https://registry.terraform.io/v1/providers?namespace={namespace}&limit={limit}"
@@ -805,10 +911,13 @@ def get_terraform_providers(namespace, limit=100, tier="official"):
 
     return [providers["name"] for providers in providers]
 
-def list_items(schema, namespace="hashicorp", provider=None, scope="resource", keywords=None):
+
+def list_items(
+    schema, namespace="hashicorp", provider=None, scope="resource", keywords=None
+):
     """
     Get a list of providers for a namespace or resources or data sources for a provider.
-    
+
     Parameters:
     schema (dict): The schema dictionary containing provider information.
     namespace (str): The namespace of the provider, defaults to 'hashicorp'.
@@ -825,7 +934,9 @@ def list_items(schema, namespace="hashicorp", provider=None, scope="resource", k
         if scope == "provider":
             schema = schema["provider_schemas"]
             for provider_name in schema:
-                provider_name = provider_name.replace("registry.terraform.io/", "").split("/")[1]
+                provider_name = provider_name.replace(
+                    "registry.terraform.io/", ""
+                ).split("/")[1]
                 items.append(provider_name)
         elif scope in ALLOWED_SCOPES:
             schema = schema["provider_schemas"][
@@ -843,6 +954,7 @@ def list_items(schema, namespace="hashicorp", provider=None, scope="resource", k
 
     return items
 
+
 def delete_provider_code(provider, filename="providers.tf"):
     regex_pattern = rf'^provider\s+"{provider}"\s+{{[\s\S]*?^}}\n*'
 
@@ -854,11 +966,10 @@ def delete_provider_code(provider, filename="providers.tf"):
     with open(filename, "w") as f:
         f.write(result)
 
+
 def delete_resource_code(provider, kind, name, filename="main.tf"):
     kind = "_".join([provider, kind]) if not provider in kind else kind
-    regex_pattern = (
-        rf'(?:#.*\n)*?^resource\s+"{kind}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
-    )
+    regex_pattern = rf'(?:#.*\n)*?^resource\s+"{kind}"\s+"{name}"\s+{{[\s\S]*?^}}\n*'
 
     with open(filename, "r") as f:
         string = f.read()
@@ -867,6 +978,7 @@ def delete_resource_code(provider, kind, name, filename="main.tf"):
 
     with open(filename, "w") as f:
         f.write(result)
+
 
 def delete_data_source_code(provider, kind, name, filename="main.tf"):
     kind = "_".join([provider, kind]) if not provider in kind else kind
@@ -880,12 +992,14 @@ def delete_data_source_code(provider, kind, name, filename="main.tf"):
     with open(filename, "w") as f:
         f.write(result)
 
+
 def run_terraform_fmt():
     subprocess.run(["terraform", "fmt"], stdout=subprocess.DEVNULL)
 
+
 def get_namespaces_and_providers():
     # Check if there are any Terraform files in the current directory
-    if not any(fname.endswith('.tf') for fname in os.listdir('.')):
+    if not any(fname.endswith(".tf") for fname in os.listdir(".")):
         print("It appears you are not in a Terraform directory.")
         return None, None
 
@@ -898,7 +1012,7 @@ def get_namespaces_and_providers():
         return None, None
 
     # Parse the command output
-    pattern = fr"provider\[registry\.terraform\.io/(.*?)/(.*?)\]\s?(\S+)?"
+    pattern = rf"provider\[registry\.terraform\.io/(.*?)/(.*?)\]\s?(\S+)?"
     match = re.findall(pattern, result.stdout, re.MULTILINE)
     if match:
         # Separate namespaces and providers and convert to sets to get unique values
@@ -906,15 +1020,19 @@ def get_namespaces_and_providers():
         providers = list(set(provider for namespace, provider, version in match))
 
         return namespaces, providers
-    
+
+
 def get_provider_versions(namespace, provider):
     """
     Gets a list of versions for a given terraform provider such as aws, gcp, or azurerm.
     """
-    response = requests.get(f"https://registry.terraform.io/v1/providers/{namespace}/{provider}/versions")
+    response = requests.get(
+        f"https://registry.terraform.io/v1/providers/{namespace}/{provider}/versions"
+    )
     data = json.loads(response.text)
-    
-    return [x['version'] for x in data['versions']]
+
+    return [x["version"] for x in data["versions"]]
+
 
 def compare_versions(v1, v2):
     """
@@ -923,8 +1041,8 @@ def compare_versions(v1, v2):
     Returns:
         int: -1 if v1 < v2, 0 if v1 == v2, 1 if v1 > v2.
     """
-    v1_parts = [int(part) for part in v1.split('.')]
-    v2_parts = [int(part) for part in v2.split('.')]
+    v1_parts = [int(part) for part in v1.split(".")]
+    v2_parts = [int(part) for part in v2.split(".")]
 
     # Pad the shorter version with zeros
     max_len = max(len(v1_parts), len(v2_parts))
@@ -938,6 +1056,7 @@ def compare_versions(v1, v2):
             return 1
 
     return 0
+
 
 def sort_versions(versions, exclude_preleases=True):
     """
@@ -953,7 +1072,10 @@ def sort_versions(versions, exclude_preleases=True):
     if exclude_preleases:
         versions = [v for v in versions if "alpha" not in v and "beta" not in v]
 
-    return sorted(versions, key=lambda v: [int(part) for part in v.split('.')], reverse=True)
+    return sorted(
+        versions, key=lambda v: [int(part) for part in v.split(".")], reverse=True
+    )
+
 
 def get_latest_version(versions, exclude_preleases=False):
     """
@@ -981,22 +1103,29 @@ def get_provider_version(provider: str, namespace: str = "hashicorp") -> str:
 
     # Check the return code
     if result.returncode != 0:
-        print("Error running `terraform providers` command.")
+        print(
+            f'{colors("FAIL")}Error:{colors()} Cloud not run the terraform provider command.'
+        )
         return None
 
     # Parse the command output
-    pattern = fr"provider\[registry\.terraform\.io/hashicorp/azurerm\]\s?(\S+)?"
+    pattern = rf"provider\[registry\.terraform\.io/hashicorp/azurerm\]\s?(\S+)?"
     match = re.search(pattern, result.stdout)
     version = match.group(1)
 
-    versions = get_provider_versions(namespace=namespace, provider=provider)
-    latest_version = get_latest_version(versions=versions)
+    # If the provider version was found, return it
+    if version:
+        return version
 
-    if match:
-        return version if version else latest_version
+    # Otherwise, try to get the latest version
+    try:
+        versions = get_provider_versions(namespace=namespace, provider=provider)
+        latest_version = get_latest_version(versions=versions)
+        return latest_version
+    except Exception as e:
+        print(f'{colors("FAIL")}Error:{colors()} {e}')
+        return None
 
-    print(f"No match found for provider {namespace}/{provider} in `terraform providers` output.")
-    return None
 
 def get_terraform_versions() -> list:
     """
@@ -1006,25 +1135,29 @@ def get_terraform_versions() -> list:
         A list of valid Terraform versions.
     """
     response = requests.get("https://releases.hashicorp.com/terraform")
-    
-    pattern = r'terraform_((\d+)\.*(\d+)*\.*(\d+)*-?([\S]*))</a>'
+
+    pattern = r"terraform_((\d+)\.*(\d+)*\.*(\d+)*-?([\S]*))</a>"
     versions = re.findall(pattern, response.text)
 
     versions = [version[0] for version in versions]
 
     return versions
 
+
 # print(get_terraform_versions())
+
 
 def get_terraform_version():
     """
     Get the current Terraform version from the terraform block.
     """
     try:
-        result = subprocess.run(['terraform', 'version'], capture_output=True, text=True)
+        result = subprocess.run(
+            ["terraform", "version"], capture_output=True, text=True
+        )
         output = result.stdout.strip()
         # Extracting the version information from the output
-        version = output.split('\n')[0].split(' ')[-1].replace('v', '')
+        version = output.split("\n")[0].split(" ")[-1].replace("v", "")
         return version
     except FileNotFoundError:
         # Handle the case where Terraform is not installed or not in the system's PATH
@@ -1033,43 +1166,70 @@ def get_terraform_version():
         # Handle any other exceptions that might occur during the execution
         return f"Error occurred: {str(e)}"
 
-def filter_attributes(attributes: dict, attribute_docs: dict, configuration: object, block_hierarchy: list = None) -> dict:
+
+def filter_attributes(
+    attributes: dict,
+    attribute_docs: dict,
+    configuration: object,
+    block_hierarchy: list = None,
+) -> dict:
     if block_hierarchy is None:
         block_hierarchy = []
 
     # Exclude specified attributes if any
     if configuration.exclude_attributes:
-        attributes = {k: v for k, v in attributes.items() if '.'.join(block_hierarchy + [k]) not in configuration.exclude_attributes or v.get('required', False)}
+        attributes = {
+            k: v
+            for k, v in attributes.items()
+            if ".".join(block_hierarchy + [k]) not in configuration.exclude_attributes
+            or v.get("required", False)
+        }
 
     # # Exclude attributes that are flagged as 'input': False
-    attributes = {k: v for k, v in attributes.items() if '.'.join(block_hierarchy + [k]) in attribute_docs and attribute_docs['.'.join(block_hierarchy + [k])].get('input', True)}
+    attributes = {
+        k: v
+        for k, v in attributes.items()
+        if ".".join(block_hierarchy + [k]) in attribute_docs
+        and attribute_docs[".".join(block_hierarchy + [k])].get("input", True)
+    }
 
     # Include only required attributes if specified
     if configuration.required_attributes_only:
-        attributes = {k: v for k, v in attributes.items() if v.get('required', False)}
+        attributes = {k: v for k, v in attributes.items() if v.get("required", False)}
 
     return attributes
 
 
-def filter_blocks(blocks: dict, configuration: object, exclude_blocks: list = [], block_hierarchy: list = None) -> dict:
+def filter_blocks(
+    blocks: dict,
+    configuration: object,
+    exclude_blocks: list = [],
+    block_hierarchy: list = None,
+) -> dict:
     if block_hierarchy is None:
         block_hierarchy = []
 
     # Exclude specified blocks if any
     if configuration.exclude_blocks:
-        blocks = {k: v for k, v in blocks.items() if '.'.join(block_hierarchy + [k]) not in configuration.exclude_blocks or v.get("min_items", 0) > 0}
+        blocks = {
+            k: v
+            for k, v in blocks.items()
+            if ".".join(block_hierarchy + [k]) not in configuration.exclude_blocks
+            or v.get("min_items", 0) > 0
+        }
 
     # Include only required blocks if specified
     if configuration.required_blocks_only:
-        blocks = {k: v for k, v in blocks.items() if v.get('min_items', 0) > 0}
+        blocks = {k: v for k, v in blocks.items() if v.get("min_items", 0) > 0}
 
     return blocks
+
 
 def parse_variables(data):
     # Regular expression patterns
     type_pattern = r'((?:#.*\n)*?(^(.*?)\s+(?:"(.*?)"\s+)?\s?"(.*?)"\s+{)[\s\S]*?^}$)'
-    block_pattern = r'(.*?)\s*{'
-    attribute_pattern = r'\s*(.*?)\s*=\s*var.(.*?)$'
+    block_pattern = r"(.*?)\s*{"
+    attribute_pattern = r"\s*(.*?)\s*=\s*var.(.*?)$"
 
     # Initialize containers
     resource_info = {}
@@ -1086,11 +1246,11 @@ def parse_variables(data):
             "type": type_match.group(3).strip(),
             "provider": type_match.group(5).strip(),
             "kind": type_match.group(4) if type_match.group(4) else "",
-            "resource_id": f'{type_match.group(3).strip()}{"." + type_match.group(4) if type_match.group(4) else ""}.{type_match.group(5).strip()}'
+            "resource_id": f'{type_match.group(3).strip()}{"." + type_match.group(4) if type_match.group(4) else ""}.{type_match.group(5).strip()}',
         }
 
         # Split the content by lines
-        lines = type_content.split('\n')
+        lines = type_content.split("\n")
 
         # Process lines
         for line in lines:
@@ -1100,19 +1260,24 @@ def parse_variables(data):
                 block_stack.append(block_match.group(1).strip())
             elif attribute_match:  # This is an attribute
                 attribute_dict = {
-                    "attribute_id": ".".join(block_stack.copy()[1:] + [attribute_match.group(1)]),
-                    "variable_id": ".".join(['variable', attribute_match.group(2)]),
+                    "attribute_id": ".".join(
+                        block_stack.copy()[1:] + [attribute_match.group(1)]
+                    ),
+                    "variable_id": ".".join(["variable", attribute_match.group(2)]),
                     "block_hierarchy": block_stack.copy()[1:],
                     "name": attribute_match.group(1),
-                    "value": attribute_match.group(2)
+                    "value": attribute_match.group(2),
                 }
-                attribute_dict.update(resource_info)  # Add resource info to attribute dict
+                attribute_dict.update(
+                    resource_info
+                )  # Add resource info to attribute dict
                 output.append(attribute_dict)
-            elif '}' in line and block_stack:  # The end of a block
+            elif "}" in line and block_stack:  # The end of a block
                 block_stack.pop()
 
     # Return output
     return output
+
 
 # Usage example:
 

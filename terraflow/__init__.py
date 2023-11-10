@@ -32,6 +32,7 @@ def terraflow():
     """
     pass
 
+
 # terraflow provider
 @terraflow.group("provider")
 def provider():
@@ -48,11 +49,11 @@ def provider_list(namespace, provider):
     """
     List available providers.
     """
-    items = get_terraform_providers(
-        namespace=namespace
-    )
+    items = get_terraform_providers(namespace=namespace)
 
-    output = format_list(title=f"Available providers for namespace {namespace}:", items=items)
+    output = format_list(
+        title=f"Available providers for namespace {namespace}:", items=items
+    )
     click.echo_via_pager(output)
 
 
@@ -69,6 +70,7 @@ def provider_get(keyword):
 
     output = format_list(title="Providers in this configuration:", items=items)
     click.echo_via_pager(output)
+
 
 # terraflow provider create
 @provider.command("create", context_settings=CONTEXT_SETTINGS)
@@ -89,7 +91,7 @@ def resource_create(
     attribute_default,
     attribute_value_prefix,
     terraform_filename,
-    header_comment
+    header_comment,
 ):
     """
     Create a Terraform provider.
@@ -109,19 +111,18 @@ def resource_create(
         attribute_value_prefix=attribute_value_prefix,
     )
 
-    component = ProviderComponent(
-        schema=schema,
-        namespace=namespace,
-        name=provider,
-        configuration=configuration
+    component = TerraformProvider(
+        schema=schema, namespace=namespace, name=provider, configuration=configuration
     )
 
     write_terraform_to_file(
         new_code=component.code,
-        filename=terraform_filename if terraform_filename else 'providers.tf'
+        filename=terraform_filename if terraform_filename else "providers.tf",
     )
 
-    print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The provider "{provider}" was created.\n')
+    print(
+        f'\n{colors(color="OK_GREEN")}Success:{colors()} The provider "{provider}" was created.\n'
+    )
 
     run_terraform_fmt()
 
@@ -179,7 +180,7 @@ def resource_create(
     attribute_default,
     attribute_value_prefix,
     terraform_filename,
-    header_comment
+    header_comment,
 ):
     """
     Create a Terraform resource.
@@ -199,21 +200,23 @@ def resource_create(
         attribute_value_prefix=attribute_value_prefix,
     )
 
-    resource = ResourceComponent(
+    resource = TerraformResource(
         schema=schema,
         namespace=namespace,
         provider=provider,
         kind=kind,
         name=name,
-        configuration=configuration
+        configuration=configuration,
     )
 
     write_terraform_to_file(
         new_code=resource.code,
-        filename=terraform_filename if terraform_filename else 'main.tf'
+        filename=terraform_filename if terraform_filename else "main.tf",
     )
 
-    print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The resource "{provider}_{kind}" "{name}" was created.\n')
+    print(
+        f'\n{colors(color="OK_GREEN")}Success:{colors()} The resource "{provider}_{kind}" "{name}" was created.\n'
+    )
 
     run_terraform_fmt()
 
@@ -227,19 +230,25 @@ def resource_delete(namespace, provider, kind, name):
     Delete a resource from the configuration.
     """
     loader = CodeLoader()
-    component = loader.get_component_by_id(
-        id=f"resource.{provider}_{kind}.{name}"
-    )
+    component = loader.get_component_by_id(id=f"resource.{provider}_{kind}.{name}")
 
     if component:
         delete_resource_code(
-            provider=provider, kind=component["kind"], name=component["name"], filename=component["filename"]
+            provider=provider,
+            kind=component["kind"],
+            name=component["name"],
+            filename=component["filename"],
         )
-        print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The resource "{provider}_{kind}" "{name}" was deleted from the Terraform configuration.\n')
+        print(
+            f'\n{colors(color="OK_GREEN")}Success:{colors()} The resource "{provider}_{kind}" "{name}" was deleted from the Terraform configuration.\n'
+        )
     else:
-        print(f'\n{colors(color="FAIL")}Error:{colors()} The resource "{provider}_{kind}" "{name}" does not exist in the Terraform configuration.\n')
+        print(
+            f'\n{colors(color="FAIL")}Error:{colors()} The resource "{provider}_{kind}" "{name}" does not exist in the Terraform configuration.\n'
+        )
 
     remove_unused_variables()
+
 
 # terraflow data
 @terraflow.group("data")
@@ -293,7 +302,7 @@ def data_create(
     attribute_default,
     attribute_value_prefix,
     terraform_filename,
-    header_comment
+    header_comment,
 ):
     """
     Create a Terraform data source.
@@ -313,21 +322,23 @@ def data_create(
         attribute_value_prefix=attribute_value_prefix,
     )
 
-    component = DataSourceComponent(
+    component = TerraformDataSource(
         schema=schema,
         namespace=namespace,
         provider=provider,
         kind=kind,
         name=name,
-        configuration=configuration
+        configuration=configuration,
     )
 
     write_terraform_to_file(
         new_code=component.code,
-        filename=terraform_filename if terraform_filename else 'data.tf'
+        filename=terraform_filename if terraform_filename else "data.tf",
     )
 
-    print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The data source "{provider}_{kind}" "{name}" was created.\n')
+    print(
+        f'\n{colors(color="OK_GREEN")}Success:{colors()} The data source "{provider}_{kind}" "{name}" was created.\n'
+    )
 
     run_terraform_fmt()
 
@@ -341,20 +352,26 @@ def resource_delete(namespace, provider, kind, name):
     Delete a data source from the configuration.
     """
     loader = CodeLoader()
-    component = loader.get_component_by_id(
-        id=f"data.{provider}_{kind}.{name}"
-    )
+    component = loader.get_component_by_id(id=f"data.{provider}_{kind}.{name}")
 
     if component:
         delete_data_source_code(
-            provider=provider, kind=component["kind"], name=component["name"], filename=component["filename"]
+            provider=provider,
+            kind=component["kind"],
+            name=component["name"],
+            filename=component["filename"],
         )
-        print(f'\n{colors(color="OK_GREEN")}Success:{colors()} The data source "{provider}_{kind}" "{name}" was deleted from the Terraform configuration.\n')
+        print(
+            f'\n{colors(color="OK_GREEN")}Success:{colors()} The data source "{provider}_{kind}" "{name}" was deleted from the Terraform configuration.\n'
+        )
     else:
-        print(f'\n{colors(color="FAIL")}Error:{colors()} The data source "{provider}_{kind}" "{name}" does not exist in the Terraform configuration.\n')
+        print(
+            f'\n{colors(color="FAIL")}Error:{colors()} The data source "{provider}_{kind}" "{name}" does not exist in the Terraform configuration.\n'
+        )
 
     remove_unused_variables()
     # TODO: Add remove_orphaned_outputs()
+
 
 # terraflow variable
 @terraflow.group("variable")
@@ -363,6 +380,7 @@ def variable():
     Manage Terraform variables.
     """
     pass
+
 
 # terraflow variable create
 @variable.command("create", context_settings=CONTEXT_SETTINGS)
@@ -384,20 +402,20 @@ def variable_create(
     """
     schema = Schema()
     configuration = VariableConfiguration()
-    component = VariableComponent(
+    component = TerraformVariable(
         schema=schema,
         name=name,
         namespace=namespace,
         provider=provider,
         kind=kind,
+        type=type,
         description=description,
-        variable_type=type,
+        variable_type="string",
         default=default,
         configuration=configuration,
     )
-    
+
     write_terraform_to_file(
         new_code=component.code,
-        filename=terraform_filename if terraform_filename else 'variables.tf'
+        filename=terraform_filename if terraform_filename else "variables.tf",
     )
-    

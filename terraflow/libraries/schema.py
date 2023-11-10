@@ -12,7 +12,7 @@ class Schema:
         self.filename = filename
         self.cache = cache
         self.refresh = refresh
-        self.schema = self.get_schema()
+        self.json = self.get_schema()
 
     def get_schema(self):
         if not os.path.exists(TERRAFLOW_DIR):
@@ -58,19 +58,19 @@ class Schema:
             print(f'\n{colors("FAIL")}Error:{colors()} An error occurred while caching the schema: {traceback.format_exc()}\n')
 
     def get_provider_schema(self, namespace, provider):
-        return self.schema["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["provider"]
+        return self.json["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["provider"]
 
     def get_resource_schema(self, namespace, provider, resource):
         if resource and provider not in resource:
             resource = f"{provider}_{resource}"
 
-        return self.schema["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["resource_schemas"][resource]
+        return self.json["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["resource_schemas"][resource]
 
     def get_data_schema(self, namespace, provider, data_source):
         if data_source and provider not in data_source:
             data_source = f"{provider}_{data_source}"
 
-        return self.schema["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["data_source_schemas"][data_source]
+        return self.json["provider_schemas"][f"{TERRAFORM_REGISTRY_BASE}/{namespace}/{provider}"]["data_source_schemas"][data_source]
 
     def get_attribute_schema(self, resource_schema, blocks=None, attribute=None):
         try:
