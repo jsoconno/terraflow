@@ -141,7 +141,6 @@ class CodeGenerator():
 
         # Get the documentation once and use it throughout the method
         if docs is None:
-            print(self.provider_version)
             docs = TerraformDocumentation(
                 schema=self.schema,
                 namespace=self.namespace,
