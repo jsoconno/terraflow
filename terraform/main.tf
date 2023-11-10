@@ -11,3 +11,9 @@ resource "azurerm_service_plan" "main" {
   worker_count                 = var.worker_count
   zone_balancing_enabled       = var.zone_balancing_enabled
 }
+
+resource "azurerm_resource_group" "main" {
+  location = var.location
+  name     = var.name
+  tags     = var.tags
+}

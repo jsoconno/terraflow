@@ -141,6 +141,7 @@ class CodeGenerator():
 
         # Get the documentation once and use it throughout the method
         if docs is None:
+            print(self.provider_version)
             docs = TerraformDocumentation(
                 schema=self.schema,
                 namespace=self.namespace,
@@ -301,36 +302,33 @@ class VariableComponent():
     """
     Class representing a Terraform variable.
     """
-    def _validate_type(self, variable_type: str):
-        # Normalize the type to ensure it matches the expected case
-        normalized_type = variable_type.lower()
-        # Check if the normalized type is in the set of valid types
-        if normalized_type not in VALID_TYPES:
-            print(f"The type '{variable_type}' is not a valid Terraform variable type.")
-        # For complex types, further validation logic can be added here
-        return normalized_type
+    # def _validate_type(self, variable_type: str):
+    #     # Check if the normalized type is in the set of valid types
+    #     if variable_type not in VALID_TYPES:
+    #         print(f"The type '{variable_type}' is not a valid Terraform variable type.")
+    #     # For complex types, further validation logic can be added here
+    #     return variable_type
     
-    def __init__(self, name: str, kind: str, schema: Schema, provider: str, namespace: str = "hashicorp", default=None, description: str = None, variable_type: str = "string", configuration: VariableConfiguration = None):
+    def __init__(self, name: str, kind: str, schema: Schema, provider: str, namespace: str = "hashicorp", default=None, description: str = None, variable_type: str = None, configuration: VariableConfiguration = None):
         self.name = name
         self.default = default
         self.description = description
-        self.variable_type = self._validate_type(variable_type)  # Ensure the variable type is in lowercase to match Terraform syntax
+        self.variable_type = variable_type # self._validate_type(variable_type)  # Ensure the variable type is in lowercase to match Terraform syntax
         self.configuration = configuration if configuration is not None else VariableConfiguration()
         self.kind = kind
 
         # If a description is not provided, fetch it using the schema and provider information
-        if not description:
-            terraform_documentation = TerraformDocumentation(
-                schema=schema,
-                namespace=namespace,
-                provider=provider,
-                kind=self.kind,
-                version=get_provider_version(provider, namespace),
-                type='resource' #TODO: Can I make this a variable?
-            )
-            description = terraform_documentation.metadata.get(name, {}).get('description', f'Default description for {name}')
+        terraform_documentation = TerraformDocumentation(
+            schema=schema,
+            namespace=namespace,
+            provider=provider,
+            kind=self.kind,
+            version=get_provider_version(provider, namespace),
+            type='resource' #TODO: Can I make this a variable?
+        )
         
-        self.description = description
+        self.docs = terraform_documentation.metadata
+        self.description = terraform_documentation.metadata.get(name, {}).get('description', f'Default description for {name}') if not description else description
         
         self.code = self._write_code()
 
@@ -349,7 +347,10 @@ class VariableComponent():
             else:
                 # For non-string types, output the default value as is
                 code += f'  default = {self.default.lower()}\n'
-        code += f'  type = {self.variable_type}\n'
+        if self.variable_type == None:
+            code += f'  type = {self.docs[self.name].get("type")}\n'
+        else:
+            code += f'  type = {self.variable_type}\n'
         code += '}\n'
         return code
 

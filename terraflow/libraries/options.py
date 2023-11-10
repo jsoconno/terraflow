@@ -208,7 +208,7 @@ options = {
     "type": click.option(
         "--type",
         type=str,
-        default="string",
+        default=None,
         multiple=False,
         required=False,
         help="The type for the object.",

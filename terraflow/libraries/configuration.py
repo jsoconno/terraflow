@@ -13,6 +13,7 @@ class Configuration:
     exclude_computed_blocks: bool = True
     attribute_defaults: dict = field(default_factory=dict)
     attribute_value_prefix: str = ""
+    auto_create_variables: bool = True
 
 @dataclass
 class ProviderConfiguration(Configuration):
