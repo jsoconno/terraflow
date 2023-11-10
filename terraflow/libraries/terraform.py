@@ -325,6 +325,7 @@ class VariableComponent():
                 namespace=namespace,
                 provider=provider,
                 kind=self.kind,
+                version=get_provider_version(provider, namespace),
                 type='resource' #TODO: Can I make this a variable?
             )
             description = terraform_documentation.metadata.get(name, {}).get('description', f'Default description for {name}')

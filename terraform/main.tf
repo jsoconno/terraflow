@@ -1,13 +1,13 @@
-resource "azurerm_resource_group" "main" {
-  location = var.resource_group_location
-  name     = var.resource_group_name
-  tags     = var.resource_group_tags
-
-  # This block is optional allowing for 0 to N item(s)
-  timeouts {
-    create = var.resource_group_timeouts_create
-    delete = var.resource_group_timeouts_delete
-    read   = var.resource_group_timeouts_read
-    update = var.resource_group_timeouts_update
-  }
+resource "azurerm_service_plan" "main" {
+  app_service_environment_id   = var.app_service_environment_id
+  location                     = var.location
+  maximum_elastic_worker_count = var.maximum_elastic_worker_count
+  name                         = var.name
+  os_type                      = var.os_type
+  per_site_scaling_enabled     = var.per_site_scaling_enabled
+  resource_group_name          = var.resource_group_name
+  sku_name                     = var.sku_name
+  tags                         = var.tags
+  worker_count                 = var.worker_count
+  zone_balancing_enabled       = var.zone_balancing_enabled
 }
