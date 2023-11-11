@@ -3,20 +3,22 @@ import re
 import os
 
 # from terraflow.libraries.schema import get_schema, get_provider_schema, get_resource_schema, get_data_schema
-from terraflow.libraries.schema import Schema
-from terraflow.libraries.helpers import (
+from .schema import Schema
+from .helpers import (
+    get_terraform_documentation_url,
+    get_terraform_documentation,
     get_provider_version,
     get_terraform_version,
     filter_attributes,
     filter_blocks,
 )
-from terraflow.libraries.formatting import (
+from .formatting import (
     format_attribute,
     format_block_header,
     format_resource_header,
     format_terraform_code,
 )
-from terraflow.libraries.configuration import (
+from .configuration import (
     Configuration,
     ProviderConfiguration,
     ResourceConfiguration,
@@ -24,8 +26,8 @@ from terraflow.libraries.configuration import (
     VariableConfiguration,
     OutputConfiguration,
 )
-from terraflow.libraries.docs import TerraformDocumentation
-from terraflow.libraries.constants import VALID_TYPES
+from .docs import TerraformDocumentation
+from .constants import VALID_TYPES
 
 
 class CodeLoader:
@@ -133,51 +135,32 @@ class CodeLoader:
         return None
 
 
-class TerraformBase:
+# code = CodeLoader()
+# print(code.get_components())
+
+
+class CodeGenerator:
     """
-    Base class for all Terraform objects.
+    Base class representing a Terraform component.
+    This class provides methods to generate Terraform code.
     """
 
-    def __init__(
-        self,
-        schema: Schema,
-        namespace: str,
-        provider: str,
-        provider_version: str = None,
-        type: str = None,
-        name: str = None,
-        kind: str = None,
-        configuration: Configuration = None,
-    ):
-        self.schema = schema
-        self.terraform_version = get_terraform_version()
+    def __init__(self, provider: str, schema: Schema, namespace: str = "hashicorp"):
         self.namespace = namespace
         self.provider = provider
-        self.provider_version = (
-            provider_version
-            if provider_version
-            else get_provider_version(self.provider, self.namespace)
-        )
-        self.kind = kind
-        self.type = type
-        self.name = name
-        self.configuration = configuration if configuration else Configuration()
-
+        self.kind = None
+        self.type = "terraform"
+        self.configuration = Configuration()
         self.code = ""
-        self.documentation = TerraformDocumentation(
-            schema=self.schema,
-            namespace=self.namespace,
-            provider=self.provider,
-            version=self.provider_version,
-            kind=self.kind,
-            type=self.type,
-        )
+        self.schema = schema
+        self.schema_json = schema.json
+        self.attributes = {}
 
-
-class TerraformCodeMixin:
-    """
-    Class responsible for generating Terraform code.
-    """
+    def _write_code_line(self, line: str):
+        """
+        Appends a line of code to the overall Terraform code.
+        """
+        self.code += line
 
     def _write_body_code(self, schema: dict, docs=None, block_hierarchy: list = None):
         """
@@ -188,6 +171,17 @@ class TerraformCodeMixin:
         if block_hierarchy is None:
             block_hierarchy = []
 
+        # Get the documentation once and use it throughout the method
+        if docs is None:
+            docs = TerraformDocumentation(
+                schema=self.schema,
+                namespace=self.namespace,
+                provider=self.provider,
+                version=self.provider_version,
+                kind=self.kind,
+                type=self.type,
+            ).metadata
+
         # Collect attributes and blocks in the current block
         attributes = schema.get("block", {}).get("attributes", {})
         blocks = schema.get("block", {}).get("block_types", {})
@@ -195,7 +189,7 @@ class TerraformCodeMixin:
         # Apply filtering based on configuration
         attributes = filter_attributes(
             attributes=attributes,
-            attribute_docs=self.documentation.metadata,
+            attribute_docs=docs,
             configuration=self.configuration,
             block_hierarchy=block_hierarchy,
         )
@@ -214,9 +208,7 @@ class TerraformCodeMixin:
             code += format_attribute(
                 attribute=attribute,
                 attribute_schema=attribute_schema,
-                attribute_description=self.documentation.metadata.get(id, {}).get(
-                    "description", None
-                ),
+                attribute_description=docs.get(id, {}).get("description", None),
                 block_hierarchy=block_hierarchy,
                 configuration=self.configuration,
             )
@@ -233,9 +225,7 @@ class TerraformCodeMixin:
             code += header
             # Recursive call to handle nested blocks
             code += self._write_body_code(
-                schema=block_schema,
-                docs=self.documentation.metadata,
-                block_hierarchy=updated_block_hierarchy,
+                schema=block_schema, docs=docs, block_hierarchy=updated_block_hierarchy
             )
             code += footer
 
@@ -253,7 +243,7 @@ class TerraformCodeMixin:
             provider=self.provider,
             kind=self.kind,
             documentation_url=(
-                self.documentation.url
+                self.docs_url
                 if self.configuration.add_header_terraform_docs_url
                 else None
             ),
@@ -270,144 +260,168 @@ class TerraformCodeMixin:
 
         return code
 
-
-class TerraformProvider(TerraformBase, TerraformCodeMixin):
-    def __init__(
-        self,
-        schema: Schema,
-        namespace: str,
-        provider: str,
-        provider_version: str = None,
-        type: str = "provider",
-        name: str = None,
-        kind: str = None,
-        configuration: ProviderConfiguration = None,
-    ):
-        super().__init__(
-            schema,
-            namespace,
-            provider,
-            provider_version,
-            type,
-            name,
-            kind,
-            configuration,
-        )
-
-        provider_schema = self.schema.get_provider_schema(
-            namespace=self.namespace,
-            provider=self.provider,
-        )
-        self.code = self._write_code(schema=provider_schema)
-        self.configuration = configuration if configuration else ProviderConfiguration()
-
-
-class TerraformResource(TerraformBase, TerraformCodeMixin):
-    def __init__(
-        self,
-        schema: Schema,
-        namespace: str,
-        provider: str,
-        kind: str,
-        provider_version: str = None,
-        type: str = "resource",
-        name: str = "main",
-        configuration: ResourceConfiguration = None,
-    ):
-        super().__init__(
-            schema,
-            namespace,
-            provider,
-            provider_version,
-            type,
-            name,
-            kind,
-            configuration,
-        )
-
-        resource_schema = self.schema.get_resource_schema(
+    @property
+    def docs_url(self):
+        return get_terraform_documentation_url(
+            type=self.type,
             namespace=self.namespace,
             provider=self.provider,
             resource=self.kind,
-        )
-        self.code = self._write_code(schema=resource_schema)
-        self.configuration = configuration if configuration else ResourceConfiguration()
-
-
-class TerraformDataSource(TerraformBase, TerraformCodeMixin):
-    def __init__(
-        self,
-        schema: Schema,
-        namespace: str,
-        provider: str,
-        provider_version: str,
-        kind: str,
-        type: str = "data",
-        name: str = "main",
-        configuration: DataSourceConfiguration = None,
-    ):
-        super().__init__(
-            schema,
-            namespace,
-            provider,
-            provider_version,
-            type,
-            name,
-            kind,
-            configuration,
+            version=self.provider_version,
         )
 
-        data_source_schema = self.schema.get_data_schema(
+    @property
+    def docs(self):
+        return get_terraform_documentation(
             namespace=self.namespace,
             provider=self.provider,
-            data_source=self.kind,
-        )
-        self.code = self._write_code(schema=data_source_schema)
-        self.configuration = (
-            configuration if configuration else DataSourceConfiguration()
+            scope=self.type,
+            resource=self.kind,
+            version=self.provider_version,
         )
 
+    @property
+    def provider_version(self):
+        return get_provider_version(self.provider, self.namespace)
 
-class TerraformVariable(TerraformBase):
+    @property
+    def terraform_version(self):
+        return get_terraform_version()
+
+
+class ProviderComponent(CodeGenerator):
+    """
+    Class representing a Terraform provider.
+    """
+
     def __init__(
         self,
-        schema: Schema,
-        namespace: str,
-        provider: str,
-        kind: str,
         name: str,
-        type: str,
-        provider_version: str = None,
-        variable_type: str = None,
-        configuration: VariableConfiguration = None,
-        default=None,
-        description: str = None,
+        schema: Schema,
+        namespace: str = "hashicorp",
+        configuration: ProviderConfiguration = None,
     ):
-        super().__init__(
-            schema,
-            namespace,
-            provider,
-            provider_version,
-            type,
-            name,
-            kind,
-            configuration,
+        super().__init__(name, schema, namespace)
+        self.name = name
+        self.type = "provider"
+        self.schema_json = schema.get_provider_schema(
+            namespace=namespace, provider=name
+        )
+        self.configuration = (
+            configuration if configuration is not None else ProviderConfiguration()
+        )
+        self.code = self._write_code(self.schema_json)
+
+
+class ResourceComponent(CodeGenerator):
+    """
+    Class representing a Terraform resource.
+    """
+
+    def __init__(
+        self,
+        kind: str,
+        provider: str,
+        schema: Schema,
+        name: str = "main",
+        namespace: str = "hashicorp",
+        configuration: ResourceConfiguration = None,
+    ):
+        super().__init__(provider, schema, namespace)
+        # Set initial variables
+        self.name = name
+        self.type = "resource"
+        self.kind = kind
+        self.schema_json = schema.get_resource_schema(
+            namespace=namespace, provider=provider, resource=kind
         )
 
+        self.configuration = (
+            configuration if configuration is not None else ResourceConfiguration()
+        )
+        self.code = self._write_code(self.schema_json)
+
+
+class DataSourceComponent(CodeGenerator):
+    """
+    Class representing a Terraform data source.
+    """
+
+    def __init__(
+        self,
+        kind: str,
+        provider: str,
+        schema: Schema,
+        name: str = "main",
+        namespace: str = "hashicorp",
+        configuration: DataSourceConfiguration = None,
+    ):
+        super().__init__(provider, schema, namespace)
+        # Set initial variables
         self.name = name
+        self.type = "data"
         self.kind = kind
+        self.schema_json = schema.get_data_schema(
+            namespace=namespace, provider=provider, data_source=kind
+        )
+        self.configuration = (
+            configuration if configuration is not None else DataSourceConfiguration()
+        )
+        self.code = self._write_code(self.schema_json)
+
+
+class VariableComponent:
+    """
+    Class representing a Terraform variable.
+    """
+
+    # def _validate_type(self, variable_type: str):
+    #     # Check if the normalized type is in the set of valid types
+    #     if variable_type not in VALID_TYPES:
+    #         print(f"The type '{variable_type}' is not a valid Terraform variable type.")
+    #     # For complex types, further validation logic can be added here
+    #     return variable_type
+
+    def __init__(
+        self,
+        name: str,
+        kind: str,
+        schema: Schema,
+        provider: str,
+        namespace: str = "hashicorp",
+        default=None,
+        description: str = None,
+        variable_type: str = None,
+        configuration: VariableConfiguration = None,
+    ):
+        self.name = name
         self.default = default
+        self.description = description
+        self.variable_type = variable_type  # self._validate_type(variable_type)  # Ensure the variable type is in lowercase to match Terraform syntax
+        self.configuration = (
+            configuration if configuration is not None else VariableConfiguration()
+        )
+        self.kind = kind
+
+        # If a description is not provided, fetch it using the schema and provider information
+        terraform_documentation = TerraformDocumentation(
+            schema=schema,
+            namespace=namespace,
+            provider=provider,
+            kind=self.kind,
+            version=get_provider_version(provider, namespace),
+            type="resource",  # TODO: Can I make this a variable?
+        )
+
+        self.docs = terraform_documentation.metadata
         self.description = (
-            self.documentation.metadata.get(name, {}).get(
+            terraform_documentation.metadata.get(name, {}).get(
                 "description", f"Default description for {name}"
             )
             if not description
             else description
         )
-        self.type = type
-        self.variable_type = variable_type
 
-        self.configuration = configuration if configuration else VariableConfiguration()
         self.code = self._write_code()
 
     def _write_code(self):
@@ -416,7 +430,7 @@ class TerraformVariable(TerraformBase):
         """
         code = f'variable "{self.name}" {{\n'
         if self.variable_type == None:
-            code += f'  type = {self.documentation.metadata[self.name].get("type")}\n'
+            code += f'  type = {self.docs[self.name].get("type")}\n'
         else:
             code += f"  type = {self.variable_type}\n"
         if self.description:
@@ -433,20 +447,41 @@ class TerraformVariable(TerraformBase):
         return code
 
 
+# Usage example
+# variable = VariableComponent(name="instance_size", default="t2.micro", description="The size of the instance", variable_type="string")
+# print(variable.code)
+
 # schema = Schema()
-# configuration = ResourceConfiguration(
-#     exclude_attributes=["tags"], exclude_blocks=["timeouts"]
+
+# config = ResourceConfiguration(
+#     add_inline_descriptions=True,
+#     exclude_blocks=['timeouts'],
+#     add_header_terraform_docs_url=True,
+#     attribute_value_prefix="test",
+#     attribute_defaults={'location': 'eastus'},
+#     header_comment='This key vault is used for storing keys, secrets, and certificates for the application.'
 # )
 
-# terraform = TerraformResource(
+# x = ResourceComponent(
+#     namespace='hashicorp',
+#     provider='azurerm',
 #     schema=schema,
-#     namespace="hashicorp",
-#     provider="azurerm",
-#     kind="resource_group",
-#     name="name",
-#     type="resource",
-#     # provider_version="3.45.0",
-#     configuration=configuration,
+#     kind='key_vault',
+#     name='test',
+#     configuration=config
 # )
 
-# print(terraform.code)
+# print(x.code)
+
+# x._write_variables_code()
+
+# configuration = ProviderConfiguration(
+#     add_inline_descriptions=True
+# )
+
+# provider = ProviderComponent(
+#     name='azurerm',
+#     configuration=configuration
+# )
+
+# print(provider.code)

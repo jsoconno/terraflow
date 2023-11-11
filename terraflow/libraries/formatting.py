@@ -5,7 +5,8 @@ def format_comments(comments):
     else:
         return ""
 
-def wrap_text(text, line_length=80, prefix=''):
+
+def wrap_text(text, line_length=80, prefix=""):
     words = text.split()
     lines = []
     current_line = ""
@@ -27,7 +28,10 @@ def wrap_text(text, line_length=80, prefix=''):
 
     return lines
 
-def format_list(items: list, title: str = None, top: int = None, prefix: str = " - ") -> str:
+
+def format_list(
+    items: list, title: str = None, top: int = None, prefix: str = " - "
+) -> str:
     """
     Format a list for output in the terminal.
 
@@ -53,6 +57,7 @@ def format_list(items: list, title: str = None, top: int = None, prefix: str = "
 
     return formatted_list
 
+
 def colors(color: str = "END") -> str:
     """
     Returns ANSI color codes for printing to the command line.
@@ -77,7 +82,10 @@ def colors(color: str = "END") -> str:
 
     return colors[color]
 
-def format_resource_header(type, name, provider=None, kind=None, documentation_url=None, comment=None):
+
+def format_resource_header(
+    type, name, provider=None, kind=None, documentation_url=None, comment=None
+):
     header_content = ""
 
     if documentation_url:
@@ -87,14 +95,15 @@ def format_resource_header(type, name, provider=None, kind=None, documentation_u
         wrapped_comment = "\n".join(["# " + line for line in wrap_text(text=comment)])
         header_content += f"{wrapped_comment}\n"
 
-    if type == 'provider':
-        header = f'{type} "{name}" {{'
+    if type == "provider":
+        header = f'{type} "{provider}" {{'
     else:
         header = f'{type} "{provider}_{kind}" "{name}" {{'
     header_content += f"{header}\n"
     footer = "}\n"
 
     return header_content, footer
+
 
 def format_block_header(schema, block, block_hierarchy):
     header = ""
@@ -111,29 +120,39 @@ def format_block_header(schema, block, block_hierarchy):
 
     return header, footer
 
-def format_attribute(attribute: str, attribute_schema: dict, attribute_description: str = None, block_hierarchy: list = [], configuration: object = None):
-    # Join block hierarchy and attribute with '_'
-    hierarchy_key = "_".join(block_hierarchy + [attribute])
+
+def format_attribute(
+    attribute: str,
+    attribute_schema: dict,
+    attribute_description: str = None,
+    block_hierarchy: list = [],
+    configuration: object = None,
+):
+    # Join block hierarchy and attribute with '.'
+    hierarchy_key = ".".join(block_hierarchy + [attribute])
 
     # If hierarchy_key exists in attribute_defaults dictionary, set attribute_value accordingly
     if hierarchy_key in configuration.attribute_defaults:
         attribute_value = configuration.attribute_defaults[hierarchy_key]
     elif configuration.attribute_value_prefix:  # If attribute_value_prefix is given
-        attribute_value = f'var.{configuration.attribute_value_prefix}_{hierarchy_key}'
+        attribute_value = f"var.{configuration.attribute_value_prefix}_{hierarchy_key.replace('.', '_')}"
     else:
-        attribute_value = f'var.{hierarchy_key}'
-    
+        attribute_value = f"var.{hierarchy_key.replace('.', '_')}"
+
     # Check if attribute value starts with the provided prefixes
     prefixes = ("var.", "local.", "resource.", "data.", "module.", "{", "[")
-    if not attribute_value.startswith(prefixes):
+    attribute_type = attribute_schema.get("type", "string")
+    if not attribute_value.startswith(prefixes) and attribute_type == "string":
         attribute_value = f'"{attribute_value}"'
-    
+
     # Construct the attribute line
     if configuration.add_inline_descriptions and attribute_description:
-        attribute_line = f'{attribute} = {attribute_value} # {attribute_description}' + '\n'
+        attribute_line = (
+            f"{attribute} = {attribute_value} # {attribute_description}" + "\n"
+        )
     else:
-        attribute_line = f'{attribute} = {attribute_value}'+ '\n'
-    
+        attribute_line = f"{attribute} = {attribute_value}" + "\n"
+
     return attribute_line
 
 
@@ -157,7 +176,8 @@ def format_attribute_type(attribute_type):
     else:
         raise ValueError(f"Invalid Terraform data type: {attribute_type}")
 
-def format_terraform_code(code: str, indentation='  '):
+
+def format_terraform_code(code: str, indentation="  "):
     """
     Indent Terraform code so that it is formatted correctly.
 
@@ -167,7 +187,7 @@ def format_terraform_code(code: str, indentation='  '):
     """
 
     # Split the code into lines
-    lines = code.split('\n')
+    lines = code.split("\n")
 
     # Initialize a counter for the current level of indentation
     indent_level = 0
@@ -175,19 +195,19 @@ def format_terraform_code(code: str, indentation='  '):
     # Process each line
     for i, line in enumerate(lines):
         # Increase the indent level if the line opens a block
-        if '{' in line and '}' not in line:
+        if "{" in line and "}" not in line:
             lines[i] = indent_level * indentation + line.lstrip()
             indent_level += 1
         # Decrease the indent level if the line closes a block
-        elif '}' in line and '{' not in line:
+        elif "}" in line and "{" not in line:
             indent_level -= 1
             lines[i] = indent_level * indentation + line.lstrip()
         # No change in indent level if the line both opens and closes a block
-        elif '{' in line and '}' in line:
+        elif "{" in line and "}" in line:
             lines[i] = indent_level * indentation + line.lstrip()
         # Otherwise, just add the current level of indentation
         else:
             lines[i] = indent_level * indentation + line.lstrip()
 
     # Join the lines back together and return the result
-    return '\n'.join(lines)
+    return "\n".join(lines)

@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
 
+
 @dataclass
 class Configuration:
     add_inline_descriptions: bool = False
     add_header_terraform_docs_url: bool = False
-    header_comment: str = ''
+    header_comment: str = ""
     required_attributes_only: bool = False
     required_blocks_only: bool = False
     exclude_attributes: list = field(default_factory=list)
@@ -15,22 +16,28 @@ class Configuration:
     attribute_value_prefix: str = ""
     auto_create_variables: bool = True
 
+
 @dataclass
 class ProviderConfiguration(Configuration):
     pass
+
 
 @dataclass
 class ResourceConfiguration(Configuration):
     pass
 
+
 @dataclass
 class DataSourceConfiguration(Configuration):
     pass
 
-@dataclass
-class VariableConfiguration():
-    pass
 
 @dataclass
-class OutputConfiguration():
+class VariableConfiguration:
+    # TODO: It could be helpful to add things like add-description or add-type
+    pass
+
+
+@dataclass
+class OutputConfiguration:
     pass
