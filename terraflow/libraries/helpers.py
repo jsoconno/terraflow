@@ -993,6 +993,18 @@ def delete_data_source_code(provider, kind, name, filename="main.tf"):
         f.write(result)
 
 
+# def delete_variable_code(name, filename="variables.tf"):
+#     regex_pattern = rf'^provider\s+"{name}"\s+{{[\s\S]*?^}}\n*'
+
+#     with open(filename, "r") as f:
+#         string = f.read()
+
+#     result = re.sub(pattern=regex_pattern, repl="", string=string, flags=re.MULTILINE)
+
+#     with open(filename, "w") as f:
+#         f.write(result)
+
+
 def run_terraform_fmt():
     subprocess.run(["terraform", "fmt"], stdout=subprocess.DEVNULL)
 

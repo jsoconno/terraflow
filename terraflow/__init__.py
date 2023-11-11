@@ -410,7 +410,6 @@ def variable_create(
         kind=kind,
         type=type,
         description=description,
-        variable_type="string",
         default=default,
         configuration=configuration,
     )
@@ -419,3 +418,29 @@ def variable_create(
         new_code=component.code,
         filename=terraform_filename if terraform_filename else "variables.tf",
     )
+
+
+# # terraflow variable delete
+# @variable.command("delete", context_settings=CONTEXT_SETTINGS)
+# @resource_options
+# def resource_delete(kind, name):
+#     """
+#     Delete a variable from the configuration.
+#     """
+#     loader = CodeLoader()
+#     component = loader.get_component_by_id(id=f"variable.{name}")
+
+#     if component:
+#         delete_variable_code(
+#             name=component["name"],
+#             filename=component["filename"],
+#         )
+#         print(
+#             f'\n{colors(color="OK_GREEN")}Success:{colors()} The variable "{name}" was deleted from the Terraform configuration.\n'
+#         )
+#     else:
+#         print(
+#             f'\n{colors(color="FAIL")}Error:{colors()} The variable "{name}" does not exist in the Terraform configuration.\n'
+#         )
+
+#     remove_unused_variables()
