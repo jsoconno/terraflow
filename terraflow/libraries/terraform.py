@@ -378,7 +378,7 @@ class TerraformVariable(TerraformBase):
         name: str,
         type: str,
         provider_version: str = None,
-        variable_type: str = "string",
+        variable_type: str = None,
         configuration: VariableConfiguration = None,
         default=None,
         description: str = None,
@@ -416,7 +416,7 @@ class TerraformVariable(TerraformBase):
         """
         code = f'variable "{self.name}" {{\n'
         if self.variable_type == None:
-            code += f'  type = {self.docs[self.name].get("type")}\n'
+            code += f'  type = {self.documentation.metadata[self.name].get("type")}\n'
         else:
             code += f"  type = {self.variable_type}\n"
         if self.description:

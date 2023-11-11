@@ -1,20 +1,10 @@
-variable "resource_group_name" {
-  description = "The name of the Resource Group where the AppService should exist. Changing this forces a new AppService to be created."
+variable "location" {
   type        = string
+  description = "The Azure region where resources should be deployed. Changing this will create new resources"
+  default     = "eastus"
 }
 
 variable "tags" {
-  type        = map(string)
-  description = "A mapping of tags which should be assigned to the Resource Group."
-  default     = {}
-}
-
-variable "location" {
-  description = "The Azure Region where the Resource Group should exist. Changing this forces a new Resource Group to be created."
-  type        = string
-}
-
-variable "name" {
-  type        = string
-  description = "The Name of this Resource Group."
+  type = map(string)
+  description = "Tags to apply to the Azure resource(s)."
 }

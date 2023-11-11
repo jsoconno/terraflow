@@ -1,38 +1,36 @@
 {
-    //explorer
-    "explorer.openEditors.visible": 1,
-    //editor
-    "editor.tabSize": 4,
-    "editor.fontSize": 12,
-    "editor.renderControlCharacters": true,
-    "editor.insertSpaces": true,
-    "editor.renderWhitespace": "all",
-    "editor.rulers": [
-        79
-    ],
-    "editor.formatOnType": true,
-    "editor.formatOnSave": true,
-    "editor.wordWrap": "on",
-    "editor.mouseWheelZoom": true,
-    "editor.glyphMargin": true,
-    //workbench
-    "workbench.editor.enablePreview": false,
-    //files
-    "files.exclude": {
-        "**/.git": true,
-        "**/.svn": true,
-        "**/.hg": true,
-        "**/.DS_Store": true,
-        "**/*.pyc": true,
-        "*.pyo": true,
-        "**/__pycache__": true,
-        "__pycache__": true
-    },
-    "files.trimTrailingWhitespace": true,
-    "files.eol": "\n",
-    //git
-    "git.autorefresh": false,
-    "git.autofetch": false,
-    //python
-    "python.pythonPath": "${env.VIRTUAL_ENV}/bin/python",
+  //explorer
+  "explorer.openEditors.visible": 1,
+  //editor
+  "editor.tabSize": 4,
+  "editor.fontSize": 12,
+  "editor.renderControlCharacters": true,
+  "editor.insertSpaces": true,
+  "editor.renderWhitespace": "all",
+  "editor.rulers": [79],
+  "editor.formatOnType": true,
+  "editor.formatOnSave": true,
+  "editor.wordWrap": "off",
+  "editor.mouseWheelZoom": true,
+  "editor.glyphMargin": true,
+  //workbench
+  "workbench.editor.enablePreview": false,
+  //files
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/.DS_Store": true,
+    "**/*.pyc": true,
+    "*.pyo": true,
+    "**/__pycache__": true,
+    "__pycache__": true
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.eol": "\n",
+  //git
+  "git.autorefresh": false,
+  "git.autofetch": false,
+  //python
+  "python.pythonPath": "${env.VIRTUAL_ENV}/bin/python"
 }
