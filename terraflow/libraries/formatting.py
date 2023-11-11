@@ -128,16 +128,16 @@ def format_attribute(
     block_hierarchy: list = [],
     configuration: object = None,
 ):
-    # Join block hierarchy and attribute with '_'
+    # Join block hierarchy and attribute with '.'
     hierarchy_key = ".".join(block_hierarchy + [attribute])
 
     # If hierarchy_key exists in attribute_defaults dictionary, set attribute_value accordingly
     if hierarchy_key in configuration.attribute_defaults:
         attribute_value = configuration.attribute_defaults[hierarchy_key]
     elif configuration.attribute_value_prefix:  # If attribute_value_prefix is given
-        attribute_value = f"var.{configuration.attribute_value_prefix}_{hierarchy_key}"
+        attribute_value = f"var.{configuration.attribute_value_prefix}_{hierarchy_key.replace('.', '_')}"
     else:
-        attribute_value = f"var.{hierarchy_key}"
+        attribute_value = f"var.{hierarchy_key.replace('.', '_')}"
 
     # Check if attribute value starts with the provided prefixes
     prefixes = ("var.", "local.", "resource.", "data.", "module.", "{", "[")
