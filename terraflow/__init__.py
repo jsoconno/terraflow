@@ -112,7 +112,10 @@ def resource_create(
     )
 
     component = TerraformProvider(
-        schema=schema, namespace=namespace, name=provider, configuration=configuration
+        schema=schema,
+        namespace=namespace,
+        provider=provider,
+        configuration=configuration,
     )
 
     write_terraform_to_file(
