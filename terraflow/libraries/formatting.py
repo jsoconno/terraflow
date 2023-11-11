@@ -129,7 +129,7 @@ def format_attribute(
     configuration: object = None,
 ):
     # Join block hierarchy and attribute with '_'
-    hierarchy_key = "_".join(block_hierarchy + [attribute])
+    hierarchy_key = ".".join(block_hierarchy + [attribute])
 
     # If hierarchy_key exists in attribute_defaults dictionary, set attribute_value accordingly
     if hierarchy_key in configuration.attribute_defaults:
