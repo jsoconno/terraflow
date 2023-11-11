@@ -270,10 +270,10 @@ def data_list(namespace, provider, keyword):
     """
     List available data sources for a provider.
     """
-    schema = Schema().schema
+    schema = Schema()
 
     items = list_items(
-        schema=schema,
+        schema=schema.json,
         namespace=namespace,
         provider=provider,
         scope="data_source",
