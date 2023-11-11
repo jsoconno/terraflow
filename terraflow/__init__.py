@@ -147,10 +147,10 @@ def resource_list(namespace, provider, keyword):
     """
     List available resources for a provider.
     """
-    schema = Schema().schema
+    schema = Schema()
 
     items = list_items(
-        schema=schema,
+        schema=schema.json,
         namespace=namespace,
         provider=provider,
         scope="resource",

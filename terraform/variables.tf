@@ -5,6 +5,14 @@ variable "location" {
 }
 
 variable "tags" {
-  type = map(string)
+  type        = map(string)
   description = "Tags to apply to the Azure resource(s)."
+}
+
+variable "app" {
+  type = string
+}
+
+variable "env" {
+  type = string
 }
