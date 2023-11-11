@@ -141,7 +141,8 @@ def format_attribute(
 
     # Check if attribute value starts with the provided prefixes
     prefixes = ("var.", "local.", "resource.", "data.", "module.", "{", "[")
-    if not attribute_value.startswith(prefixes):
+    attribute_type = attribute_schema.get("type", "string")
+    if not attribute_value.startswith(prefixes) and attribute_type == "string":
         attribute_value = f'"{attribute_value}"'
 
     # Construct the attribute line
